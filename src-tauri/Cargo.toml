@@ -1,0 +1,37 @@
+[package]
+name = "printflow"
+version = "0.1.0"
+description = "PrintFlow — offline 3D print project & filament manager"
+authors = ["PrintFlow"]
+edition = "2021"
+rust-version = "1.77.2"
+
+[lib]
+# The `_lib` suffix avoids a name collision with the binary on Windows.
+name = "printflow_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+tauri = { version = "2", features = [] }
+tauri-plugin-sql = { version = "2", features = ["sqlite"] }
+tauri-plugin-dialog = "2"
+tauri-plugin-os = "2"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+# Same sqlx as tauri-plugin-sql pulls in, so the pool types unify and the
+# transaction command below can reuse the plugin's connection pool.
+sqlx = { version = "0.8", default-features = false, features = [
+  "sqlite",
+  "runtime-tokio",
+  "json",
+] }
+
+[profile.release]
+codegen-units = 1
+lto = true
+opt-level = "s"
+panic = "abort"
+strip = true
