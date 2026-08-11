@@ -51,6 +51,11 @@ export interface TxResult {
  */
 export async function transaction(statements: TxStatement[]): Promise<TxResult[]> {
 	if (statements.length === 0) return [];
+	// `db_transaction` looks the pool up in the plugin's own `DbInstances` map.
+	// `closeDb()` (backup export/import) drops our cached promise but leaves a
+	// closed pool behind in that map, so without re-loading here the next
+	// transaction would run against it and fail.
+	await getDb();
 	return invoke<TxResult[]>('db_transaction', {
 		db: DB_URL,
 		statements: statements.map((s) => ({ sql: s.sql, params: s.params ?? [] }))

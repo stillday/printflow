@@ -122,7 +122,27 @@ async function parseThreeMf(file: File): Promise<ParseResult> {
 		}
 	}
 
-	// 3. Unsliced project file — object names are still useful for the BOM.
+	// 3. Bambu Studio / OrcaSlicer project that was saved without slicing.
+	//    Its `3dmodel.model` carries no object names at all — they live in
+	//    `model_settings.config`, which also records which objects sit on which
+	//    build plate. Without this step every part would import as "#2".
+	const modelSettings = findEntry(zip, (path) =>
+		path.toLowerCase().endsWith('model_settings.config')
+	);
+	if (modelSettings) {
+		try {
+			const plates = parseModelSettings(await modelSettings.async('string'));
+			if (plates.length > 0) {
+				warnings.push('errors.parse.noMetadata');
+				return { fileName: file.name, source: 'model', plates, warnings };
+			}
+		} catch {
+			warnings.push('plates.parseWarning');
+		}
+	}
+
+	// 4. Any other unsliced project file (e.g. PrusaSlicer) — object names are
+	//    still useful for the BOM.
 	const model = findEntry(zip, (path) => path.toLowerCase().endsWith('3dmodel.model'));
 	if (model) {
 		const objects = parseModelObjects(await model.async('string'));
@@ -217,6 +237,73 @@ function parseSliceInfo(xml: string): ParsedPlate[] {
 			objects
 		});
 	});
+
+	return plates;
+}
+
+/**
+ * `model_settings.config` from a Bambu Studio / OrcaSlicer project.
+ *
+ * ```xml
+ * <object id="4"><metadata key="name" value="Leg Carrier.stl"/> … </object>
+ * <plate>
+ *   <metadata key="plater_id" value="2"/>
+ *   <model_instance><metadata key="object_id" value="4"/></model_instance>
+ * </plate>
+ * ```
+ *
+ * One `<model_instance>` is one printed copy, so repeated instances of the same
+ * object become that part's quantity. Returns one plate per `<plate>` element;
+ * plates the user left empty are dropped.
+ */
+function parseModelSettings(xml: string): ParsedPlate[] {
+	const doc = new DOMParser().parseFromString(xml, 'application/xml');
+	if (doc.querySelector('parsererror')) return [];
+
+	const names = new Map<string, string>();
+	doc.querySelectorAll('config > object').forEach((node) => {
+		const id = node.getAttribute('id');
+		if (!id) return;
+		// `:scope >` keeps us off the identically-keyed name inside <part>.
+		const name = node.querySelector(':scope > metadata[key="name"]')?.getAttribute('value');
+		names.set(id, cleanObjectName(name || `#${id}`));
+	});
+	if (names.size === 0) return [];
+
+	const plates: ParsedPlate[] = [];
+	doc.querySelectorAll('config > plate').forEach((plateNode, position) => {
+		const plateId = plateNode
+			.querySelector(':scope > metadata[key="plater_id"]')
+			?.getAttribute('value');
+
+		const instances: string[] = [];
+		plateNode.querySelectorAll(':scope > model_instance').forEach((instance) => {
+			const objectId = instance
+				.querySelector(':scope > metadata[key="object_id"]')
+				?.getAttribute('value');
+			if (objectId && names.has(objectId)) instances.push(names.get(objectId)!);
+		});
+
+		if (instances.length === 0) return;
+		plates.push({
+			index: toInt(plateId) ?? position + 1,
+			estimatedTimeSeconds: 0,
+			layerCount: null,
+			filamentRequirements: [],
+			objects: countObjects(instances)
+		});
+	});
+
+	// A project with objects but no plate assignment still deserves a BOM.
+	if (plates.length === 0) {
+		plates.push({
+			index: 1,
+			estimatedTimeSeconds: 0,
+			layerCount: null,
+			filamentRequirements: [],
+			objects: countObjects(Array.from(names.values()))
+		});
+	}
 
 	return plates;
 }

@@ -1,6 +1,5 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
-	import { page } from '$app/state';
+		import { page } from '$app/state';
 	import { goto } from '$app/navigation';
 	import { t } from 'svelte-i18n';
 	import { ArrowLeft, ExternalLink, History, Layers3, Pencil, Trash2 } from '@lucide/svelte';
@@ -21,7 +20,7 @@
 	import { listParts } from '$lib/db/parts';
 	import { deletePlate, listPlates } from '$lib/db/plates';
 	import { deleteJob, listJobsForProject } from '$lib/db/jobs';
-	import { listActiveSpools } from '$lib/db/spools';
+	import { listSpools } from '$lib/db/spools';
 	import { toasts } from '$lib/stores/toast.svelte';
 	import type {
 		Part,
@@ -62,33 +61,63 @@
 		minute: $t('units.minutesShort')
 	});
 
-	async function load() {
-		if (!Number.isFinite(projectId)) {
+	// Guards against a slow load for the previous project landing after a faster
+	// one for the project the user has already switched to.
+	let requestId = 0;
+
+	async function load(id: number) {
+		const token = ++requestId;
+		if (!Number.isFinite(id)) {
 			notFound = true;
 			loading = false;
 			return;
 		}
 		try {
-			const found = await getProject(projectId);
+			const found = await getProject(id);
+			if (token !== requestId) return;
 			if (!found) {
 				notFound = true;
 				return;
 			}
-			project = found;
-			[parts, plates, jobs, spools] = await Promise.all([
-				listParts(projectId),
-				listPlates(projectId),
-				listJobsForProject(projectId),
-				listActiveSpools()
+			const [nextParts, nextPlates, nextJobs, nextSpools] = await Promise.all([
+				listParts(id),
+				listPlates(id),
+				listJobsForProject(id),
+				// Every spool, not just the active ones: logging a print can flip a
+				// spool to `empty`, and the job that emptied it still has to be able
+				// to show its name in the history.
+				listSpools()
 			]);
+			if (token !== requestId) return;
+			project = found;
+			parts = nextParts;
+			plates = nextPlates;
+			jobs = nextJobs;
+			spools = nextSpools;
 		} catch {
-			toasts.error('errors.loadFailed');
+			if (token === requestId) toasts.error('errors.loadFailed');
 		} finally {
-			loading = false;
+			if (token === requestId) loading = false;
 		}
 	}
 
-	onMount(load);
+	/** Re-reads the project currently in the URL. */
+	function reload(): Promise<void> {
+		return load(projectId);
+	}
+
+	// SvelteKit reuses this component when navigating between two projects, so
+	// `onMount` would leave the previous project's parts and plates on screen.
+	$effect(() => {
+		const id = projectId;
+		loading = true;
+		notFound = false;
+		project = null;
+		void load(id);
+	});
+
+	/** Only active spools can be assigned to a slot for a new print. */
+	const activeSpools = $derived(spools.filter((spool) => spool.status === 'active'));
 
 	const tabs: { value: Tab; labelKey: string; count: number }[] = $derived([
 		{ value: 'parts', labelKey: 'projects.tabs.parts', count: parts.length },
@@ -101,7 +130,7 @@
 		try {
 			await deletePlate(pendingPlateDelete.id);
 			toasts.success('toast.deleted');
-			await load();
+			await reload();
 		} catch {
 			toasts.error('errors.deleteFailed');
 		} finally {
@@ -114,7 +143,7 @@
 		try {
 			await deleteJob(pendingJobDelete.id);
 			toasts.success('toast.deleted');
-			await load();
+			await reload();
 		} catch {
 			toasts.error('errors.deleteFailed');
 		} finally {
@@ -228,7 +257,7 @@
 		</div>
 
 		{#if tab === 'parts'}
-			<PartsPanel {projectId} {parts} onChanged={load} />
+			<PartsPanel {projectId} {parts} onChanged={reload} />
 		{:else if tab === 'plates'}
 			<div class="grid gap-5">
 				<PlateDropzone onParsed={(result) => (parseResult = result)} />
@@ -314,7 +343,7 @@
 		open={editOpen}
 		{project}
 		onClose={() => (editOpen = false)}
-		onSaved={load}
+		onSaved={reload}
 	/>
 
 	<PlateImportModal
@@ -322,22 +351,22 @@
 		result={parseResult}
 		{parts}
 		onClose={() => (parseResult = null)}
-		onImported={load}
+		onImported={reload}
 	/>
 
 	<AssignPartsModal
 		plate={assigning}
 		{parts}
 		onClose={() => (assigning = null)}
-		onSaved={load}
+		onSaved={reload}
 	/>
 
 	<PrintJobModal
 		plate={printing}
 		{parts}
-		{spools}
+		spools={activeSpools}
 		onClose={() => (printing = null)}
-		onLogged={load}
+		onLogged={reload}
 	/>
 
 	<ConfirmDialog
