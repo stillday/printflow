@@ -38,7 +38,7 @@
 		<Calculator size={15} class="text-indigo-400" />
 		<div class="min-w-0">
 			<p class="text-xs font-semibold text-zinc-200">{$t('spools.tare.title')}</p>
-			<p class="text-[11px] text-zinc-600">{$t('spools.tare.subtitle')}</p>
+			<p class="text-[11px] text-zinc-400">{$t('spools.tare.subtitle')}</p>
 		</div>
 	</div>
 
@@ -61,7 +61,7 @@
 
 	<div class="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-white/5 pt-4">
 		<div class="min-w-0">
-			<p class="text-[10px] tracking-widest text-zinc-600 uppercase">
+			<p class="text-[10px] tracking-widest text-zinc-400 uppercase">
 				{$t('spools.tare.formula')}
 			</p>
 			<p

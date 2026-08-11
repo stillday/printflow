@@ -1,4 +1,4 @@
-import { execute, select, selectOne } from './index';
+import { execute, select } from './index';
 import type {
 	FilamentRequirement,
 	PartOnPlate,
@@ -50,11 +50,6 @@ export async function listPlates(projectId: number): Promise<PrintPlateDecoded[]
 		[projectId]
 	);
 	return rows.map(mapPlate);
-}
-
-export async function getPlate(id: number): Promise<PrintPlateDecoded | null> {
-	const row = await selectOne<PlateRow>('SELECT * FROM print_plates WHERE id = ?', [id]);
-	return row ? mapPlate(row) : null;
 }
 
 export async function createPlate(plate: PrintPlate): Promise<number> {

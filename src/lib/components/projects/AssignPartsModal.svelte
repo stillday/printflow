@@ -68,7 +68,7 @@
 			</label>
 
 			{#if parts.length === 0}
-				<p class="text-sm text-zinc-500">{$t('parts.empty')}</p>
+				<p class="text-sm text-zinc-400">{$t('parts.empty')}</p>
 			{:else}
 				<div>
 					<span class="label-base">{$t('plates.quantityOnPlate')}</span>
@@ -78,7 +78,7 @@
 								class="flex items-center gap-3 rounded-xl border border-white/10 bg-zinc-950/40 px-3 py-2"
 							>
 								<span class="min-w-0 flex-1 truncate text-sm text-zinc-200">{part.name}</span>
-								<span class="shrink-0 text-[11px] text-zinc-600 tabular-nums">
+								<span class="shrink-0 text-[11px] text-zinc-400 tabular-nums">
 									{part.printedQuantity}/{part.requiredQuantity}
 								</span>
 								<input

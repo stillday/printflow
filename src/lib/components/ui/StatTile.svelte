@@ -38,12 +38,12 @@
 		>
 			<Icon size={17} />
 		</div>
-		<span class="text-xs font-medium tracking-wide text-zinc-500 uppercase">{label}</span>
+		<span class="text-xs font-medium tracking-wide text-zinc-400 uppercase">{label}</span>
 	</div>
 	<div class="mt-3 flex items-baseline gap-1.5">
 		<span class="text-2xl font-semibold text-zinc-50 tabular-nums">{value}</span>
 		{#if unit}
-			<span class="text-sm text-zinc-500">{unit}</span>
+			<span class="text-sm text-zinc-400">{unit}</span>
 		{/if}
 	</div>
 </div>

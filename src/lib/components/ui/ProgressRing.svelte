@@ -57,7 +57,7 @@
 		<div class="absolute inset-0 flex flex-col items-center justify-center">
 			<span class="text-sm font-semibold text-zinc-100 tabular-nums">{label}</span>
 			{#if sublabel}
-				<span class="text-[10px] tracking-wide text-zinc-500 uppercase">{sublabel}</span>
+				<span class="text-[10px] tracking-wide text-zinc-400 uppercase">{sublabel}</span>
 			{/if}
 		</div>
 	{/if}

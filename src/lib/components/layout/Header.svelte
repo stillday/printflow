@@ -87,7 +87,7 @@
 	<div class="relative w-full max-w-md" bind:this={root}>
 		<Search
 			size={15}
-			class="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-zinc-600"
+			class="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-zinc-400"
 		/>
 		<input
 			bind:this={input}
@@ -106,7 +106,7 @@
 				class="animate-pop-in absolute top-full right-0 left-0 z-50 mt-2 overflow-hidden rounded-xl border border-white/10 bg-zinc-900 py-1 shadow-2xl shadow-black/60"
 			>
 				{#if hits.length === 0}
-					<p class="px-4 py-3 text-sm text-zinc-500">{$t('common.noResults')}</p>
+					<p class="px-4 py-3 text-sm text-zinc-400">{$t('common.noResults')}</p>
 				{:else}
 					<ul>
 						{#each hits as hit, index (hit.kind + hit.id)}
@@ -124,15 +124,15 @@
 									{#if hit.colorHex}
 										<ColorSwatch color={hit.colorHex} size={16} />
 									{:else}
-										<Icon size={16} class="shrink-0 text-zinc-500" />
+										<Icon size={16} class="shrink-0 text-zinc-400" />
 									{/if}
 									<span class="min-w-0 flex-1">
 										<span class="block truncate text-sm text-zinc-200">{hit.title}</span>
-										<span class="block truncate text-xs text-zinc-500">
+										<span class="block truncate text-xs text-zinc-400">
 											{hit.subtitleKey ? $t(hit.subtitleKey) : hit.subtitle}
 										</span>
 									</span>
-									<span class="shrink-0 text-[10px] tracking-wide text-zinc-600 uppercase">
+									<span class="shrink-0 text-[10px] tracking-wide text-zinc-400 uppercase">
 										{$t(`nav.${hit.kind === 'project' ? 'projects' : hit.kind === 'spool' ? 'spools' : 'catalog'}`)}
 									</span>
 								</button>

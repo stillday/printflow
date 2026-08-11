@@ -15,7 +15,6 @@ export const PROJECT_STATUSES: ProjectStatus[] = [
 	'completed',
 	'archived'
 ];
-export const JOB_STATUSES: JobStatus[] = ['success', 'failed', 'cancelled'];
 
 /** Common materials offered as suggestions; the field stays free text. */
 export const COMMON_MATERIALS = [

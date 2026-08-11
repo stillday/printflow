@@ -193,6 +193,7 @@
 			"status": "Status"
 		},
 		"tabs": {
+			"label": "Projektbereiche",
 			"parts": "Teile",
 			"plates": "Druckplatten",
 			"history": "Historie"
@@ -320,6 +321,7 @@
 		"loadFailed": "Daten konnten nicht geladen werden.",
 		"saveFailed": "Speichern fehlgeschlagen.",
 		"deleteFailed": "Löschen fehlgeschlagen.",
+		"openFailed": "Der Link konnte nicht geöffnet werden.",
 		"notFound": "Nicht gefunden",
 		"notFoundBody": "Dieser Eintrag existiert nicht (mehr).",
 		"required": "Bitte ausfüllen",

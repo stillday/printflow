@@ -193,6 +193,7 @@
 			"status": "Status"
 		},
 		"tabs": {
+			"label": "Project sections",
 			"parts": "Parts",
 			"plates": "Print plates",
 			"history": "History"
@@ -320,6 +321,7 @@
 		"loadFailed": "Data could not be loaded.",
 		"saveFailed": "Saving failed.",
 		"deleteFailed": "Deleting failed.",
+		"openFailed": "The link could not be opened.",
 		"notFound": "Not found",
 		"notFoundBody": "This entry does not exist (any more).",
 		"required": "Please fill this in",

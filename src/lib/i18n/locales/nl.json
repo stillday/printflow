@@ -193,6 +193,7 @@
 			"status": "Status"
 		},
 		"tabs": {
+			"label": "Projectonderdelen",
 			"parts": "Onderdelen",
 			"plates": "Printplaten",
 			"history": "Geschiedenis"
@@ -320,6 +321,7 @@
 		"loadFailed": "Gegevens konden niet geladen worden.",
 		"saveFailed": "Opslaan mislukt.",
 		"deleteFailed": "Verwijderen mislukt.",
+		"openFailed": "De link kon niet geopend worden.",
 		"notFound": "Niet gevonden",
 		"notFoundBody": "Dit item bestaat niet (meer).",
 		"required": "Vul dit in",

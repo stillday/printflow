@@ -33,6 +33,7 @@
 	import { formatDateTime, formatDuration, formatGrams } from '$lib/utils/format';
 	import { jobTone, projectTone } from '$lib/utils/status';
 	import { cn } from '$lib/utils/cn';
+	import { isExternalUrl, openExternal } from '$lib/utils/external';
 
 	type Tab = 'parts' | 'plates' | 'history';
 
@@ -125,6 +126,39 @@
 		{ value: 'history', labelKey: 'projects.tabs.history', count: jobs.length }
 	]);
 
+	/**
+	 * Arrow / Home / End navigation inside the tab list, as the WAI-ARIA tabs
+	 * pattern expects. Selection follows focus, so moving also switches panels.
+	 */
+	function onTabKeydown(event: KeyboardEvent) {
+		const order = tabs.map((item) => item.value);
+		const current = order.indexOf(tab);
+		let next = current;
+
+		switch (event.key) {
+			case 'ArrowRight':
+				next = (current + 1) % order.length;
+				break;
+			case 'ArrowLeft':
+				next = (current - 1 + order.length) % order.length;
+				break;
+			case 'Home':
+				next = 0;
+				break;
+			case 'End':
+				next = order.length - 1;
+				break;
+			default:
+				return;
+		}
+
+		event.preventDefault();
+		tab = order[next];
+		// The newly selected tab is the only one with tabindex 0, so focus has to
+		// follow it explicitly.
+		document.getElementById(`tab-${tab}`)?.focus();
+	}
+
 	async function confirmPlateDelete() {
 		if (pendingPlateDelete?.id === undefined) return;
 		try {
@@ -161,6 +195,14 @@
 		}
 	}
 
+	async function openSource(url: string) {
+		try {
+			await openExternal(url);
+		} catch {
+			toasts.error('errors.openFailed');
+		}
+	}
+
 	/** Resolve the spool ids stored on a job to readable names. */
 	function spoolLabel(spoolId: number): string {
 		const spool = spools.find((item) => item.id === spoolId);
@@ -169,7 +211,7 @@
 </script>
 
 {#if loading}
-	<p class="py-20 text-center text-sm text-zinc-600">{$t('common.loading')}</p>
+	<p class="py-20 text-center text-sm text-zinc-400">{$t('common.loading')}</p>
 {:else if notFound || !project}
 	<div class="px-8 py-16">
 		<div class="card">
@@ -191,7 +233,7 @@
 			<div class="flex items-center gap-3">
 				<a
 					href="/projects"
-					class="inline-flex items-center gap-1.5 text-xs text-zinc-500 transition-colors hover:text-zinc-200"
+					class="inline-flex items-center gap-1.5 text-xs text-zinc-400 transition-colors hover:text-zinc-200"
 				>
 					<ArrowLeft size={13} />
 					{$t('projects.title')}
@@ -204,13 +246,8 @@
 		{/snippet}
 
 		{#snippet actions()}
-			{#if activeProject.sourceUrl}
-				<Button
-					variant="secondary"
-					href={activeProject.sourceUrl}
-					target="_blank"
-					rel="noreferrer noopener"
-				>
+			{#if isExternalUrl(activeProject.sourceUrl)}
+				<Button variant="secondary" onclick={() => openSource(activeProject.sourceUrl!)}>
 					<ExternalLink size={15} />
 					{$t('projects.openSource')}
 				</Button>
@@ -229,23 +266,29 @@
 	</PageHeader>
 
 	<div class="px-8 pb-10">
-		<div class="mb-6 flex gap-1 border-b border-white/10" role="tablist">
+		<div
+			class="mb-6 flex gap-1 border-b border-white/10"
+			role="tablist"
+			aria-label={$t('projects.tabs.label')}
+		>
 			{#each tabs as item (item.value)}
 				{@const selected = tab === item.value}
 				<button
 					type="button"
 					role="tab"
+					id="tab-{item.value}"
 					aria-selected={selected}
+					aria-controls="panel-{item.value}"
+					tabindex={selected ? 0 : -1}
 					class={cn(
 						'relative -mb-px px-4 py-2.5 text-sm font-medium transition-colors',
-						selected
-							? 'text-indigo-200'
-							: 'text-zinc-500 hover:text-zinc-200'
+						selected ? 'text-indigo-200' : 'text-zinc-400 hover:text-zinc-200'
 					)}
 					onclick={() => (tab = item.value)}
+					onkeydown={onTabKeydown}
 				>
 					{$t(item.labelKey)}
-					<span class="ml-1.5 text-xs text-zinc-600 tabular-nums">{item.count}</span>
+					<span class="ml-1.5 text-xs text-zinc-400 tabular-nums">{item.count}</span>
 					{#if selected}
 						<span
 							class="absolute right-0 bottom-0 left-0 h-0.5 rounded-full bg-indigo-400 shadow-[0_0_12px_rgba(129,140,248,0.8)]"
@@ -257,9 +300,17 @@
 		</div>
 
 		{#if tab === 'parts'}
-			<PartsPanel {projectId} {parts} onChanged={reload} />
+			<div role="tabpanel" id="panel-parts" aria-labelledby="tab-parts" tabindex="-1">
+				<PartsPanel {projectId} {parts} onChanged={reload} />
+			</div>
 		{:else if tab === 'plates'}
-			<div class="grid gap-5">
+			<div
+				class="grid gap-5"
+				role="tabpanel"
+				id="panel-plates"
+				aria-labelledby="tab-plates"
+				tabindex="-1"
+			>
 				<PlateDropzone onParsed={(result) => (parseResult = result)} />
 
 				{#if plates.length === 0}
@@ -281,7 +332,13 @@
 				{/if}
 			</div>
 		{:else}
-			<div class="card overflow-hidden">
+			<div
+				class="card overflow-hidden"
+				role="tabpanel"
+				id="panel-history"
+				aria-labelledby="tab-history"
+				tabindex="-1"
+			>
 				{#if jobs.length === 0}
 					<EmptyState
 						icon={History}
@@ -296,7 +353,7 @@
 
 								<div class="min-w-0 flex-1">
 									<p class="truncate text-sm text-zinc-200">{job.plateName}</p>
-									<p class="mt-0.5 text-[11px] text-zinc-600">
+									<p class="mt-0.5 text-[11px] text-zinc-400">
 										{formatDateTime(job.completedAt ?? job.startedAt)}
 										{#if job.actualDurationSeconds}
 											· {formatDuration(job.actualDurationSeconds, durationLabels)}
@@ -315,7 +372,7 @@
 												title={$t('job.deductedFrom')}
 											>
 												<span class="max-w-40 truncate">{spoolLabel(usage.spoolId)}</span>
-												<span class="text-zinc-500 tabular-nums">
+												<span class="text-zinc-400 tabular-nums">
 													−{formatGrams(usage.weightGrams)}
 												</span>
 											</span>

@@ -25,12 +25,12 @@
 		>
 			<Layers size={22} class="text-indigo-300" />
 		</div>
-		<p class="text-sm text-zinc-500">PrintFlow</p>
+		<p class="text-sm text-zinc-400">PrintFlow</p>
 	</div>
 {:then}
 	{#if $isLoading}
 		<div class="flex h-screen items-center justify-center bg-zinc-950">
-			<p class="text-sm text-zinc-500">PrintFlow</p>
+			<p class="text-sm text-zinc-400">PrintFlow</p>
 		</div>
 	{:else}
 		<div class="flex h-screen overflow-hidden bg-zinc-950">
@@ -57,7 +57,7 @@
 					<h1 class="text-sm font-semibold text-zinc-100">
 						{$isLoading ? 'PrintFlow' : $t('errors.dbInit')}
 					</h1>
-					<p class="mt-2 text-xs break-words text-zinc-500" data-selectable>
+					<p class="mt-2 text-xs break-words text-zinc-400">
 						{error instanceof Error ? error.message : String(error)}
 					</p>
 					<div class="mt-4">

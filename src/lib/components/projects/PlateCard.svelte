@@ -39,7 +39,7 @@
 	<div class="flex items-start justify-between gap-3">
 		<div class="min-w-0">
 			<p class="truncate text-sm font-semibold text-zinc-100">{plate.name}</p>
-			<p class="mt-0.5 truncate text-[11px] text-zinc-600">{plate.fileName}</p>
+			<p class="mt-0.5 truncate text-[11px] text-zinc-400">{plate.fileName}</p>
 		</div>
 		<IconButton label={$t('common.delete')} tone="danger" onclick={() => onDelete(plate)}>
 			<Trash2 size={15} />
@@ -48,12 +48,12 @@
 
 	<div class="mt-4 flex flex-wrap items-center gap-4 text-xs">
 		<span class="inline-flex items-center gap-1.5 text-zinc-400">
-			<Clock size={13} class="text-zinc-600" />
+			<Clock size={13} class="text-zinc-400" />
 			{formatDuration(plate.estimatedTimeSeconds, durationLabels)}
 		</span>
 		{#if plate.layerCount}
 			<span class="inline-flex items-center gap-1.5 text-zinc-400">
-				<Layers3 size={13} class="text-zinc-600" />
+				<Layers3 size={13} class="text-zinc-400" />
 				{formatNumber(plate.layerCount)}
 			</span>
 		{/if}
@@ -71,7 +71,7 @@
 					class="inline-flex items-center gap-2 rounded-lg border border-white/10 bg-white/5 px-2.5 py-1.5 text-[11px]"
 				>
 					<ColorSwatch color={requirement.colorHex} size={12} />
-					<span class="text-zinc-500">
+					<span class="text-zinc-400">
 						{$t('plates.slotShort', { values: { index: requirement.slotIndex } })}
 					</span>
 					<span class="text-zinc-300">{requirement.materialType}</span>
@@ -82,11 +82,11 @@
 			{/each}
 		</ul>
 	{:else}
-		<p class="mt-3 text-[11px] text-zinc-600">{$t('plates.noFilamentData')}</p>
+		<p class="mt-3 text-[11px] text-zinc-400">{$t('plates.noFilamentData')}</p>
 	{/if}
 
 	<div class="mt-4 border-t border-white/5 pt-4">
-		<p class="text-[10px] font-semibold tracking-widest text-zinc-600 uppercase">
+		<p class="text-[10px] font-semibold tracking-widest text-zinc-400 uppercase">
 			{$t('plates.partsOnPlate')}
 		</p>
 		{#if assigned.length > 0}
@@ -96,12 +96,12 @@
 						class="inline-flex items-center gap-1.5 rounded-md border border-white/10 bg-white/5 px-2 py-1 text-[11px] text-zinc-300"
 					>
 						<span class="truncate">{entry.part.name}</span>
-						<span class="text-zinc-500 tabular-nums">{entry.quantity}×</span>
+						<span class="text-zinc-400 tabular-nums">{entry.quantity}×</span>
 					</li>
 				{/each}
 			</ul>
 		{:else}
-			<p class="mt-2 text-[11px] text-zinc-600">{$t('plates.noPartsAssigned')}</p>
+			<p class="mt-2 text-[11px] text-zinc-400">{$t('plates.noPartsAssigned')}</p>
 		{/if}
 	</div>
 

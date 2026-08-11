@@ -21,6 +21,7 @@
 	} from '$lib/types/schema';
 	import { formatDate, formatPercent } from '$lib/utils/format';
 	import { projectTone } from '$lib/utils/status';
+	import { isExternalUrl, openExternal } from '$lib/utils/external';
 
 	let projects = $state<ProjectWithProgress[]>([]);
 	let loading = $state(true);
@@ -63,6 +64,15 @@
 		modalOpen = true;
 	}
 
+	/** Hands the model link to the OS browser — see `utils/external.ts`. */
+	async function openSource(url: string) {
+		try {
+			await openExternal(url);
+		} catch {
+			toasts.error('errors.openFailed');
+		}
+	}
+
 	function openEdit(project: ProjectWithProgress) {
 		editing = project;
 		modalOpen = true;
@@ -103,7 +113,7 @@
 
 <div class="px-8 pb-10">
 	{#if loading}
-		<p class="py-16 text-center text-sm text-zinc-600">{$t('common.loading')}</p>
+		<p class="py-16 text-center text-sm text-zinc-400">{$t('common.loading')}</p>
 	{:else if projects.length === 0}
 		<div class="card">
 			<EmptyState icon={FolderKanban} title={$t('projects.empty')} body={$t('projects.emptyBody')}>
@@ -159,7 +169,7 @@
 								<p class="truncate text-sm font-semibold text-zinc-100 group-hover:text-indigo-200">
 									{project.title}
 								</p>
-								<p class="mt-0.5 truncate text-xs text-zinc-600">
+								<p class="mt-0.5 truncate text-xs text-zinc-400">
 									{formatDate(project.updatedAt)}
 								</p>
 							</a>
@@ -167,14 +177,14 @@
 						</div>
 
 						{#if project.description}
-							<p class="mt-3 line-clamp-2 text-xs leading-relaxed text-zinc-500">
+							<p class="mt-3 line-clamp-2 text-xs leading-relaxed text-zinc-400">
 								{project.description}
 							</p>
 						{/if}
 
 						<div class="mt-auto pt-5">
 							<div class="mb-2 flex items-baseline justify-between gap-2 text-xs">
-								<span class="text-zinc-500">{$t('projects.progress')}</span>
+								<span class="text-zinc-400">{$t('projects.progress')}</span>
 								<span class="font-semibold text-zinc-300 tabular-nums">
 									{formatPercent(ratio)}
 								</span>
@@ -186,7 +196,7 @@
 									: 0}
 								tone={ratio >= 1 ? 'emerald' : 'indigo'}
 							/>
-							<p class="mt-2 text-[11px] text-zinc-600">
+							<p class="mt-2 text-[11px] text-zinc-400">
 								{$t('projects.partsProgress', {
 									values: { printed: project.printedTotal, required: project.requiredTotal }
 								})}
@@ -196,17 +206,13 @@
 						<div
 							class="mt-4 flex items-center justify-end gap-1 border-t border-white/5 pt-3 opacity-0 transition-opacity group-hover:opacity-100 focus-within:opacity-100"
 						>
-							{#if project.sourceUrl}
-								<a
-									href={project.sourceUrl}
-									target="_blank"
-									rel="noreferrer noopener"
-									title={$t('projects.openSource')}
-									aria-label={$t('projects.openSource')}
-									class="inline-flex h-8 w-8 items-center justify-center rounded-lg text-zinc-400 transition-colors hover:bg-white/10 hover:text-zinc-100"
+							{#if isExternalUrl(project.sourceUrl)}
+								<IconButton
+									label={$t('projects.openSource')}
+									onclick={() => openSource(project.sourceUrl!)}
 								>
 									<ExternalLink size={15} />
-								</a>
+								</IconButton>
 							{/if}
 							<IconButton label={$t('common.edit')} onclick={() => openEdit(project)}>
 								<Pencil size={15} />

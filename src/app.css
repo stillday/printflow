@@ -56,14 +56,37 @@
 		outline-offset: 2px;
 	}
 
-	/* Chrome shouldn't be selectable in a native app; content still is. */
-	body {
+	/*
+	 * Buttons, labels and nav shouldn't be selectable in a native app, but
+	 * content has to be: spool names, storage locations and failure reasons are
+	 * exactly the things a user wants to copy out. So the ban applies to
+	 * interactive chrome only, not to the whole document.
+	 */
+	button,
+	label,
+	nav,
+	[role='tab'],
+	[role='tablist'] {
 		user-select: none;
 	}
-	input,
-	textarea,
-	[data-selectable] {
-		user-select: text;
+
+	/*
+	 * A dropdown's closed control is ours to style, but the popup list is drawn
+	 * by the platform (GTK on Linux, the shell on Windows) and defaults to a
+	 * light palette — unreadable next to a dark theme. `color-scheme: dark`
+	 * above covers most engines; these rules cover the rest.
+	 */
+	select {
+		color-scheme: dark;
+	}
+	select option {
+		background-color: var(--color-surface-raised);
+		color: var(--color-zinc-100);
+	}
+	select option:checked,
+	select option:hover {
+		background-color: var(--color-indigo-600);
+		color: #fff;
 	}
 }
 
@@ -74,7 +97,7 @@
 
 	.input-base {
 		@apply w-full rounded-xl border border-white/10 bg-zinc-950/60 px-3 py-2 text-sm text-zinc-100
-			placeholder:text-zinc-600 transition-colors
+			placeholder:text-zinc-400 transition-colors
 			focus:border-indigo-500/60 focus:bg-zinc-950 focus:outline-none;
 	}
 

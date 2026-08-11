@@ -121,7 +121,7 @@
 
 <div class="px-8 pb-10">
 	{#if loading}
-		<p class="py-16 text-center text-sm text-zinc-600">{$t('common.loading')}</p>
+		<p class="py-16 text-center text-sm text-zinc-400">{$t('common.loading')}</p>
 	{:else if catalog.length === 0}
 		<div class="card">
 			<EmptyState icon={Layers} title={$t('spools.needsCatalog')} body={$t('spools.needsCatalogBody')}>
@@ -188,7 +188,7 @@
 				</div>
 			{/if}
 
-			<p class="ml-auto pb-2 text-xs text-zinc-500">
+			<p class="ml-auto pb-2 text-xs text-zinc-400">
 				{$t('common.total')}:
 				<span class="font-semibold text-zinc-300 tabular-nums">{formatGrams(totalRemaining)}</span>
 			</p>

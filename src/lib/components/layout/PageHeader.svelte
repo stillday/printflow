@@ -20,7 +20,7 @@
 		{/if}
 		<h1 class="truncate text-xl font-semibold tracking-tight text-zinc-50">{title}</h1>
 		{#if subtitle}
-			<p class="mt-1 text-sm text-zinc-500">{subtitle}</p>
+			<p class="mt-1 text-sm text-zinc-400">{subtitle}</p>
 		{/if}
 	</div>
 	{#if actions}

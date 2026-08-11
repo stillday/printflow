@@ -64,7 +64,7 @@
 
 <div class="px-8 pb-10">
 	{#if loading}
-		<p class="py-16 text-center text-sm text-zinc-600">{$t('common.loading')}</p>
+		<p class="py-16 text-center text-sm text-zinc-400">{$t('common.loading')}</p>
 	{:else if isFresh}
 		<div class="card">
 			<EmptyState icon={Sparkles} title={$t('dashboard.emptyTitle')} body={$t('dashboard.emptyBody')}>
@@ -164,14 +164,14 @@
 												: 0}
 											tone={ratio >= 1 ? 'emerald' : 'indigo'}
 										/>
-										<p class="mt-2 text-[11px] text-zinc-600">
+										<p class="mt-2 text-[11px] text-zinc-400">
 											{$t('projects.partsProgress', {
 												values: {
 													printed: project.printedTotal,
 													required: project.requiredTotal
 												}
 											})}
-											<span class="ml-2 text-zinc-500">{formatPercent(ratio)}</span>
+											<span class="ml-2 text-zinc-400">{formatPercent(ratio)}</span>
 										</p>
 									</div>
 								</a>
@@ -196,7 +196,7 @@
 
 				<div class="card p-4">
 					{#if lowSpools.length === 0}
-						<p class="py-6 text-center text-xs text-zinc-600">{$t('dashboard.lowStockEmpty')}</p>
+						<p class="py-6 text-center text-xs text-zinc-400">{$t('dashboard.lowStockEmpty')}</p>
 					{:else}
 						<ul class="grid gap-3">
 							{#each lowSpools as spool (spool.id)}
@@ -210,9 +210,9 @@
 									/>
 									<div class="min-w-0 flex-1">
 										<p class="truncate text-xs font-medium text-zinc-200">{spoolTitle(spool)}</p>
-										<p class="mt-0.5 text-[11px] text-zinc-500 tabular-nums">
+										<p class="mt-0.5 text-[11px] text-zinc-400 tabular-nums">
 											{formatGrams(spool.currentWeightNet)}
-											<span class="text-zinc-600"> · {formatPercent(ratio)}</span>
+											<span class="text-zinc-400"> · {formatPercent(ratio)}</span>
 										</p>
 									</div>
 								</li>
@@ -229,12 +229,12 @@
 							<Clock size={17} />
 						</div>
 						<div class="min-w-0">
-							<p class="text-xs font-medium tracking-wide text-zinc-500 uppercase">
+							<p class="text-xs font-medium tracking-wide text-zinc-400 uppercase">
 								{$t('dashboard.stats.printHours')}
 							</p>
 							<p class="mt-0.5 text-lg font-semibold text-zinc-50 tabular-nums">
 								{formatHours(stats.plannedSeconds)}
-								<span class="text-sm font-normal text-zinc-500">{$t('units.hoursShort')}</span>
+								<span class="text-sm font-normal text-zinc-400">{$t('units.hoursShort')}</span>
 							</p>
 						</div>
 					</div>

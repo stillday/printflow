@@ -14,8 +14,9 @@
 		onCancel: () => void;
 	}
 
+	// Plain prop, like in `Modal` — the caller closes via `onConfirm`/`onCancel`.
 	let {
-		open = $bindable(),
+		open,
 		title,
 		body,
 		confirmLabel,

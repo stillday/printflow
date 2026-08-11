@@ -96,7 +96,7 @@
 
 <div class="px-8 pb-10">
 	{#if loading}
-		<p class="py-16 text-center text-sm text-zinc-600">{$t('common.loading')}</p>
+		<p class="py-16 text-center text-sm text-zinc-400">{$t('common.loading')}</p>
 	{:else if entries.length === 0}
 		<div class="card">
 			<EmptyState icon={Layers} title={$t('catalog.empty')} body={$t('catalog.emptyBody')}>
@@ -146,7 +146,7 @@
 
 							<div class="min-w-0 flex-1">
 								<p class="truncate text-sm font-semibold text-zinc-100">{entry.name}</p>
-								<p class="truncate text-xs text-zinc-500">{entry.brand}</p>
+								<p class="truncate text-xs text-zinc-400">{entry.brand}</p>
 								<span
 									class="mt-2 inline-flex rounded-md border border-white/10 bg-white/5 px-2 py-0.5 text-[11px] font-medium text-zinc-300"
 								>
@@ -170,20 +170,20 @@
 
 						<dl class="relative mt-5 grid grid-cols-3 gap-3 border-t border-white/5 pt-4 text-xs">
 							<div>
-								<dt class="text-zinc-600">{$t('catalog.fields.density')}</dt>
+								<dt class="text-zinc-400">{$t('catalog.fields.density')}</dt>
 								<dd class="mt-0.5 text-zinc-300 tabular-nums">
 									{formatNumber(entry.density, 2)}
 									{$t('units.gramPerCubicCm')}
 								</dd>
 							</div>
 							<div>
-								<dt class="text-zinc-600">{$t('catalog.fields.spoolTareWeight')}</dt>
+								<dt class="text-zinc-400">{$t('catalog.fields.spoolTareWeight')}</dt>
 								<dd class="mt-0.5 text-zinc-300 tabular-nums">
 									{formatGrams(entry.spoolTareWeight)}
 								</dd>
 							</div>
 							<div>
-								<dt class="text-zinc-600">{$t('catalog.fields.nominalWeight')}</dt>
+								<dt class="text-zinc-400">{$t('catalog.fields.nominalWeight')}</dt>
 								<dd class="mt-0.5 text-zinc-300 tabular-nums">
 									{formatGrams(entry.nominalWeight)}
 								</dd>
@@ -191,14 +191,14 @@
 						</dl>
 
 						<div class="relative mt-4 flex items-center justify-between gap-3 text-xs">
-							<span class="text-zinc-500">
+							<span class="text-zinc-400">
 								{$t(spoolCountKey(entry.spoolCount), { values: { count: entry.spoolCount } })}
 								{#if entry.totalRemaining > 0}
-									<span class="text-zinc-600"> · {formatGrams(entry.totalRemaining)}</span>
+									<span class="text-zinc-400"> · {formatGrams(entry.totalRemaining)}</span>
 								{/if}
 							</span>
 							{#if entry.printingTempMin || entry.printingTempMax}
-								<span class="inline-flex items-center gap-1.5 text-zinc-500 tabular-nums">
+								<span class="inline-flex items-center gap-1.5 text-zinc-400 tabular-nums">
 									<Thermometer size={13} />
 									{entry.printingTempMin ?? '–'}–{entry.printingTempMax ?? '–'}
 									{$t('units.celsius')}

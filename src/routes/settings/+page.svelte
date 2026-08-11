@@ -136,7 +136,7 @@
 			</div>
 			<div class="min-w-0">
 				<h2 class="text-sm font-semibold text-zinc-100">{$t('settings.language')}</h2>
-				<p class="mt-0.5 text-xs text-zinc-500">{$t('settings.languageHint')}</p>
+				<p class="mt-0.5 text-xs text-zinc-400">{$t('settings.languageHint')}</p>
 			</div>
 		</div>
 
@@ -156,7 +156,7 @@
 				>
 					<span>
 						<span class="block font-medium">{$t(`languages.${code}`)}</span>
-						<span class="mt-0.5 block text-[11px] text-zinc-600 uppercase">{code}</span>
+						<span class="mt-0.5 block text-[11px] text-zinc-400 uppercase">{code}</span>
 					</span>
 					{#if selected}
 						<Check size={16} />
@@ -175,7 +175,7 @@
 			</div>
 			<div class="min-w-0">
 				<h2 class="text-sm font-semibold text-zinc-100">{$t('settings.database')}</h2>
-				<p class="mt-0.5 text-xs text-zinc-500">{$t('settings.databaseHint')}</p>
+				<p class="mt-0.5 text-xs text-zinc-400">{$t('settings.databaseHint')}</p>
 			</div>
 		</div>
 
@@ -184,7 +184,6 @@
 				<span class="label-base">{$t('settings.databasePath')}</span>
 				<p
 					class="rounded-xl border border-white/10 bg-zinc-950/60 px-3 py-2 font-mono text-xs break-all text-zinc-400"
-					data-selectable
 				>
 					{dbPath}
 				</p>
@@ -197,7 +196,7 @@
 				<dl class="grid grid-cols-2 gap-2 sm:grid-cols-3">
 					{#each summaryRows as row (row.key)}
 						<div class="rounded-xl border border-white/10 bg-zinc-950/40 px-3 py-2">
-							<dt class="text-[11px] text-zinc-600">{$t(row.key)}</dt>
+							<dt class="text-[11px] text-zinc-400">{$t(row.key)}</dt>
 							<dd class="mt-0.5 text-sm font-semibold text-zinc-100 tabular-nums">
 								{formatNumber(row.value)}
 							</dd>
@@ -210,7 +209,7 @@
 		<div class="mt-5 grid gap-3 sm:grid-cols-2">
 			<div class="rounded-xl border border-white/10 bg-zinc-950/40 p-4">
 				<p class="text-xs font-medium text-zinc-200">{$t('settings.export')}</p>
-				<p class="mt-1 mb-3 text-[11px] leading-relaxed text-zinc-600">
+				<p class="mt-1 mb-3 text-[11px] leading-relaxed text-zinc-400">
 					{$t('settings.exportHint')}
 				</p>
 				<Button variant="secondary" size="sm" onclick={exportBackup} disabled={busy}>
@@ -221,7 +220,7 @@
 
 			<div class="rounded-xl border border-white/10 bg-zinc-950/40 p-4">
 				<p class="text-xs font-medium text-zinc-200">{$t('settings.import')}</p>
-				<p class="mt-1 mb-3 text-[11px] leading-relaxed text-zinc-600">
+				<p class="mt-1 mb-3 text-[11px] leading-relaxed text-zinc-400">
 					{$t('settings.importHint')}
 				</p>
 				<Button variant="secondary" size="sm" onclick={chooseBackup} disabled={busy}>
@@ -241,13 +240,13 @@
 			</div>
 			<div class="min-w-0">
 				<h2 class="text-sm font-semibold text-zinc-100">{$t('settings.about')}</h2>
-				<p class="mt-0.5 text-xs text-zinc-500">
+				<p class="mt-0.5 text-xs text-zinc-400">
 					{$t('app.name')} · {$t('settings.version')}
 					{APP_VERSION}
 				</p>
 			</div>
 		</div>
-		<p class="mt-4 text-xs leading-relaxed text-zinc-500">{$t('settings.aboutBody')}</p>
+		<p class="mt-4 text-xs leading-relaxed text-zinc-400">{$t('settings.aboutBody')}</p>
 	</section>
 </div>
 

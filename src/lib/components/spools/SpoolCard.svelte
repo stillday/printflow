@@ -1,11 +1,11 @@
 <script lang="ts">
 	import { t } from 'svelte-i18n';
-	import { Archive, MapPin, Minus, Pencil, RotateCcw, Trash2 } from '@lucide/svelte';
+	import { Archive, MapPin, Minus, Pencil, RotateCcw, Tag, Trash2 } from '@lucide/svelte';
 	import IconButton from '$lib/components/ui/IconButton.svelte';
 	import ProgressRing from '$lib/components/ui/ProgressRing.svelte';
 	import StatusPill from '$lib/components/ui/StatusPill.svelte';
 	import type { SpoolWithCatalog } from '$lib/types/schema';
-	import { formatGrams, formatPercent } from '$lib/utils/format';
+	import { formatCurrency, formatGrams, formatPercent } from '$lib/utils/format';
 	import { fillRatio, spoolTone } from '$lib/utils/status';
 	import { rgbaFromHex } from '$lib/utils/color';
 
@@ -53,7 +53,7 @@
 			<div class="flex items-start justify-between gap-2">
 				<div class="min-w-0">
 					<p class="truncate text-sm font-semibold text-zinc-100">{spool.catalog.name}</p>
-					<p class="truncate text-xs text-zinc-500">{spool.catalog.brand}</p>
+					<p class="truncate text-xs text-zinc-400">{spool.catalog.brand}</p>
 				</div>
 				<StatusPill labelKey={statusKey} {tone} />
 			</div>
@@ -61,7 +61,7 @@
 			<p class="mt-3 text-lg font-semibold text-zinc-50 tabular-nums">
 				{formatGrams(spool.currentWeightNet)}
 			</p>
-			<p class="text-[11px] text-zinc-600">
+			<p class="text-[11px] text-zinc-400">
 				{$t('spools.remainingOf', {
 					values: {
 						current: Math.round(spool.currentWeightNet),
@@ -76,10 +76,19 @@
 				>
 					{spool.catalog.material}
 				</span>
-				<span class="inline-flex items-center gap-1 text-[11px] text-zinc-500">
+				<span class="inline-flex items-center gap-1 text-[11px] text-zinc-400">
 					<MapPin size={11} />
 					{spool.location || $t('spools.noLocation')}
 				</span>
+				{#if spool.cost > 0}
+					<span
+						class="inline-flex items-center gap-1 text-[11px] text-zinc-400"
+						title={$t('spools.cost')}
+					>
+						<Tag size={11} />
+						{formatCurrency(spool.cost)}
+					</span>
+				{/if}
 			</div>
 		</div>
 	</div>

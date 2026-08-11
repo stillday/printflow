@@ -1,4 +1,4 @@
-import { execute, select, selectOne } from './index';
+import { execute, select } from './index';
 import type { FilamentCatalog } from '$lib/types/schema';
 
 interface CatalogRow {
@@ -57,11 +57,6 @@ export async function listCatalog(): Promise<CatalogWithUsage[]> {
 	}));
 }
 
-export async function getCatalog(id: number): Promise<FilamentCatalog | null> {
-	const row = await selectOne<CatalogRow>('SELECT * FROM filament_catalog WHERE id = ?', [id]);
-	return row ? mapCatalog(row) : null;
-}
-
 export async function createCatalog(entry: FilamentCatalog): Promise<number> {
 	const result = await execute(
 		`INSERT INTO filament_catalog
@@ -107,12 +102,4 @@ export async function updateCatalog(entry: FilamentCatalog): Promise<void> {
 
 export async function deleteCatalog(id: number): Promise<void> {
 	await execute('DELETE FROM filament_catalog WHERE id = ?', [id]);
-}
-
-/** Distinct materials already in use — feeds the material filter. */
-export async function listMaterials(): Promise<string[]> {
-	const rows = await select<{ material: string }>(
-		'SELECT DISTINCT material FROM filament_catalog ORDER BY material COLLATE NOCASE'
-	);
-	return rows.map((r) => r.material);
 }

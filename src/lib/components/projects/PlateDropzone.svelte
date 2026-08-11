@@ -87,7 +87,7 @@
 			'flex h-12 w-12 items-center justify-center rounded-2xl border transition-colors',
 			dragging
 				? 'border-indigo-400/40 bg-indigo-500/20 text-indigo-200'
-				: 'border-white/10 bg-white/5 text-zinc-500'
+				: 'border-white/10 bg-white/5 text-zinc-400'
 		)}
 	>
 		{#if parsing}
@@ -108,8 +108,8 @@
 			{/if}
 		</p>
 		{#if !parsing && !dragging}
-			<p class="mt-1 text-xs text-zinc-500">{$t('plates.dropzone.subtitle')}</p>
-			<p class="mt-2 text-[11px] text-zinc-600">{$t('plates.dropzone.formats')}</p>
+			<p class="mt-1 text-xs text-zinc-400">{$t('plates.dropzone.subtitle')}</p>
+			<p class="mt-2 text-[11px] text-zinc-400">{$t('plates.dropzone.formats')}</p>
 		{/if}
 	</div>
 

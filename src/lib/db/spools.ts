@@ -1,4 +1,4 @@
-import { execute, now, nullable, select, selectOne } from './index';
+import { execute, now, nullable, select } from './index';
 import { mapCatalog } from './catalog';
 import type { Spool, SpoolStatus, SpoolWithCatalog } from '$lib/types/schema';
 
@@ -81,11 +81,6 @@ export async function listActiveSpools(): Promise<SpoolWithCatalog[]> {
 	return rows.map(mapSpool);
 }
 
-export async function getSpool(id: number): Promise<SpoolWithCatalog | null> {
-	const row = await selectOne<SpoolJoinRow>(`${JOIN_SELECT} WHERE s.id = ?`, [id]);
-	return row ? mapSpool(row) : null;
-}
-
 export async function createSpool(spool: Spool): Promise<number> {
 	const result = await execute(
 		`INSERT INTO spools
@@ -158,13 +153,4 @@ export function deductStatement(id: number, grams: number) {
 		      WHERE id = ?`,
 		params: [grams, grams, id]
 	};
-}
-
-export async function listLocations(): Promise<string[]> {
-	const rows = await select<{ location: string }>(
-		`SELECT DISTINCT location FROM spools
-		 WHERE location IS NOT NULL AND TRIM(location) <> ''
-		 ORDER BY location COLLATE NOCASE`
-	);
-	return rows.map((r) => r.location);
 }

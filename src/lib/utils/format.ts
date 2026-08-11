@@ -14,13 +14,6 @@ export function formatNumber(value: number, fractionDigits = 0): string {
 	}).format(value);
 }
 
-/** Grams below 1 kg, kilograms above — with one decimal where it helps. */
-export function formatWeight(grams: number): string {
-	if (!Number.isFinite(grams)) return '–';
-	if (Math.abs(grams) >= 1000) return `${formatNumber(grams / 1000, 2)} kg`;
-	return `${formatNumber(grams, grams % 1 === 0 ? 0 : 1)} g`;
-}
-
 export function formatGrams(grams: number): string {
 	return `${formatNumber(grams, grams % 1 === 0 ? 0 : 1)} g`;
 }

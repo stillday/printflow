@@ -124,12 +124,12 @@
 	{#if parts.length > 0}
 		<div class="card p-5">
 			<div class="flex flex-wrap items-baseline justify-between gap-3">
-				<span class="text-xs font-medium tracking-wide text-zinc-500 uppercase">
+				<span class="text-xs font-medium tracking-wide text-zinc-400 uppercase">
 					{$t('parts.totalProgress')}
 				</span>
 				<span class="text-sm font-semibold text-zinc-100 tabular-nums">
-					{totals.printed} <span class="text-zinc-600">/ {totals.required}</span>
-					<span class="ml-2 text-zinc-500">{formatPercent(ratio)}</span>
+					{totals.printed} <span class="text-zinc-400">/ {totals.required}</span>
+					<span class="ml-2 text-zinc-400">{formatPercent(ratio)}</span>
 				</span>
 			</div>
 			<ProgressBar
@@ -139,7 +139,7 @@
 				tone={ratio >= 1 ? 'emerald' : 'indigo'}
 			/>
 			{#if totals.failed > 0}
-				<p class="mt-2.5 text-[11px] text-zinc-600">
+				<p class="mt-2.5 text-[11px] text-zinc-400">
 					{$t('parts.failed')}: <span class="text-rose-400 tabular-nums">{totals.failed}</span>
 					<span class="ml-2">{$t('parts.failedRate')}: {formatPercent(failureRate)}</span>
 				</p>
@@ -161,7 +161,7 @@
 								'flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border text-[11px] font-semibold',
 								done
 									? 'border-emerald-500/20 bg-emerald-500/10 text-emerald-400'
-									: 'border-white/10 bg-white/5 text-zinc-500'
+									: 'border-white/10 bg-white/5 text-zinc-400'
 							)}
 							aria-hidden="true"
 						>
@@ -181,7 +181,7 @@
 						/>
 
 						<div class="flex shrink-0 items-center gap-1.5">
-							<span class="text-[10px] tracking-widest text-zinc-600 uppercase">
+							<span class="text-[10px] tracking-widest text-zinc-400 uppercase">
 								{$t('parts.printed')}
 							</span>
 							<IconButton
@@ -196,7 +196,7 @@
 								class="w-14 text-center text-sm font-semibold text-zinc-100 tabular-nums"
 								aria-live="polite"
 							>
-								{part.printedQuantity}<span class="text-zinc-600">/{part.requiredQuantity}</span>
+								{part.printedQuantity}<span class="text-zinc-400">/{part.requiredQuantity}</span>
 							</span>
 							<IconButton
 								label={$t('parts.increment')}
@@ -210,7 +210,7 @@
 						</div>
 
 						<div class="flex shrink-0 items-center gap-1.5">
-							<span class="text-[10px] tracking-widest text-zinc-600 uppercase">
+							<span class="text-[10px] tracking-widest text-zinc-400 uppercase">
 								{$t('parts.required')}
 							</span>
 							<input
@@ -225,7 +225,7 @@
 						</div>
 
 						<div class="flex shrink-0 items-center gap-1.5">
-							<span class="text-[10px] tracking-widest text-zinc-600 uppercase">
+							<span class="text-[10px] tracking-widest text-zinc-400 uppercase">
 								{$t('parts.failed')}
 							</span>
 							<IconButton
@@ -237,7 +237,7 @@
 							>
 								<Plus size={13} />
 							</IconButton>
-							<span class="w-6 text-center text-sm tabular-nums {part.failedQuantity > 0 ? 'text-rose-400' : 'text-zinc-600'}">
+							<span class="w-6 text-center text-sm tabular-nums {part.failedQuantity > 0 ? 'text-rose-400' : 'text-zinc-400'}">
 								{part.failedQuantity}
 							</span>
 						</div>

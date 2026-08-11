@@ -14,8 +14,9 @@
 		footer?: Snippet;
 	}
 
-	let { open = $bindable(), title, subtitle, size = 'md', onClose, children, footer }: Props =
-		$props();
+	// `open` is deliberately a plain prop, not `$bindable()`: closing always goes
+	// through `onClose` so the owner can reset its own state in one place.
+	let { open, title, subtitle, size = 'md', onClose, children, footer }: Props = $props();
 
 	const widths = {
 		sm: 'max-w-md',
@@ -105,12 +106,12 @@
 				<div class="min-w-0 flex-1">
 					<h2 class="truncate text-base font-semibold text-zinc-100">{title}</h2>
 					{#if subtitle}
-						<p class="mt-0.5 text-sm text-zinc-500">{subtitle}</p>
+						<p class="mt-0.5 text-sm text-zinc-400">{subtitle}</p>
 					{/if}
 				</div>
 				<button
 					type="button"
-					class="-mt-1 -mr-2 inline-flex h-8 w-8 items-center justify-center rounded-lg text-zinc-500 transition-colors hover:bg-white/10 hover:text-zinc-200"
+					class="-mt-1 -mr-2 inline-flex h-8 w-8 items-center justify-center rounded-lg text-zinc-400 transition-colors hover:bg-white/10 hover:text-zinc-200"
 					aria-label={$t('common.close')}
 					onclick={onClose}
 				>

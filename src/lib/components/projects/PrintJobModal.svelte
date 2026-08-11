@@ -160,14 +160,14 @@
 		<div class="grid gap-6">
 			<section>
 				<h3 class="text-xs font-semibold text-zinc-200">{$t('job.assignSpools')}</h3>
-				<p class="mt-1 text-[11px] leading-relaxed text-zinc-600">{$t('job.assignSpoolsHint')}</p>
+				<p class="mt-1 text-[11px] leading-relaxed text-zinc-400">{$t('job.assignSpoolsHint')}</p>
 
 				{#if activeSpools.length === 0}
 					<p class="mt-3 rounded-xl border border-amber-500/20 bg-amber-500/10 px-4 py-3 text-xs text-amber-200">
 						{$t('job.noSpoolsAvailable')}
 					</p>
 				{:else if slots.length === 0}
-					<p class="mt-3 text-xs text-zinc-600">{$t('plates.noFilamentData')}</p>
+					<p class="mt-3 text-xs text-zinc-400">{$t('plates.noFilamentData')}</p>
 				{:else}
 					<ul class="mt-3 grid gap-2">
 						{#each slots as slot, index (slot.requirement.slotIndex)}
@@ -194,13 +194,13 @@
 
 								<dl class="mt-3 grid grid-cols-3 gap-2 text-[11px]">
 									<div>
-										<dt class="text-zinc-600">{$t('job.needs')}</dt>
+										<dt class="text-zinc-400">{$t('job.needs')}</dt>
 										<dd class="mt-0.5 text-zinc-300 tabular-nums">
 											{formatGrams(slot.requirement.weightGrams)}
 										</dd>
 									</div>
 									<div>
-										<dt class="text-zinc-600">{$t('job.available')}</dt>
+										<dt class="text-zinc-400">{$t('job.available')}</dt>
 										<dd
 											class={cn(
 												'mt-0.5 tabular-nums',
@@ -211,7 +211,7 @@
 										</dd>
 									</div>
 									<div>
-										<dt class="text-zinc-600">{$t('job.afterPrint')}</dt>
+										<dt class="text-zinc-400">{$t('job.afterPrint')}</dt>
 										<dd class="mt-0.5 text-zinc-300 tabular-nums">
 											{slot.spool && status !== 'cancelled' ? formatGrams(slot.after) : '–'}
 										</dd>
@@ -262,7 +262,7 @@
 								<outcome.icon size={14} />
 								{$t(outcome.labelKey)}
 							</span>
-							<span class="mt-1 block text-[11px] leading-snug text-zinc-600">
+							<span class="mt-1 block text-[11px] leading-snug text-zinc-400">
 								{$t(outcome.hintKey)}
 							</span>
 						</button>
@@ -297,7 +297,7 @@
 
 			{#if status !== 'cancelled' && affectedParts.length > 0}
 				<section class="rounded-xl border border-white/10 bg-zinc-950/40 p-4">
-					<p class="text-[10px] font-semibold tracking-widest text-zinc-600 uppercase">
+					<p class="text-[10px] font-semibold tracking-widest text-zinc-400 uppercase">
 						{$t('job.partsCounted')}
 					</p>
 					<ul class="mt-2 flex flex-wrap gap-1.5">
@@ -318,7 +318,7 @@
 				</section>
 			{/if}
 
-			<p class="text-[11px] text-zinc-600">
+			<p class="text-[11px] text-zinc-400">
 				{$t('plates.estimatedTime')}: {formatDuration(plate.estimatedTimeSeconds, durationLabels)}
 			</p>
 		</div>

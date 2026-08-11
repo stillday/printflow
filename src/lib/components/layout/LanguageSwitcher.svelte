@@ -44,7 +44,7 @@
 		aria-label={$t('settings.language')}
 		onclick={() => (open = !open)}
 	>
-		<Globe size={15} class="text-zinc-500" />
+		<Globe size={15} class="text-zinc-400" />
 		<span class="uppercase">{current}</span>
 	</button>
 

@@ -77,11 +77,11 @@
 	{#if spool}
 		<div class="grid gap-5">
 			<div class="flex items-center justify-between rounded-xl border border-white/10 bg-zinc-950/50 px-4 py-3">
-				<span class="text-xs tracking-wide text-zinc-500 uppercase">{$t('spools.remaining')}</span>
+				<span class="text-xs tracking-wide text-zinc-400 uppercase">{$t('spools.remaining')}</span>
 				<span class="text-sm font-semibold text-zinc-100 tabular-nums">
 					{formatGrams(spool.currentWeightNet)}
 					{#if valid}
-						<span class="text-zinc-600"> → </span>
+						<span class="text-zinc-400"> → </span>
 						<span class={remaining <= 0 ? 'text-rose-400' : 'text-emerald-400'}>
 							{formatGrams(remaining)}
 						</span>

@@ -1,9 +1,5 @@
 const HEX_PATTERN = /^#([0-9a-f]{3}|[0-9a-f]{6}|[0-9a-f]{8})$/i;
 
-export function isValidHex(value: string): boolean {
-	return HEX_PATTERN.test(value.trim());
-}
-
 /** Expands `#abc` to `#aabbcc` and drops an alpha channel; returns null if unparseable. */
 export function normalizeHex(value: string | null | undefined): string | null {
 	if (!value) return null;
@@ -26,21 +22,6 @@ export function hexToRgb(hex: string): { r: number; g: number; b: number } {
 export function rgbaFromHex(hex: string, alpha: number): string {
 	const { r, g, b } = hexToRgb(hex);
 	return `rgba(${r}, ${g}, ${b}, ${alpha})`;
-}
-
-/** Relative luminance per WCAG, used to pick readable text on a filament swatch. */
-export function luminance(hex: string): number {
-	const { r, g, b } = hexToRgb(hex);
-	const channel = (value: number) => {
-		const c = value / 255;
-		return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
-	};
-	return 0.2126 * channel(r) + 0.7152 * channel(g) + 0.0722 * channel(b);
-}
-
-/** Near-black or near-white foreground, whichever contrasts better. */
-export function readableTextColor(hex: string): string {
-	return luminance(hex) > 0.42 ? '#18181b' : '#fafafa';
 }
 
 /** Deterministic accent for filaments with no colour set. */
