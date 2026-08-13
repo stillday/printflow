@@ -1,10 +1,11 @@
 # PrintFlow
 
 A native, fully offline desktop app for 3D printing makers: filament spool
-inventory, multi-part assembly (BOM) planning, and `.3mf` / G-code metadata
-parsing with automatic stock deduction.
+inventory, multi-part assembly (BOM) planning, print scheduling, and `.3mf` /
+G-code metadata parsing with automatic stock deduction.
 
-Available in **German**, **English** and **Dutch**.
+Available in **German**, **English** and **Dutch**, in a dark and a light
+theme.
 
 ---
 
@@ -16,8 +17,9 @@ Available in **German**, **English** and **Dutch**.
 | **Spool inventory** (`/spools`) | Per-spool net weight with fill rings, storage locations, barcodes, cost, and a tare calculator (`net = scale − tare`). Filter by status, material and location. |
 | **Project BOM** (`/projects`) | Multi-part assemblies with required / printed / failed counters, inline `+`/`−` adjustment and overall progress. |
 | **Plate import** (`/projects/[id]`) | Drag & drop a `.3mf` or `.gcode` file: print time, layer count and per-slot filament usage are read out, and the objects on the plate are mapped to (or turned into) BOM parts. |
+| **Print plan** (`/plan`) | A weekly agenda of what gets printed when: per-day print time with a warning above 24 h, the week's filament need per material, and a separate section for overdue entries. Logging a print from here closes its plan entry. |
 | **Print logging** | Assign a spool per AMS/MMU slot, see needed vs. available vs. remaining, then log the print as successful, failed or cancelled. Stock and part counters update in one atomic transaction. |
-| **Settings** (`/settings`) | Language switch, database location, and backup export / import. |
+| **Settings** (`/settings`) | Appearance (dark / light / system), language switch, database location, and backup export / import. |
 
 ---
 
@@ -65,7 +67,7 @@ cd src-tauri && cargo test    # Rust side: link and backup-path validation
 ```
 src/
   lib/
-    bootstrap.ts            startup: i18n -> database -> stored locale
+    bootstrap.ts            startup: i18n -> database -> stored theme + locale
     db/                     one module per entity, snake_case <-> camelCase mapping
       index.ts              connection, transaction() helper
       catalog.ts spools.ts projects.ts parts.ts plates.ts jobs.ts
@@ -74,16 +76,19 @@ src/
       index.ts              locale detection + setup
       locales/              de.json · en.json · nl.json
     types/schema.ts         domain types mirroring the SQL schema
+    theme.ts                dark/light preference, applied to <html>
     utils/
       threemf.ts            .3mf / G-code metadata parser
+      plan.ts               calendar maths for the print plan
       format.ts color.ts status.ts validate.ts cn.ts
     components/
       ui/ layout/ catalog/ spools/ projects/
-  routes/                   /, /spools, /catalog, /projects, /projects/[id], /settings
+  routes/                   /, /spools, /catalog, /projects, /projects/[id],
+                            /plan, /settings
 
 src-tauri/
   src/lib.rs                plugins, backup commands, transaction command
-  migrations/001_initial.sql
+  migrations/001_initial.sql 002_print_plan.sql
   tauri.conf.json           window, CSP and bundle configuration
   capabilities/default.json permissions granted to the main window
 ```
@@ -104,7 +109,7 @@ migration — `tauri-plugin-sql` tracks them by version and checksum.
 
 ---
 
-## Notes on two design decisions
+## Notes on a few design decisions
 
 **Transactions run in Rust.** `tauri-plugin-sql` hands out *pooled* connections,
 so `BEGIN` / `COMMIT` issued as separate `execute()` calls from the frontend can
@@ -121,6 +126,15 @@ accepts `http`/`https` only and hands the URL to the OS browser; the
 `navigation-guard` plugin cancels any navigation that is not the app's own
 origin. A `sourceUrl` is re-validated when it is rendered, not just when it is
 entered — a restored backup has never passed the input check.
+
+**Theming runs through CSS variables, not `dark:` variants.** The UI is written
+entirely in Tailwind's zinc ramp plus a few accent shades, and Tailwind v4
+compiles each of those to a `var(--color-…)` reference. The light theme therefore
+redefines those variables under `:root[data-theme='light']` in `app.css`, which
+re-themes all ~350 colour utilities at once. The zinc ramp is inverted,
+`--color-white` flips to near-black so the `border-white/10` hairlines stay
+visible, and `--color-on-accent` stays white in both themes so a primary button's
+label does not invert with it.
 
 **Drag & drop is handled by the WebView.** `dragDropEnabled: false` in the window
 config turns off Tauri's native file-drop interception, so HTML5 drag & drop
@@ -149,8 +163,8 @@ the app.
 ## Releasing
 
 Push a tag and the `Release` workflow builds `.msi` + `.exe` (Windows), `.dmg`
-(macOS Intel and Apple silicon) and `.AppImage` + `.deb` (Linux), then attaches
-them to a **draft** GitHub release:
+(macOS Intel and Apple silicon) and `.AppImage` + `.deb` (Linux) and publishes
+them as a GitHub release:
 
 ```bash
 git tag v0.1.0
