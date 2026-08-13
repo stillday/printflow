@@ -39,7 +39,7 @@ channel, so the app cannot phone home even by accident.
 
 ## Getting started
 
-Requirements: Node 20+, Rust 1.77+, and the
+Requirements: Node 22+, Rust 1.77+, and the
 [Tauri system dependencies](https://tauri.app/start/prerequisites/) for your OS.
 
 ```bash

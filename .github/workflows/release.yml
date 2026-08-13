@@ -51,7 +51,9 @@ jobs:
       - name: Set up Node
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          # 20 is too old for the undici that jsdom pulls in: vitest dies with
+          # `webidl.util.markAsUncloneable is not a function`.
+          node-version: 22
           cache: npm
 
       - name: Set up Rust

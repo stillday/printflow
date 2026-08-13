@@ -116,6 +116,199 @@ fn sidecar(path: &Path, suffix: &str) -> PathBuf {
     PathBuf::from(format!("{}{}", path.to_string_lossy(), suffix))
 }
 
+/// Extensions the slicer-file scanner reports.
+const SLICER_EXTENSIONS: [&str; 3] = ["3mf", "gcode", "gco"];
+
+/// Ceiling on a single slicer file handed to the frontend (400 MB), matching
+/// `MAX_FILE_BYTES` in `utils/threemf.ts`.
+const MAX_SLICER_FILE_BYTES: u64 = 400 * 1024 * 1024;
+
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ScannedFile {
+    /// Absolute path, the identity of the file everywhere else.
+    path: String,
+    file_name: String,
+    /// Directory containing the file, relative to the scanned root. Empty for
+    /// files sitting directly in the root.
+    folder: String,
+    size_bytes: u64,
+    /// Unix seconds; `None` when the platform does not report it.
+    modified_at: Option<i64>,
+}
+
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ScanResult {
+    root: String,
+    files: Vec<ScannedFile>,
+    /// True when the limit was hit, so the UI can say the list is incomplete
+    /// rather than implying the drive holds nothing else.
+    truncated: bool,
+}
+
+/// Recursively finds slicer files below `root`.
+///
+/// A model library can hold tens of thousands of files across deep folder
+/// trees, so the walk is bounded on three axes: `max_depth`, `limit`, and
+/// skipping directories that never contain user models. Hidden directories and
+/// symlinks are skipped too — the latter because a link pointing at an ancestor
+/// would otherwise send the walk in circles.
+#[tauri::command]
+async fn scan_slicer_files(
+    root: String,
+    max_depth: Option<u32>,
+    limit: Option<usize>,
+) -> Result<ScanResult, String> {
+    let root_path = PathBuf::from(&root);
+    if !root_path.is_absolute() {
+        return Err("scan path must be absolute".into());
+    }
+    if !root_path.is_dir() {
+        return Err("scan path is not a folder".into());
+    }
+
+    let max_depth = max_depth.unwrap_or(8);
+    let limit = limit.unwrap_or(5_000);
+    let mut files = Vec::new();
+    let mut truncated = false;
+
+    // Iterative walk with an explicit stack: a deep library must not be able to
+    // blow the call stack.
+    let mut stack = vec![(root_path.clone(), 0u32)];
+    while let Some((dir, depth)) = stack.pop() {
+        let entries = match fs::read_dir(&dir) {
+            Ok(entries) => entries,
+            // An unreadable folder is normal (permissions, vanished mount) and
+            // must not abort a scan that is otherwise working.
+            Err(_) => continue,
+        };
+
+        for entry in entries.flatten() {
+            if files.len() >= limit {
+                truncated = true;
+                break;
+            }
+
+            let path = entry.path();
+            let name = entry.file_name().to_string_lossy().into_owned();
+            if name.starts_with('.') {
+                continue;
+            }
+
+            let file_type = match entry.file_type() {
+                Ok(file_type) => file_type,
+                Err(_) => continue,
+            };
+            if file_type.is_symlink() {
+                continue;
+            }
+
+            if file_type.is_dir() {
+                if depth < max_depth && !is_noise_dir(&name) {
+                    stack.push((path, depth + 1));
+                }
+                continue;
+            }
+
+            if !has_slicer_extension(&path) {
+                continue;
+            }
+
+            let metadata = match entry.metadata() {
+                Ok(metadata) => metadata,
+                Err(_) => continue,
+            };
+            files.push(ScannedFile {
+                folder: relative_folder(&root_path, &path),
+                path: path.to_string_lossy().into_owned(),
+                file_name: name,
+                size_bytes: metadata.len(),
+                modified_at: modified_unix_seconds(&metadata),
+            });
+        }
+
+        if truncated {
+            break;
+        }
+    }
+
+    // Folder first, then name: the order the UI groups by, decided once here so
+    // it is stable no matter how the filesystem returned the entries.
+    files.sort_by(|a, b| {
+        a.folder
+            .to_lowercase()
+            .cmp(&b.folder.to_lowercase())
+            .then_with(|| a.file_name.to_lowercase().cmp(&b.file_name.to_lowercase()))
+    });
+
+    Ok(ScanResult {
+        root: root_path.to_string_lossy().into_owned(),
+        files,
+        truncated,
+    })
+}
+
+fn has_slicer_extension(path: &Path) -> bool {
+    path.extension()
+        .and_then(|ext| ext.to_str())
+        .map(|ext| SLICER_EXTENSIONS.contains(&ext.to_ascii_lowercase().as_str()))
+        .unwrap_or(false)
+}
+
+/// Directories that only ever hold build output or dependencies. Descending
+/// into them wastes most of the scan budget on a developer's machine.
+fn is_noise_dir(name: &str) -> bool {
+    matches!(
+        name,
+        "node_modules" | "target" | "__pycache__" | "venv" | ".venv" | "$RECYCLE.BIN"
+    )
+}
+
+fn relative_folder(root: &Path, file: &Path) -> String {
+    file.parent()
+        .and_then(|parent| parent.strip_prefix(root).ok())
+        .map(|rel| rel.to_string_lossy().into_owned())
+        .unwrap_or_default()
+}
+
+fn modified_unix_seconds(metadata: &fs::Metadata) -> Option<i64> {
+    metadata
+        .modified()
+        .ok()?
+        .duration_since(std::time::UNIX_EPOCH)
+        .ok()
+        .map(|d| d.as_secs() as i64)
+}
+
+/// Reads a slicer file so the frontend parser can work on it.
+///
+/// The frontend never gets a general-purpose file reader: only the extensions
+/// the importer understands are accepted, and only up to the same size ceiling
+/// the parser enforces, so a mistyped path cannot pull a multi-gigabyte file
+/// into the WebView.
+#[tauri::command]
+async fn read_slicer_file(path: String) -> Result<Vec<u8>, String> {
+    let file = PathBuf::from(&path);
+    if !file.is_absolute() {
+        return Err("file path must be absolute".into());
+    }
+    if !has_slicer_extension(&file) {
+        return Err("not a slicer file".into());
+    }
+    let metadata = fs::metadata(&file).map_err(|e| format!("cannot read file: {e}"))?;
+    if !metadata.is_file() {
+        return Err("not a file".into());
+    }
+    if metadata.len() > MAX_SLICER_FILE_BYTES {
+        return Err(format!(
+            "file is larger than {} MB",
+            MAX_SLICER_FILE_BYTES / (1024 * 1024)
+        ));
+    }
+    fs::read(&file).map_err(|e| format!("cannot read file: {e}"))
+}
+
 /// Parses `url` and accepts it only if it is a plain web address.
 ///
 /// Only `http` and `https` pass — `file:`, `javascript:` and custom schemes are
@@ -297,6 +490,8 @@ pub fn run() {
             export_database,
             import_database,
             open_external,
+            scan_slicer_files,
+            read_slicer_file,
             db_transaction
         ])
         .run(tauri::generate_context!())
@@ -328,6 +523,116 @@ mod tests {
         ] {
             assert!(web_url(url).is_err(), "should have refused `{url}`");
         }
+    }
+
+    #[test]
+    fn recognises_only_slicer_extensions() {
+        for name in ["a.3mf", "a.3MF", "a.gcode", "a.GCode", "a.gco"] {
+            assert!(has_slicer_extension(Path::new(name)), "{name}");
+        }
+        for name in ["a.stl", "a.step", "a.png", "a.3mf.bak", "a", "a."] {
+            assert!(!has_slicer_extension(Path::new(name)), "{name}");
+        }
+    }
+
+    #[test]
+    fn folder_is_relative_to_the_scanned_root() {
+        let root = Path::new("/home/u/models");
+        assert_eq!(relative_folder(root, Path::new("/home/u/models/a.3mf")), "");
+        assert_eq!(
+            relative_folder(root, Path::new("/home/u/models/Table/Legs/a.3mf")),
+            "Table/Legs"
+        );
+    }
+
+    /// Builds a small library on disk and checks what the walk reports: nested
+    /// files are found, non-slicer files and hidden or noise folders are not.
+    #[test]
+    fn scan_walks_nested_folders_and_skips_noise() {
+        let root = std::env::temp_dir().join(format!("printflow-scan-{}", std::process::id()));
+        let _ = fs::remove_dir_all(&root);
+        for dir in ["Table/Legs", "Kiste", ".hidden", "node_modules/pkg"] {
+            fs::create_dir_all(root.join(dir)).unwrap();
+        }
+        for file in [
+            "top.3mf",
+            "notes.txt",
+            "Table/plate.gcode",
+            "Table/Legs/leg.3mf",
+            "Kiste/box.gco",
+            "Kiste/model.stl",
+            ".hidden/secret.3mf",
+            "node_modules/pkg/vendor.3mf",
+        ] {
+            fs::write(root.join(file), b"x").unwrap();
+        }
+
+        let result = tauri::async_runtime::block_on(scan_slicer_files(
+            root.to_string_lossy().into_owned(),
+            None,
+            None,
+        ))
+        .unwrap();
+
+        // Sorted by folder, then by name — root first, then folders in order.
+        let names: Vec<&str> = result.files.iter().map(|f| f.file_name.as_str()).collect();
+        assert_eq!(names, vec!["top.3mf", "box.gco", "plate.gcode", "leg.3mf"]);
+        // Folders come back relative, so the UI can group without string surgery.
+        let folders: Vec<&str> = result.files.iter().map(|f| f.folder.as_str()).collect();
+        assert_eq!(folders, vec!["", "Kiste", "Table", "Table/Legs"]);
+        assert!(!result.truncated);
+
+        let _ = fs::remove_dir_all(&root);
+    }
+
+    #[test]
+    fn scan_respects_depth_and_limit() {
+        let root = std::env::temp_dir().join(format!("printflow-depth-{}", std::process::id()));
+        let _ = fs::remove_dir_all(&root);
+        fs::create_dir_all(root.join("a/b/c")).unwrap();
+        fs::write(root.join("a/one.3mf"), b"x").unwrap();
+        fs::write(root.join("a/b/two.3mf"), b"x").unwrap();
+        fs::write(root.join("a/b/c/three.3mf"), b"x").unwrap();
+
+        let shallow = tauri::async_runtime::block_on(scan_slicer_files(
+            root.to_string_lossy().into_owned(),
+            Some(1),
+            None,
+        ))
+        .unwrap();
+        assert_eq!(shallow.files.len(), 1, "depth 1 reaches a/ only");
+
+        let capped = tauri::async_runtime::block_on(scan_slicer_files(
+            root.to_string_lossy().into_owned(),
+            None,
+            Some(2),
+        ))
+        .unwrap();
+        assert_eq!(capped.files.len(), 2);
+        assert!(capped.truncated, "a capped scan must say so");
+
+        let _ = fs::remove_dir_all(&root);
+    }
+
+    #[test]
+    fn read_slicer_file_refuses_anything_else() {
+        let dir = std::env::temp_dir().join(format!("printflow-read-{}", std::process::id()));
+        let _ = fs::remove_dir_all(&dir);
+        fs::create_dir_all(&dir).unwrap();
+        let allowed = dir.join("model.3mf");
+        let refused = dir.join("notes.txt");
+        fs::write(&allowed, b"hello").unwrap();
+        fs::write(&refused, b"hello").unwrap();
+
+        let read = |p: &Path| {
+            tauri::async_runtime::block_on(read_slicer_file(p.to_string_lossy().into_owned()))
+        };
+        assert_eq!(read(&allowed).unwrap(), b"hello");
+        assert!(read(&refused).is_err(), "wrong extension");
+        assert!(read(&dir).is_err(), "a folder is not a file");
+        assert!(read(Path::new("relative.3mf")).is_err(), "relative path");
+
+        let _ = fs::remove_dir_all(&dir);
     }
 
     #[test]
