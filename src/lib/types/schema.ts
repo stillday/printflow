@@ -1,12 +1,13 @@
 /**
  * Domain types. These mirror the SQLite schema in
- * `src-tauri/migrations/001_initial.sql`; the repositories in `$lib/db` do the
+ * `src-tauri/migrations/`; the repositories in `$lib/db` do the
  * snake_case <-> camelCase mapping so nothing else has to care about SQL.
  */
 
 export type SpoolStatus = 'active' | 'empty' | 'archived';
 export type ProjectStatus = 'planning' | 'in_progress' | 'completed' | 'archived';
 export type JobStatus = 'success' | 'failed' | 'cancelled';
+export type PlanStatus = 'planned' | 'done' | 'skipped';
 
 export const SPOOL_STATUSES: SpoolStatus[] = ['active', 'empty', 'archived'];
 export const PROJECT_STATUSES: ProjectStatus[] = [
@@ -159,4 +160,32 @@ export interface PrintJob {
 export interface PrintJobDecoded extends PrintJob {
 	spoolsUsed: SpoolAssignment[];
 	plateName: string;
+}
+
+/**
+ * One planned print of one plate on one day.
+ *
+ * `plannedDate` is a local calendar date (`YYYY-MM-DD`), not a timestamp — a
+ * plan is "Tuesday", so it must not shift with the timezone.
+ */
+export interface PlanEntry {
+	id?: number;
+	plateId: number;
+	plannedDate: string;
+	/** Order within the day. */
+	position: number;
+	status: PlanStatus;
+	note?: string | null;
+	/** Set once the entry was closed by logging a real print. */
+	jobId?: number | null;
+	createdAt?: string;
+}
+
+/** A plan entry with the plate and project data needed to render a row. */
+export interface PlanEntryDecoded extends PlanEntry {
+	plateName: string;
+	projectId: number;
+	projectTitle: string;
+	estimatedTimeSeconds: number;
+	filamentRequirements: FilamentRequirement[];
 }

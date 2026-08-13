@@ -10,6 +10,7 @@
 		"spools": "Spulen",
 		"catalog": "Filament-Katalog",
 		"projects": "Projekte",
+		"plan": "Druckplan",
 		"settings": "Einstellungen",
 		"section": {
 			"main": "Werkstatt",
@@ -349,6 +350,45 @@
 		"spoolDeducted": "{amount} g von „{name}“ abgebucht",
 		"exported": "Sicherung gespeichert",
 		"imported": "Sicherung importiert",
-		"languageChanged": "Sprache geändert"
+		"languageChanged": "Sprache geändert",
+		"scheduled": "Eingeplant",
+		"moved": "Verschoben"
+	},
+	"plan": {
+		"title": "Druckplan",
+		"subtitle": "Plane, wann welche Platte gedruckt wird",
+		"thisWeek": "Diese Woche",
+		"previousWeek": "Woche zurück",
+		"nextWeek": "Woche vor",
+		"weekOf": "{from} – {to}",
+		"plannedTime": "geplante Druckzeit",
+		"empty": "Diese Woche ist nichts geplant",
+		"emptyBody": "Öffne ein Projekt und plane eine Platte ein, dann erscheint sie hier.",
+		"dayEmpty": "Nichts geplant",
+		"overdue": "{count} überfällig",
+		"overdueHint": "Diese Drucke liegen in der Vergangenheit und sind noch offen.",
+		"moveToToday": "Auf heute",
+		"overloadedHint": "Mehr als 24 Stunden Druckzeit an einem Tag",
+		"schedule": "Einplanen",
+		"scheduleTitle": "Platte einplanen",
+		"date": "Datum",
+		"note": "Notiz",
+		"notePlaceholder": "z. B. Nachtdruck, andere Düse",
+		"today": "Heute",
+		"tomorrow": "Morgen",
+		"inAWeek": "In einer Woche",
+		"logPrint": "Protokollieren",
+		"reopen": "Wieder einplanen",
+		"moveUp": "Nach oben",
+		"moveDown": "Nach unten",
+		"dayEarlier": "Einen Tag früher",
+		"dayLater": "Einen Tag später",
+		"nextPrint": "Nächster geplanter Druck",
+		"deleteConfirm": "Diesen Planeintrag entfernen?",
+		"deleteBody": "Die Platte selbst bleibt erhalten, nur die Planung wird gelöscht.",
+		"status": {
+			"done": "Gedruckt",
+			"skipped": "Übersprungen"
+		}
 	}
 }

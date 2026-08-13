@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { t } from 'svelte-i18n';
-	import { Clock, Layers3, Play, Puzzle, Trash2 } from '@lucide/svelte';
+	import { CalendarPlus, Clock, Layers3, Play, Puzzle, Trash2 } from '@lucide/svelte';
 	import Button from '$lib/components/ui/Button.svelte';
 	import IconButton from '$lib/components/ui/IconButton.svelte';
 	import ColorSwatch from '$lib/components/ui/ColorSwatch.svelte';
@@ -12,11 +12,12 @@
 		plate: PrintPlateDecoded;
 		parts: Part[];
 		onAssign: (plate: PrintPlateDecoded) => void;
+		onSchedule: (plate: PrintPlateDecoded) => void;
 		onPrint: (plate: PrintPlateDecoded) => void;
 		onDelete: (plate: PrintPlateDecoded) => void;
 	}
 
-	let { plate, parts, onAssign, onPrint, onDelete }: Props = $props();
+	let { plate, parts, onAssign, onSchedule, onPrint, onDelete }: Props = $props();
 
 	const durationLabels = $derived({
 		day: $t('units.daysShort'),
@@ -109,6 +110,10 @@
 		<Button variant="secondary" size="sm" onclick={() => onAssign(plate)}>
 			<Puzzle size={14} />
 			{$t('plates.assignParts')}
+		</Button>
+		<Button variant="secondary" size="sm" onclick={() => onSchedule(plate)}>
+			<CalendarPlus size={14} />
+			{$t('plan.schedule')}
 		</Button>
 		<Button variant="primary" size="sm" class="ml-auto" onclick={() => onPrint(plate)}>
 			<Play size={14} />

@@ -1,8 +1,9 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { t } from 'svelte-i18n';
+	import { locale, t } from 'svelte-i18n';
 	import {
 		Boxes,
+		CalendarDays,
 		Clock,
 		FolderKanban,
 		Layers,
@@ -19,24 +20,34 @@
 	import StatusPill from '$lib/components/ui/StatusPill.svelte';
 	import EmptyState from '$lib/components/ui/EmptyState.svelte';
 	import { getDashboardStats, type DashboardStats } from '$lib/db/settings';
+	import { nextPlanned } from '$lib/db/plan';
 	import { listRecentProjects } from '$lib/db/projects';
 	import { listSpools } from '$lib/db/spools';
 	import { toasts } from '$lib/stores/toast.svelte';
-	import type { ProjectWithProgress, SpoolWithCatalog } from '$lib/types/schema';
-	import { formatGrams, formatHours, formatNumber, formatPercent } from '$lib/utils/format';
+	import type { PlanEntryDecoded, ProjectWithProgress, SpoolWithCatalog } from '$lib/types/schema';
+	import { formatDuration, formatGrams, formatHours, formatNumber, formatPercent } from '$lib/utils/format';
+	import { formatPlanDate, todayPlanDate } from '$lib/utils/plan';
 	import { fillRatio, isLowStock, projectTone, spoolTitle } from '$lib/utils/status';
 
 	let stats = $state<DashboardStats | null>(null);
 	let projects = $state<ProjectWithProgress[]>([]);
 	let spools = $state<SpoolWithCatalog[]>([]);
+	let upcoming = $state<PlanEntryDecoded | null>(null);
 	let loading = $state(true);
+
+	const durationLabels = $derived({
+		day: $t('units.daysShort'),
+		hour: $t('units.hoursShort'),
+		minute: $t('units.minutesShort')
+	});
 
 	async function load() {
 		try {
-			[stats, projects, spools] = await Promise.all([
+			[stats, projects, spools, upcoming] = await Promise.all([
 				getDashboardStats(),
 				listRecentProjects(4),
-				listSpools()
+				listSpools(),
+				nextPlanned(todayPlanDate())
 			]);
 		} catch {
 			toasts.error('errors.loadFailed');
@@ -110,6 +121,34 @@
 				tone={stats.partsToPrint > 0 ? 'amber' : 'emerald'}
 			/>
 		</div>
+
+		{#if upcoming}
+			<a
+				href="/plan"
+				class="card mt-4 flex flex-wrap items-center gap-4 px-5 py-4 transition-colors duration-200 hover:border-indigo-500/40"
+			>
+				<div
+					class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-indigo-500/20 bg-indigo-500/10 text-indigo-300"
+				>
+					<CalendarDays size={18} />
+				</div>
+				<div class="min-w-0 flex-1">
+					<p class="text-[10px] font-semibold tracking-widest text-zinc-400 uppercase">
+						{$t('plan.nextPrint')}
+					</p>
+					<p class="mt-0.5 truncate text-sm font-medium text-zinc-100">{upcoming.plateName}</p>
+					<p class="truncate text-[11px] text-zinc-400">{upcoming.projectTitle}</p>
+				</div>
+				<div class="text-right">
+					<p class="text-sm font-semibold text-indigo-200 tabular-nums">
+						{formatPlanDate(upcoming.plannedDate, $locale ?? 'de')}
+					</p>
+					<p class="text-[11px] text-zinc-400 tabular-nums">
+						{formatDuration(upcoming.estimatedTimeSeconds, durationLabels)}
+					</p>
+				</div>
+			</a>
+		{/if}
 
 		<div class="mt-6 grid gap-6 xl:grid-cols-3">
 			<section class="xl:col-span-2">

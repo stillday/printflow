@@ -10,6 +10,7 @@
 		"spools": "Spools",
 		"catalog": "Filament catalog",
 		"projects": "Projects",
+		"plan": "Print plan",
 		"settings": "Settings",
 		"section": {
 			"main": "Workshop",
@@ -349,6 +350,45 @@
 		"spoolDeducted": "Deducted {amount} g from “{name}”",
 		"exported": "Backup saved",
 		"imported": "Backup imported",
-		"languageChanged": "Language changed"
+		"languageChanged": "Language changed",
+		"scheduled": "Scheduled",
+		"moved": "Moved"
+	},
+	"plan": {
+		"title": "Print plan",
+		"subtitle": "Plan when each plate gets printed",
+		"thisWeek": "This week",
+		"previousWeek": "Previous week",
+		"nextWeek": "Next week",
+		"weekOf": "{from} – {to}",
+		"plannedTime": "planned print time",
+		"empty": "Nothing planned this week",
+		"emptyBody": "Open a project and schedule a plate — it will show up here.",
+		"dayEmpty": "Nothing planned",
+		"overdue": "{count} overdue",
+		"overdueHint": "These prints are in the past and still open.",
+		"moveToToday": "To today",
+		"overloadedHint": "More than 24 hours of printing on one day",
+		"schedule": "Schedule",
+		"scheduleTitle": "Schedule plate",
+		"date": "Date",
+		"note": "Note",
+		"notePlaceholder": "e.g. overnight print, different nozzle",
+		"today": "Today",
+		"tomorrow": "Tomorrow",
+		"inAWeek": "In a week",
+		"logPrint": "Log print",
+		"reopen": "Put back on the plan",
+		"moveUp": "Move up",
+		"moveDown": "Move down",
+		"dayEarlier": "One day earlier",
+		"dayLater": "One day later",
+		"nextPrint": "Next planned print",
+		"deleteConfirm": "Remove this plan entry?",
+		"deleteBody": "The plate itself is kept — only the scheduling is deleted.",
+		"status": {
+			"done": "Printed",
+			"skipped": "Skipped"
+		}
 	}
 }

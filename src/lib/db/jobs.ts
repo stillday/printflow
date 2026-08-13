@@ -2,6 +2,7 @@ import { execute, now, nullable, select, transaction } from './index';
 import { deductStatement } from './spools';
 import { incrementStatement } from './parts';
 import { touchStatement } from './projects';
+import { completeStatement } from './plan';
 import type {
 	JobStatus,
 	PartOnPlate,
@@ -68,6 +69,12 @@ export interface LogJobInput {
 	startedAt: string;
 	actualDurationSeconds?: number | null;
 	failureReason?: string | null;
+	/**
+	 * Plan entry this print fulfils, if it was started from the print plan.
+	 * Only a successful print closes it — a failed or cancelled plate still
+	 * needs printing, so it stays on the plan.
+	 */
+	planEntryId?: number | null;
 }
 
 /**
@@ -101,6 +108,12 @@ export async function logPrintJob(input: LogJobInput): Promise<void> {
 			]
 		}
 	];
+
+	// Directly after the INSERT: `completeStatement` resolves the new job's id
+	// with `last_insert_rowid()`, which only holds while nothing else inserted.
+	if (status === 'success' && input.planEntryId) {
+		statements.push(completeStatement(input.planEntryId));
+	}
 
 	if (status !== 'cancelled') {
 		for (const assignment of assignments) {

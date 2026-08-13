@@ -16,6 +16,7 @@
 	import PlateCard from '$lib/components/projects/PlateCard.svelte';
 	import AssignPartsModal from '$lib/components/projects/AssignPartsModal.svelte';
 	import PrintJobModal from '$lib/components/projects/PrintJobModal.svelte';
+	import SchedulePlateModal from '$lib/components/projects/SchedulePlateModal.svelte';
 	import { deleteProject, getProject } from '$lib/db/projects';
 	import { listParts } from '$lib/db/parts';
 	import { deletePlate, listPlates } from '$lib/db/plates';
@@ -52,6 +53,7 @@
 	let parseResult = $state<ParseResult | null>(null);
 	let assigning = $state<PrintPlateDecoded | null>(null);
 	let printing = $state<PrintPlateDecoded | null>(null);
+	let scheduling = $state<PrintPlateDecoded | null>(null);
 	let pendingPlateDelete = $state<PrintPlateDecoded | null>(null);
 	let pendingJobDelete = $state<PrintJobDecoded | null>(null);
 	let confirmProjectDelete = $state(false);
@@ -324,6 +326,7 @@
 								{plate}
 								{parts}
 								onAssign={(item) => (assigning = item)}
+								onSchedule={(item) => (scheduling = item)}
 								onPrint={(item) => (printing = item)}
 								onDelete={(item) => (pendingPlateDelete = item)}
 							/>
@@ -424,6 +427,12 @@
 		spools={activeSpools}
 		onClose={() => (printing = null)}
 		onLogged={reload}
+	/>
+
+	<SchedulePlateModal
+		plate={scheduling}
+		onClose={() => (scheduling = null)}
+		onScheduled={reload}
 	/>
 
 	<ConfirmDialog

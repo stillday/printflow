@@ -25,9 +25,14 @@
 		spools: SpoolWithCatalog[];
 		onClose: () => void;
 		onLogged: () => void;
+		/**
+		 * Plan entry this print fulfils, when the modal was opened from the print
+		 * plan. A successful print closes it in the same transaction.
+		 */
+		planEntryId?: number | null;
 	}
 
-	let { plate, parts, spools, onClose, onLogged }: Props = $props();
+	let { plate, parts, spools, onClose, onLogged, planEntryId = null }: Props = $props();
 
 	/** Spool id chosen per filament slot; 0 means "none". */
 	let selection = $state<number[]>([]);
@@ -135,7 +140,8 @@
 				assignments,
 				startedAt,
 				actualDurationSeconds: durationSeconds,
-				failureReason: status === 'failed' ? failureReason : null
+				failureReason: status === 'failed' ? failureReason : null,
+				planEntryId
 			});
 
 			toasts.success('toast.jobLogged');

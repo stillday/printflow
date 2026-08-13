@@ -1,14 +1,22 @@
 <script lang="ts">
 	import { page } from '$app/state';
 	import { t } from 'svelte-i18n';
-	import { Boxes, FolderKanban, LayoutDashboard, Layers, Settings } from '@lucide/svelte';
+	import {
+		Boxes,
+		CalendarDays,
+		FolderKanban,
+		LayoutDashboard,
+		Layers,
+		Settings
+	} from '@lucide/svelte';
 	import { cn } from '$lib/utils/cn';
 
 	const primary = [
 		{ href: '/', labelKey: 'nav.dashboard', icon: LayoutDashboard },
 		{ href: '/spools', labelKey: 'nav.spools', icon: Boxes },
 		{ href: '/catalog', labelKey: 'nav.catalog', icon: Layers },
-		{ href: '/projects', labelKey: 'nav.projects', icon: FolderKanban }
+		{ href: '/projects', labelKey: 'nav.projects', icon: FolderKanban },
+		{ href: '/plan', labelKey: 'nav.plan', icon: CalendarDays }
 	];
 
 	const secondary = [{ href: '/settings', labelKey: 'nav.settings', icon: Settings }];

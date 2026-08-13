@@ -10,6 +10,7 @@
 		"spools": "Spoelen",
 		"catalog": "Filamentcatalogus",
 		"projects": "Projecten",
+		"plan": "Printplanning",
 		"settings": "Instellingen",
 		"section": {
 			"main": "Werkplaats",
@@ -349,6 +350,45 @@
 		"spoolDeducted": "{amount} g afgeboekt van „{name}”",
 		"exported": "Back-up opgeslagen",
 		"imported": "Back-up geïmporteerd",
-		"languageChanged": "Taal gewijzigd"
+		"languageChanged": "Taal gewijzigd",
+		"scheduled": "Ingepland",
+		"moved": "Verplaatst"
+	},
+	"plan": {
+		"title": "Printplanning",
+		"subtitle": "Plan wanneer welke plaat geprint wordt",
+		"thisWeek": "Deze week",
+		"previousWeek": "Vorige week",
+		"nextWeek": "Volgende week",
+		"weekOf": "{from} – {to}",
+		"plannedTime": "geplande printtijd",
+		"empty": "Deze week is niets gepland",
+		"emptyBody": "Open een project en plan een plaat in, dan verschijnt die hier.",
+		"dayEmpty": "Niets gepland",
+		"overdue": "{count} te laat",
+		"overdueHint": "Deze prints liggen in het verleden en staan nog open.",
+		"moveToToday": "Naar vandaag",
+		"overloadedHint": "Meer dan 24 uur printtijd op één dag",
+		"schedule": "Inplannen",
+		"scheduleTitle": "Plaat inplannen",
+		"date": "Datum",
+		"note": "Notitie",
+		"notePlaceholder": "bijv. nachtprint, andere nozzle",
+		"today": "Vandaag",
+		"tomorrow": "Morgen",
+		"inAWeek": "Over een week",
+		"logPrint": "Vastleggen",
+		"reopen": "Opnieuw inplannen",
+		"moveUp": "Omhoog",
+		"moveDown": "Omlaag",
+		"dayEarlier": "Een dag eerder",
+		"dayLater": "Een dag later",
+		"nextPrint": "Volgende geplande print",
+		"deleteConfirm": "Deze planning verwijderen?",
+		"deleteBody": "De plaat zelf blijft bestaan, alleen de planning wordt verwijderd.",
+		"status": {
+			"done": "Geprint",
+			"skipped": "Overgeslagen"
+		}
 	}
 }
