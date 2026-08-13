@@ -1,7 +1,7 @@
 @import 'tailwindcss';
 
 /*
- * PrintFlow — Maker Dark theme.
+ * PrintFlow — Maker Dark theme, with a light counterpart.
  * Zinc base, indigo accent, semantic status colours for spool/job states.
  */
 @theme {
@@ -13,11 +13,80 @@
 	--color-surface-card: #18181b;
 	--color-surface-raised: #1f1f23;
 	--color-surface-border: #27272a;
+
+	/* Foreground on a saturated accent fill. Stays white in both themes — an
+	   inverted zinc ramp must not turn a primary button's label dark. */
+	--color-on-accent: #ffffff;
+
+	--color-scrollbar-thumb: #3f3f46;
+	--color-scrollbar-thumb-hover: #52525b;
+}
+
+/*
+ * Light theme.
+ *
+ * The UI is written entirely in Tailwind's zinc ramp plus a handful of accent
+ * shades, and Tailwind v4 compiles each of those to `var(--color-…)`. Redefining
+ * those variables therefore re-themes every one of the ~350 colour utilities at
+ * once, with no `dark:` variants to keep in sync.
+ *
+ * Three things carry most of the work:
+ *  - the zinc ramp is *inverted*: `text-zinc-100` is the strongest foreground in
+ *    both themes, `bg-zinc-900` the card, `bg-zinc-950` the page behind it;
+ *  - `--color-white` flips to near-black, so the `border-white/10` hairlines and
+ *    `bg-white/5` raised fills become subtle dark tints instead of vanishing;
+ *  - `--color-black` becomes mid-grey, so `shadow-black/60` reads as a soft
+ *    shadow rather than a hard smear, and the modal scrim dims gently.
+ *
+ * Accent *fills* and *borders* (`bg-indigo-500/10`, `border-rose-500/20`) are
+ * alpha over the surface and work unchanged — only the accent shades used as
+ * text are remapped to their dark-on-light equivalents.
+ */
+:root[data-theme='light'] {
+	--color-surface-base: #f4f4f5;
+	--color-surface-card: #ffffff;
+	--color-surface-raised: #fafafa;
+	--color-surface-border: #d4d4d8;
+
+	/* Inverted foreground ramp. zinc-400 is the app's secondary text and lands
+	   at 7.4:1 on white — the same AA headroom the dark theme has. */
+	--color-zinc-50: #09090b;
+	--color-zinc-100: #18181b;
+	--color-zinc-200: #27272a;
+	--color-zinc-300: #3f3f46;
+	--color-zinc-400: #52525b;
+
+	/* Surfaces. */
+	--color-zinc-900: #ffffff;
+	--color-zinc-950: #e4e4e7;
+
+	--color-white: #18181b;
+	--color-black: #a1a1aa;
+
+	/* Accent shades that appear as text, remapped for a light background. */
+	--color-indigo-200: #4338ca;
+	--color-indigo-300: #4338ca;
+	--color-indigo-400: #4f46e5;
+	--color-indigo-950: #a5b4fc;
+	--color-emerald-300: #047857;
+	--color-emerald-400: #047857;
+	--color-amber-200: #b45309;
+	--color-amber-300: #b45309;
+	--color-amber-400: #b45309;
+	--color-rose-300: #be123c;
+	--color-rose-400: #be123c;
+
+	--color-scrollbar-thumb: #c4c4c8;
+	--color-scrollbar-thumb-hover: #a1a1aa;
 }
 
 @layer base {
 	:root {
 		color-scheme: dark;
+	}
+
+	:root[data-theme='light'] {
+		color-scheme: light;
 	}
 
 	html,
@@ -35,20 +104,20 @@
 	/* Native-feeling, unobtrusive scrollbars. */
 	* {
 		scrollbar-width: thin;
-		scrollbar-color: #3f3f46 transparent;
+		scrollbar-color: var(--color-scrollbar-thumb) transparent;
 	}
 	*::-webkit-scrollbar {
 		width: 10px;
 		height: 10px;
 	}
 	*::-webkit-scrollbar-thumb {
-		background-color: #3f3f46;
+		background-color: var(--color-scrollbar-thumb);
 		border-radius: 9999px;
 		border: 3px solid transparent;
 		background-clip: content-box;
 	}
 	*::-webkit-scrollbar-thumb:hover {
-		background-color: #52525b;
+		background-color: var(--color-scrollbar-thumb-hover);
 	}
 
 	:focus-visible {
@@ -72,13 +141,11 @@
 
 	/*
 	 * A dropdown's closed control is ours to style, but the popup list is drawn
-	 * by the platform (GTK on Linux, the shell on Windows) and defaults to a
-	 * light palette — unreadable next to a dark theme. `color-scheme: dark`
-	 * above covers most engines; these rules cover the rest.
+	 * by the platform (GTK on Linux, the shell on Windows) and would otherwise
+	 * use system colours — unreadable next to the dark theme. The inherited
+	 * `color-scheme` covers most engines; these rules cover the rest, and follow
+	 * the theme because both values are variables.
 	 */
-	select {
-		color-scheme: dark;
-	}
 	select option {
 		background-color: var(--color-surface-raised);
 		color: var(--color-zinc-100);
@@ -86,7 +153,7 @@
 	select option:checked,
 	select option:hover {
 		background-color: var(--color-indigo-600);
-		color: #fff;
+		color: var(--color-on-accent);
 	}
 }
 

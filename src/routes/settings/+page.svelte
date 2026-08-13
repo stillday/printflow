@@ -3,7 +3,7 @@
 	import { invoke } from '@tauri-apps/api/core';
 	import { open as openDialog, save as saveDialog } from '@tauri-apps/plugin-dialog';
 	import { locale, t } from 'svelte-i18n';
-	import { Check, Database, Download, Globe, Info, Upload } from '@lucide/svelte';
+	import { Check, Database, Download, Globe, Info, Palette, Upload } from '@lucide/svelte';
 	import PageHeader from '$lib/components/layout/PageHeader.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
 	import ConfirmDialog from '$lib/components/ui/ConfirmDialog.svelte';
@@ -16,6 +16,8 @@
 	} from '$lib/db/settings';
 	import { toasts } from '$lib/stores/toast.svelte';
 	import { SUPPORTED_LOCALES, setLocale, type AppLocale } from '$lib/i18n';
+	import { THEMES, type ThemePreference } from '$lib/theme';
+	import { theme } from '$lib/stores/theme.svelte';
 	import { cn } from '$lib/utils/cn';
 	import { formatNumber } from '$lib/utils/format';
 
@@ -40,6 +42,17 @@
 	onMount(load);
 
 	const current = $derived(($locale ?? 'de') as AppLocale);
+
+	async function chooseTheme(next: ThemePreference) {
+		if (next === theme.preference) return;
+		try {
+			await theme.set(next);
+			toasts.success('toast.updated');
+		} catch {
+			// The theme already switched; only persistence failed.
+			toasts.error('errors.saveFailed');
+		}
+	}
 
 	async function chooseLanguage(next: AppLocale) {
 		if (next === current) return;
@@ -127,6 +140,49 @@
 <PageHeader title={$t('settings.title')} subtitle={$t('settings.subtitle')} />
 
 <div class="grid max-w-3xl gap-6 px-8 pb-10">
+	<section class="card p-6">
+		<div class="flex items-center gap-3">
+			<div
+				class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-indigo-500/20 bg-indigo-500/10 text-indigo-300"
+			>
+				<Palette size={17} />
+			</div>
+			<div class="min-w-0">
+				<h2 class="text-sm font-semibold text-zinc-100">{$t('settings.theme')}</h2>
+				<p class="mt-0.5 text-xs text-zinc-400">{$t('settings.themeHint')}</p>
+			</div>
+		</div>
+
+		<div class="mt-5 grid gap-2 sm:grid-cols-3">
+			{#each THEMES as option (option)}
+				{@const selected = option === theme.preference}
+				<button
+					type="button"
+					aria-pressed={selected}
+					class={cn(
+						'flex items-center justify-between gap-2 rounded-xl border px-4 py-3 text-left text-sm transition-colors',
+						selected
+							? 'border-indigo-500/40 bg-indigo-500/10 text-indigo-200'
+							: 'border-white/10 bg-zinc-950/40 text-zinc-300 hover:border-white/20 hover:bg-white/5'
+					)}
+					onclick={() => chooseTheme(option)}
+				>
+					<span>
+						<span class="block font-medium">{$t(`settings.themes.${option}`)}</span>
+						{#if option === 'system'}
+							<span class="mt-0.5 block text-[11px] text-zinc-400">
+								{$t(`settings.themes.${theme.resolved}`)}
+							</span>
+						{/if}
+					</span>
+					{#if selected}
+						<Check size={16} />
+					{/if}
+				</button>
+			{/each}
+		</div>
+	</section>
+
 	<section class="card p-6">
 		<div class="flex items-center gap-3">
 			<div

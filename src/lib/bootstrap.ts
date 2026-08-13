@@ -1,7 +1,9 @@
 import { locale as osLocale } from '@tauri-apps/plugin-os';
 import { DEFAULT_LOCALE, normalizeLocale, setLocale, setupI18n, type AppLocale } from '$lib/i18n';
 import { getDb } from '$lib/db';
-import { SETTING_LOCALE, getSetting, setSetting } from '$lib/db/settings';
+import { SETTING_LOCALE, SETTING_THEME, getSetting, setSetting } from '$lib/db/settings';
+import { DEFAULT_THEME, applyTheme, normalizeTheme } from '$lib/theme';
+import { theme } from '$lib/stores/theme.svelte';
 
 /** Best guess before the database is available, so the UI can always render. */
 function guessLocale(): AppLocale {
@@ -24,7 +26,13 @@ function guessLocale(): AppLocale {
 export async function bootstrap(): Promise<void> {
 	await setupI18n(guessLocale());
 
+	// Paint in the default theme until the stored one is known — the database
+	// opens in a few milliseconds, so this is cheaper than a blocking read.
+	applyTheme(DEFAULT_THEME);
+
 	await getDb();
+
+	theme.init(normalizeTheme(await getSetting(SETTING_THEME)) ?? DEFAULT_THEME);
 
 	const stored = normalizeLocale(await getSetting(SETTING_LOCALE));
 	if (stored) {

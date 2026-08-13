@@ -285,6 +285,15 @@
 	"settings": {
 		"title": "Einstellungen",
 		"subtitle": "Sprache, Daten und Sicherung",
+		"theme": "Erscheinungsbild",
+		"themeHint": "Hell, dunkel oder dem System folgen.",
+		"themeToLight": "Zu hellem Design wechseln",
+		"themeToDark": "Zu dunklem Design wechseln",
+		"themes": {
+			"system": "System",
+			"dark": "Dunkel",
+			"light": "Hell"
+		},
 		"language": "Sprache",
 		"languageHint": "Wird sofort übernommen und gespeichert.",
 		"database": "Datenbank",

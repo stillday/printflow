@@ -16,6 +16,7 @@ export async function setSetting(key: string, value: string): Promise<void> {
 }
 
 export const SETTING_LOCALE = 'locale';
+export const SETTING_THEME = 'theme';
 
 export interface DataSummary {
 	catalog: number;

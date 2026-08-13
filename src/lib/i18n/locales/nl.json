@@ -285,6 +285,15 @@
 	"settings": {
 		"title": "Instellingen",
 		"subtitle": "Taal, gegevens en back-ups",
+		"theme": "Weergave",
+		"themeHint": "Licht, donker of het systeem volgen.",
+		"themeToLight": "Naar licht thema",
+		"themeToDark": "Naar donker thema",
+		"themes": {
+			"system": "Systeem",
+			"dark": "Donker",
+			"light": "Licht"
+		},
 		"language": "Taal",
 		"languageHint": "Wordt direct toegepast en onthouden.",
 		"database": "Database",

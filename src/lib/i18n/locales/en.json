@@ -285,6 +285,15 @@
 	"settings": {
 		"title": "Settings",
 		"subtitle": "Language, data and backups",
+		"theme": "Appearance",
+		"themeHint": "Light, dark, or follow the system.",
+		"themeToLight": "Switch to light theme",
+		"themeToDark": "Switch to dark theme",
+		"themes": {
+			"system": "System",
+			"dark": "Dark",
+			"light": "Light"
+		},
 		"language": "Language",
 		"languageHint": "Applied immediately and remembered.",
 		"database": "Database",

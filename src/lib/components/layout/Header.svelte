@@ -3,6 +3,7 @@
 	import { t } from 'svelte-i18n';
 	import { Boxes, FolderKanban, Layers, Search } from '@lucide/svelte';
 	import LanguageSwitcher from './LanguageSwitcher.svelte';
+	import ThemeToggle from './ThemeToggle.svelte';
 	import ColorSwatch from '$lib/components/ui/ColorSwatch.svelte';
 	import { quickSearch, type SearchHit } from '$lib/db/search';
 	import { cn } from '$lib/utils/cn';
@@ -144,7 +145,8 @@
 		{/if}
 	</div>
 
-	<div class="ml-auto flex items-center gap-3">
+	<div class="ml-auto flex items-center gap-2">
+		<ThemeToggle />
 		<LanguageSwitcher />
 	</div>
 </header>
