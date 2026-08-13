@@ -171,8 +171,8 @@ git tag v0.1.0
 git push origin v0.1.0
 ```
 
-Keep the version in `package.json` and `src-tauri/tauri.conf.json` in sync with
-the tag.
+Keep the version in `package.json`, `src-tauri/tauri.conf.json` and
+`src-tauri/Cargo.toml` in sync with the tag.
 
 > **Local AppImage builds fail on rolling-release distros.** The prebuilt
 > `linuxdeploy` ships an old `strip` that rejects the `.relr.dyn` sections

@@ -1,50 +1,50 @@
 {
-  "name": "printflow",
-  "version": "0.1.0",
-  "description": "PrintFlow — offline 3D print project & filament manager",
-  "private": true,
-  "type": "module",
-  "scripts": {
-    "dev": "vite dev",
-    "build": "vite build",
-    "preview": "vite preview",
-    "check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
-    "check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
-    "test": "vitest run",
-    "test:watch": "vitest",
-    "tauri": "tauri",
-    "tauri:dev": "tauri dev",
-    "tauri:build": "tauri build"
-  },
-  "devDependencies": {
-    "@sveltejs/adapter-static": "^3.0.10",
-    "@sveltejs/kit": "^2.70.2",
-    "@sveltejs/vite-plugin-svelte": "^7.3.0",
-    "@tailwindcss/vite": "^4.3.3",
-    "@tauri-apps/cli": "^2.11.4",
-    "@types/node": "^26.2.0",
-    "@vitest/coverage-v8": "^4.1.10",
-    "jsdom": "^30.0.1",
-    "svelte": "^5.56.8",
-    "svelte-check": "^4.7.5",
-    "tailwindcss": "^4.3.3",
-    "typescript": "^5.9.3",
-    "vite": "^8.2.1",
-    "vitest": "^4.1.10"
-  },
-  "dependencies": {
-    "@lucide/svelte": "^1.31.0",
-    "@tauri-apps/api": "^2.11.1",
-    "@tauri-apps/plugin-dialog": "^2.7.2",
-    "@tauri-apps/plugin-fs": "^2.5.1",
-    "@tauri-apps/plugin-os": "^2.3.2",
-    "@tauri-apps/plugin-sql": "^2.4.0",
-    "clsx": "^2.1.1",
-    "jszip": "^3.10.1",
-    "svelte-i18n": "^4.0.1",
-    "tailwind-merge": "^3.6.0"
-  },
-  "allowScripts": {
-    "esbuild@0.19.12": true
-  }
+	"name": "printflow",
+	"version": "0.2.0",
+	"description": "PrintFlow \u2014 offline 3D print project & filament manager",
+	"private": true,
+	"type": "module",
+	"scripts": {
+		"dev": "vite dev",
+		"build": "vite build",
+		"preview": "vite preview",
+		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
+		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
+		"test": "vitest run",
+		"test:watch": "vitest",
+		"tauri": "tauri",
+		"tauri:dev": "tauri dev",
+		"tauri:build": "tauri build"
+	},
+	"devDependencies": {
+		"@sveltejs/adapter-static": "^3.0.10",
+		"@sveltejs/kit": "^2.70.2",
+		"@sveltejs/vite-plugin-svelte": "^7.3.0",
+		"@tailwindcss/vite": "^4.3.3",
+		"@tauri-apps/cli": "^2.11.4",
+		"@types/node": "^26.2.0",
+		"@vitest/coverage-v8": "^4.1.10",
+		"jsdom": "^30.0.1",
+		"svelte": "^5.56.8",
+		"svelte-check": "^4.7.5",
+		"tailwindcss": "^4.3.3",
+		"typescript": "^5.9.3",
+		"vite": "^8.2.1",
+		"vitest": "^4.1.10"
+	},
+	"dependencies": {
+		"@lucide/svelte": "^1.31.0",
+		"@tauri-apps/api": "^2.11.1",
+		"@tauri-apps/plugin-dialog": "^2.7.2",
+		"@tauri-apps/plugin-fs": "^2.5.1",
+		"@tauri-apps/plugin-os": "^2.3.2",
+		"@tauri-apps/plugin-sql": "^2.4.0",
+		"clsx": "^2.1.1",
+		"jszip": "^3.10.1",
+		"svelte-i18n": "^4.0.1",
+		"tailwind-merge": "^3.6.0"
+	},
+	"allowScripts": {
+		"esbuild@0.19.12": true
+	}
 }
