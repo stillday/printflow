@@ -537,12 +537,12 @@ mod tests {
 
     #[test]
     fn folder_is_relative_to_the_scanned_root() {
-        let root = Path::new("/home/u/models");
-        assert_eq!(relative_folder(root, Path::new("/home/u/models/a.3mf")), "");
-        assert_eq!(
-            relative_folder(root, Path::new("/home/u/models/Table/Legs/a.3mf")),
-            "Table/Legs"
-        );
+        let root = absolute("models");
+        assert_eq!(relative_folder(&root, &root.join("a.3mf")), "");
+        // The separator is the platform's own, so build the expectation that way.
+        let nested = root.join("Table").join("Legs").join("a.3mf");
+        let expected = Path::new("Table").join("Legs").to_string_lossy().into_owned();
+        assert_eq!(relative_folder(&root, &nested), expected);
     }
 
     /// Builds a small library on disk and checks what the walk reports: nested
@@ -551,20 +551,25 @@ mod tests {
     fn scan_walks_nested_folders_and_skips_noise() {
         let root = std::env::temp_dir().join(format!("printflow-scan-{}", std::process::id()));
         let _ = fs::remove_dir_all(&root);
-        for dir in ["Table/Legs", "Kiste", ".hidden", "node_modules/pkg"] {
-            fs::create_dir_all(root.join(dir)).unwrap();
+        for dir in [
+            vec!["Table", "Legs"],
+            vec!["Kiste"],
+            vec![".hidden"],
+            vec!["node_modules", "pkg"],
+        ] {
+            fs::create_dir_all(dir.iter().fold(root.clone(), |p, part| p.join(part))).unwrap();
         }
         for file in [
-            "top.3mf",
-            "notes.txt",
-            "Table/plate.gcode",
-            "Table/Legs/leg.3mf",
-            "Kiste/box.gco",
-            "Kiste/model.stl",
-            ".hidden/secret.3mf",
-            "node_modules/pkg/vendor.3mf",
+            vec!["top.3mf"],
+            vec!["notes.txt"],
+            vec!["Table", "plate.gcode"],
+            vec!["Table", "Legs", "leg.3mf"],
+            vec!["Kiste", "box.gco"],
+            vec!["Kiste", "model.stl"],
+            vec![".hidden", "secret.3mf"],
+            vec!["node_modules", "pkg", "vendor.3mf"],
         ] {
-            fs::write(root.join(file), b"x").unwrap();
+            fs::write(file.iter().fold(root.clone(), |p, part| p.join(part)), b"x").unwrap();
         }
 
         let result = tauri::async_runtime::block_on(scan_slicer_files(
@@ -579,7 +584,8 @@ mod tests {
         assert_eq!(names, vec!["top.3mf", "box.gco", "plate.gcode", "leg.3mf"]);
         // Folders come back relative, so the UI can group without string surgery.
         let folders: Vec<&str> = result.files.iter().map(|f| f.folder.as_str()).collect();
-        assert_eq!(folders, vec!["", "Kiste", "Table", "Table/Legs"]);
+        let table_legs = Path::new("Table").join("Legs").to_string_lossy().into_owned();
+        assert_eq!(folders, vec!["", "Kiste", "Table", table_legs.as_str()]);
         assert!(!result.truncated);
 
         let _ = fs::remove_dir_all(&root);
@@ -589,10 +595,10 @@ mod tests {
     fn scan_respects_depth_and_limit() {
         let root = std::env::temp_dir().join(format!("printflow-depth-{}", std::process::id()));
         let _ = fs::remove_dir_all(&root);
-        fs::create_dir_all(root.join("a/b/c")).unwrap();
-        fs::write(root.join("a/one.3mf"), b"x").unwrap();
-        fs::write(root.join("a/b/two.3mf"), b"x").unwrap();
-        fs::write(root.join("a/b/c/three.3mf"), b"x").unwrap();
+        fs::create_dir_all(root.join("a").join("b").join("c")).unwrap();
+        fs::write(root.join("a").join("one.3mf"), b"x").unwrap();
+        fs::write(root.join("a").join("b").join("two.3mf"), b"x").unwrap();
+        fs::write(root.join("a").join("b").join("c").join("three.3mf"), b"x").unwrap();
 
         let shallow = tauri::async_runtime::block_on(scan_slicer_files(
             root.to_string_lossy().into_owned(),
@@ -635,25 +641,34 @@ mod tests {
         let _ = fs::remove_dir_all(&dir);
     }
 
+    /// An absolute path that is absolute on Windows too — a literal `/home/...`
+    /// is not, so the paths are derived from the platform's temp directory.
+    fn absolute(name: &str) -> PathBuf {
+        std::env::temp_dir().join(name)
+    }
+
     #[test]
     fn backup_path_must_be_absolute() {
-        let live = Path::new("/home/u/.config/app.printflow.desktop/printflow.db");
-        assert!(checked_backup_path("backup.db".into(), live).is_err());
-        assert!(checked_backup_path("../../etc/x.db".into(), live).is_err());
-        assert!(checked_backup_path("/home/u/backup.db".into(), live).is_ok());
+        let live = absolute("printflow.db");
+        assert!(checked_backup_path("backup.db".into(), &live).is_err());
+        assert!(checked_backup_path("../../etc/x.db".into(), &live).is_err());
+        assert!(
+            checked_backup_path(absolute("backup.db").to_string_lossy().into_owned(), &live).is_ok()
+        );
     }
 
     #[test]
     fn backup_path_never_targets_the_live_database() {
-        let live = Path::new("/home/u/.config/app.printflow.desktop/printflow.db");
+        let live = absolute("printflow.db");
         for candidate in [
-            "/home/u/.config/app.printflow.desktop/printflow.db",
-            "/home/u/.config/app.printflow.desktop/printflow.db-wal",
-            "/home/u/.config/app.printflow.desktop/printflow.db-shm",
+            live.clone(),
+            sidecar(&live, "-wal"),
+            sidecar(&live, "-shm"),
         ] {
+            let as_string = candidate.to_string_lossy().into_owned();
             assert!(
-                checked_backup_path(candidate.into(), live).is_err(),
-                "should have refused `{candidate}`"
+                checked_backup_path(as_string.clone(), &live).is_err(),
+                "should have refused `{as_string}`"
             );
         }
     }

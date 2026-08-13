@@ -1,6 +1,10 @@
 <script lang="ts">
 	import { locale, t } from 'svelte-i18n';
 	import {
+		ArrowDown,
+		ArrowUp,
+		CalendarArrowDown,
+		CalendarArrowUp,
 		CalendarDays,
 		ChevronLeft,
 		ChevronRight,
@@ -102,6 +106,11 @@
 
 	function dayLabel(date: string): string {
 		return formatPlanDate(date, activeLocale);
+	}
+
+	/** "Mo", "Di" — short enough to sit on a button next to the arrow. */
+	function weekdayShort(date: string): string {
+		return formatPlanDate(date, activeLocale, { weekday: 'short' });
 	}
 
 	async function shift(entry: PlanEntryDecoded, days: number) {
@@ -383,31 +392,61 @@
 											</div>
 
 											{#if entry.status === 'planned'}
-												<div class="flex items-center gap-1">
-													<IconButton
-														label={$t('plan.moveUp')}
-														onclick={() => reorder(entry, -1)}
+												<div class="flex items-center gap-2">
+													<!--
+														Two different actions that used to look alike: reordering
+														inside the day, and moving to another day. Vertical arrows
+														for the queue, the target weekday spelled out for the move.
+													-->
+													<div
+														class="flex items-center rounded-lg border border-white/10 bg-white/5"
+														role="group"
+														aria-label={$t('plan.orderGroup')}
 													>
-														<ChevronLeft size={15} class="rotate-90" />
-													</IconButton>
-													<IconButton
-														label={$t('plan.moveDown')}
-														onclick={() => reorder(entry, 1)}
-													>
-														<ChevronRight size={15} class="rotate-90" />
-													</IconButton>
-													<IconButton
-														label={$t('plan.dayEarlier')}
-														onclick={() => shift(entry, -1)}
-													>
-														<ChevronLeft size={15} />
-													</IconButton>
-													<IconButton
-														label={$t('plan.dayLater')}
-														onclick={() => shift(entry, 1)}
-													>
-														<ChevronRight size={15} />
-													</IconButton>
+														<IconButton
+															label={$t('plan.moveUp')}
+															disabled={index === 0}
+															onclick={() => reorder(entry, -1)}
+														>
+															<ArrowUp size={14} />
+														</IconButton>
+														<span class="text-[10px] text-zinc-400 tabular-nums">
+															{index + 1}/{dayEntries.length}
+														</span>
+														<IconButton
+															label={$t('plan.moveDown')}
+															disabled={index === dayEntries.length - 1}
+															onclick={() => reorder(entry, 1)}
+														>
+															<ArrowDown size={14} />
+														</IconButton>
+													</div>
+
+													<div class="flex items-center gap-1">
+														<Button
+															variant="ghost"
+															size="sm"
+															title={$t('plan.moveToDay', {
+																values: { day: weekdayName(addPlanDays(entry.plannedDate, -1)) }
+															})}
+															onclick={() => shift(entry, -1)}
+														>
+															<CalendarArrowUp size={13} />
+															{weekdayShort(addPlanDays(entry.plannedDate, -1))}
+														</Button>
+														<Button
+															variant="ghost"
+															size="sm"
+															title={$t('plan.moveToDay', {
+																values: { day: weekdayName(addPlanDays(entry.plannedDate, 1)) }
+															})}
+															onclick={() => shift(entry, 1)}
+														>
+															{weekdayShort(addPlanDays(entry.plannedDate, 1))}
+															<CalendarArrowDown size={13} />
+														</Button>
+													</div>
+
 													<Button
 														variant="primary"
 														size="sm"

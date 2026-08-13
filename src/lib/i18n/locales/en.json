@@ -390,6 +390,8 @@
 		"reopen": "Put back on the plan",
 		"moveUp": "Move up",
 		"moveDown": "Move down",
+		"orderGroup": "Order within the day",
+		"moveToDay": "Move to {day}",
 		"dayEarlier": "One day earlier",
 		"dayLater": "One day later",
 		"nextPrint": "Next planned print",

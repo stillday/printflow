@@ -390,6 +390,8 @@
 		"reopen": "Wieder einplanen",
 		"moveUp": "Nach oben",
 		"moveDown": "Nach unten",
+		"orderGroup": "Reihenfolge am Tag",
+		"moveToDay": "Auf {day} verschieben",
 		"dayEarlier": "Einen Tag früher",
 		"dayLater": "Einen Tag später",
 		"nextPrint": "Nächster geplanter Druck",

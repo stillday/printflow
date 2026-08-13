@@ -390,6 +390,8 @@
 		"reopen": "Opnieuw inplannen",
 		"moveUp": "Omhoog",
 		"moveDown": "Omlaag",
+		"orderGroup": "Volgorde op de dag",
+		"moveToDay": "Naar {day} verplaatsen",
 		"dayEarlier": "Een dag eerder",
 		"dayLater": "Een dag later",
 		"nextPrint": "Volgende geplande print",
