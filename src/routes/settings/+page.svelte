@@ -3,7 +3,16 @@
 	import { invoke } from '@tauri-apps/api/core';
 	import { open as openDialog, save as saveDialog } from '@tauri-apps/plugin-dialog';
 	import { locale, t } from 'svelte-i18n';
-	import { Check, Database, Download, Globe, Info, Palette, Upload } from '@lucide/svelte';
+	import {
+		Check,
+		Database,
+		Download,
+		Globe,
+		Info,
+		Palette,
+		Upload,
+		WifiOff
+	} from '@lucide/svelte';
 	import PageHeader from '$lib/components/layout/PageHeader.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
 	import ConfirmDialog from '$lib/components/ui/ConfirmDialog.svelte';
@@ -18,6 +27,7 @@
 	import { SUPPORTED_LOCALES, setLocale, type AppLocale } from '$lib/i18n';
 	import { THEMES, type ThemePreference } from '$lib/theme';
 	import { theme } from '$lib/stores/theme.svelte';
+	import { online } from '$lib/stores/online.svelte';
 	import { cn } from '$lib/utils/cn';
 	import { formatNumber } from '$lib/utils/format';
 
@@ -42,6 +52,16 @@
 	onMount(load);
 
 	const current = $derived(($locale ?? 'de') as AppLocale);
+
+	async function chooseOnline(enabled: boolean) {
+		if (enabled === online.enabled) return;
+		try {
+			await online.set(enabled);
+			toasts.success('toast.updated');
+		} catch {
+			toasts.error('errors.saveFailed');
+		}
+	}
 
 	async function chooseTheme(next: ThemePreference) {
 		if (next === theme.preference) return;
@@ -220,6 +240,64 @@
 				</button>
 			{/each}
 		</div>
+	</section>
+
+	<section class="card p-6">
+		<div class="flex items-center gap-3">
+			<div
+				class={cn(
+					'flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border',
+					online.enabled
+						? 'border-amber-500/20 bg-amber-500/10 text-amber-400'
+						: 'border-emerald-500/20 bg-emerald-500/10 text-emerald-400'
+				)}
+			>
+				{#if online.enabled}
+					<Globe size={17} />
+				{:else}
+					<WifiOff size={17} />
+				{/if}
+			</div>
+			<div class="min-w-0">
+				<h2 class="text-sm font-semibold text-zinc-100">{$t('settings.online')}</h2>
+				<p class="mt-0.5 text-xs text-zinc-400">{$t('settings.onlineHint')}</p>
+			</div>
+		</div>
+
+		<div class="mt-5 grid gap-2 sm:grid-cols-2">
+			{#each [false, true] as value (value)}
+				{@const selected = online.enabled === value}
+				<button
+					type="button"
+					aria-pressed={selected}
+					class={cn(
+						'flex items-start justify-between gap-2 rounded-xl border px-4 py-3 text-left text-sm transition-colors',
+						selected
+							? 'border-indigo-500/40 bg-indigo-500/10 text-indigo-200'
+							: 'border-white/10 bg-zinc-950/40 text-zinc-300 hover:border-white/20 hover:bg-white/5'
+					)}
+					onclick={() => chooseOnline(value)}
+				>
+					<span>
+						<span class="block font-medium">
+							{$t(value ? 'settings.onlineOn' : 'settings.onlineOff')}
+						</span>
+						<span class="mt-0.5 block text-[11px] leading-snug text-zinc-400">
+							{$t(value ? 'settings.onlineOnHint' : 'settings.onlineOffHint')}
+						</span>
+					</span>
+					{#if selected}
+						<Check size={16} class="mt-0.5 shrink-0" />
+					{/if}
+				</button>
+			{/each}
+		</div>
+
+		{#if online.enabled}
+			<p class="mt-4 text-[11px] leading-relaxed text-zinc-400">
+				{$t('settings.onlineDetail')}
+			</p>
+		{/if}
 	</section>
 
 	<section class="card p-6">

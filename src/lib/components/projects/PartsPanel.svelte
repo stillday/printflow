@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { t } from 'svelte-i18n';
-	import { Check, Minus, Package, Plus, Trash2 } from '@lucide/svelte';
+	import { Check, FileBox, Link2, Minus, Package, Plus, Trash2 } from '@lucide/svelte';
 	import Button from '$lib/components/ui/Button.svelte';
 	import IconButton from '$lib/components/ui/IconButton.svelte';
 	import EmptyState from '$lib/components/ui/EmptyState.svelte';
@@ -9,17 +9,55 @@
 	import { adjustPartCounter, createPart, deletePart, updatePart } from '$lib/db/parts';
 	import { touchProject } from '$lib/db/projects';
 	import { toasts } from '$lib/stores/toast.svelte';
-	import type { Part } from '$lib/types/schema';
+	import type { Part, PrintPlateDecoded } from '$lib/types/schema';
 	import { formatPercent } from '$lib/utils/format';
 	import { cn } from '$lib/utils/cn';
 
 	interface Props {
 		projectId: number;
 		parts: Part[];
+		/**
+		 * The project's files. A part's whole point is that some file prints it,
+		 * so the row has to be able to say which — the link was previously only
+		 * visible from the file's side.
+		 */
+		plates: PrintPlateDecoded[];
+		/** Opens the "which files print this part" editor. */
+		onLinkFiles: (part: Part) => void;
+		/** Jumps to a file and highlights it. */
+		onShowPlate: (plate: PrintPlateDecoded) => void;
 		onChanged: () => void;
 	}
 
-	let { projectId, parts, onChanged }: Props = $props();
+	let { projectId, parts, plates, onLinkFiles, onShowPlate, onChanged }: Props = $props();
+
+	/**
+	 * Per part: which plates carry it and how many copies they produce in total.
+	 * Both sides are already in memory, so this is a render gap, not a query.
+	 */
+	const platesForPart = $derived(
+		new Map(
+			parts.map((part) => [
+				part.id,
+				plates
+					.map((plate) => ({
+						plate,
+						quantity:
+							plate.partsOnPlate.find((entry) => entry.partId === part.id)?.quantityOnPlate ?? 0
+					}))
+					.filter((entry) => entry.quantity > 0)
+			])
+		)
+	);
+
+	const coveredForPart = $derived(
+		new Map(
+			parts.map((part) => [
+				part.id,
+				(platesForPart.get(part.id) ?? []).reduce((sum, entry) => sum + entry.quantity, 0)
+			])
+		)
+	);
 
 	let newName = $state('');
 	let newQuantity = $state('1');
@@ -149,16 +187,23 @@
 
 	<div class="card overflow-hidden">
 		{#if parts.length === 0}
-			<EmptyState icon={Package} title={$t('parts.empty')} body={$t('parts.emptyBody')} />
+			<!--
+				The old copy said "type your parts in", which is how a user ends up
+				with hand-typed names that no file will ever match. Lead with the
+				import, keep manual entry as the alternative it is.
+			-->
+			<EmptyState icon={Package} title={$t('parts.empty')} body={$t('parts.emptyBodyImport')} />
 		{:else}
 			<ul class="divide-y divide-white/5">
 				{#each parts as part (part.id)}
 					{@const done = part.printedQuantity >= part.requiredQuantity}
 					{@const open = Math.max(0, part.requiredQuantity - part.printedQuantity)}
-					<li class="group flex flex-wrap items-center gap-4 px-5 py-3.5">
+					{@const linkedPlates = platesForPart.get(part.id) ?? []}
+					{@const covered = coveredForPart.get(part.id) ?? 0}
+					<li class="group flex flex-wrap items-start gap-4 px-5 py-3.5">
 						<div
 							class={cn(
-								'flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border text-[11px] font-semibold',
+								'mt-1 flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border text-[11px] font-semibold',
 								done
 									? 'border-emerald-500/20 bg-emerald-500/10 text-emerald-400'
 									: 'border-white/10 bg-white/5 text-zinc-400'
@@ -172,13 +217,63 @@
 							{/if}
 						</div>
 
-						<input
-							class="min-w-0 flex-1 rounded-lg border border-transparent bg-transparent px-2 py-1 text-sm text-zinc-100 transition-colors hover:border-white/10 focus:border-indigo-500/60 focus:bg-zinc-950 focus:outline-none"
-							value={part.name}
-							aria-label={$t('parts.edit')}
-							onblur={(event) => renamePart(part, event.currentTarget.value)}
-							onkeydown={(event) => event.key === 'Enter' && event.currentTarget.blur()}
-						/>
+						<div class="min-w-0 flex-1">
+							<input
+								class="w-full min-w-0 rounded-lg border border-transparent bg-transparent px-2 py-1 text-sm text-zinc-100 transition-colors hover:border-white/10 focus:border-indigo-500/60 focus:bg-zinc-950 focus:outline-none"
+								value={part.name}
+								aria-label={$t('parts.edit')}
+								onblur={(event) => renamePart(part, event.currentTarget.value)}
+								onkeydown={(event) => event.key === 'Enter' && event.currentTarget.blur()}
+							/>
+
+							<!--
+								Which file prints this part. Without this the part list is a
+								to-do list with no connection to the files that fulfil it, and
+								the counters below are driven by exactly this link.
+							-->
+							<div class="mt-1 flex flex-wrap items-center gap-1.5 px-2">
+								{#each linkedPlates as entry (entry.plate.id)}
+									<button
+										type="button"
+										class="inline-flex max-w-full items-center gap-1.5 rounded-md border border-white/10 bg-white/5 px-2 py-0.5 text-[11px] text-zinc-300 transition-colors hover:border-indigo-500/40 hover:text-zinc-100"
+										title={entry.plate.sourcePath ?? entry.plate.fileName}
+										onclick={() => onShowPlate(entry.plate)}
+									>
+										<FileBox size={11} class="shrink-0 text-zinc-400" />
+										<span class="truncate">{entry.plate.name}</span>
+										<span class="text-zinc-400 tabular-nums">{entry.quantity}×</span>
+									</button>
+								{/each}
+
+								<button
+									type="button"
+									class={cn(
+										'inline-flex items-center gap-1.5 rounded-md border px-2 py-0.5 text-[11px] transition-colors',
+										linkedPlates.length === 0
+											? 'border-amber-500/30 bg-amber-500/10 text-amber-300 hover:border-amber-500/50'
+											: 'border-transparent text-zinc-400 hover:border-white/10 hover:text-zinc-200'
+									)}
+									onclick={() => onLinkFiles(part)}
+								>
+									<Link2 size={11} />
+									{linkedPlates.length === 0 ? $t('parts.linkFiles') : $t('parts.editLinks')}
+								</button>
+
+								{#if linkedPlates.length > 0 && covered !== part.requiredQuantity}
+									<span
+										class={cn(
+											'text-[11px] tabular-nums',
+											covered < part.requiredQuantity ? 'text-amber-300' : 'text-rose-400'
+										)}
+										title={$t('parts.coverageHint')}
+									>
+										{$t('parts.coverage', {
+											values: { linked: covered, required: part.requiredQuantity }
+										})}
+									</span>
+								{/if}
+							</div>
+						</div>
 
 						<div class="flex shrink-0 items-center gap-1.5">
 							<span class="text-[10px] tracking-widest text-zinc-400 uppercase">

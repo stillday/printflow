@@ -17,6 +17,7 @@
 	import AssignPartsModal from '$lib/components/projects/AssignPartsModal.svelte';
 	import PrintJobModal from '$lib/components/projects/PrintJobModal.svelte';
 	import SchedulePlateModal from '$lib/components/projects/SchedulePlateModal.svelte';
+	import LinkPlatesModal from '$lib/components/projects/LinkPlatesModal.svelte';
 	import { deleteProject, getProject } from '$lib/db/projects';
 	import { listParts } from '$lib/db/parts';
 	import { deletePlate, listPlates } from '$lib/db/plates';
@@ -54,6 +55,9 @@
 	let assigning = $state<PrintPlateDecoded | null>(null);
 	let printing = $state<PrintPlateDecoded | null>(null);
 	let scheduling = $state<PrintPlateDecoded | null>(null);
+	let linkingPart = $state<Part | null>(null);
+	/** Set when arriving from a part's file chip, so the card can be pointed out. */
+	let highlightPlateId = $state<number | null>(null);
 	let pendingPlateDelete = $state<PrintPlateDecoded | null>(null);
 	let pendingJobDelete = $state<PrintJobDecoded | null>(null);
 	let confirmProjectDelete = $state(false);
@@ -205,6 +209,19 @@
 		}
 	}
 
+	/**
+	 * Switches to the files tab and points at one card. Called from a part's file
+	 * chip, so following the link lands on the thing that was clicked.
+	 */
+	function showPlate(plate: PrintPlateDecoded) {
+		tab = 'plates';
+		highlightPlateId = plate.id ?? null;
+		// Wait for the panel to render before scrolling to it.
+		requestAnimationFrame(() => {
+			document.getElementById(`plate-${plate.id}`)?.scrollIntoView({ block: 'center' });
+		});
+	}
+
 	/** Resolve the spool ids stored on a job to readable names. */
 	function spoolLabel(spoolId: number): string {
 		const spool = spools.find((item) => item.id === spoolId);
@@ -268,6 +285,16 @@
 	</PageHeader>
 
 	<div class="px-8 pb-10">
+		<!--
+			Import sits above the tabs, not inside the files tab: a user standing in
+			the parts list who wants to attach a file had no visible way there.
+			Import is the entry point to everything on this page, not one of its
+			sections.
+		-->
+		<div class="mb-5">
+			<PlateDropzone onParsed={(result) => (parseResult = result)} />
+		</div>
+
 		<div
 			class="mb-6 flex gap-1 border-b border-white/10"
 			role="tablist"
@@ -303,7 +330,14 @@
 
 		{#if tab === 'parts'}
 			<div role="tabpanel" id="panel-parts" aria-labelledby="tab-parts" tabindex="-1">
-				<PartsPanel {projectId} {parts} onChanged={reload} />
+				<PartsPanel
+					{projectId}
+					{parts}
+					{plates}
+					onLinkFiles={(part) => (linkingPart = part)}
+					onShowPlate={showPlate}
+					onChanged={reload}
+				/>
 			</div>
 		{:else if tab === 'plates'}
 			<div
@@ -313,8 +347,6 @@
 				aria-labelledby="tab-plates"
 				tabindex="-1"
 			>
-				<PlateDropzone onParsed={(result) => (parseResult = result)} />
-
 				{#if plates.length === 0}
 					<div class="card">
 						<EmptyState icon={Layers3} title={$t('plates.empty')} body={$t('plates.emptyBody')} />
@@ -325,6 +357,7 @@
 							<PlateCard
 								{plate}
 								{parts}
+								highlighted={plate.id === highlightPlateId}
 								onAssign={(item) => (assigning = item)}
 								onSchedule={(item) => (scheduling = item)}
 								onPrint={(item) => (printing = item)}
@@ -427,6 +460,14 @@
 		spools={activeSpools}
 		onClose={() => (printing = null)}
 		onLogged={reload}
+	/>
+
+	<LinkPlatesModal
+		part={linkingPart}
+		{plates}
+		onParsed={(result) => (parseResult = result)}
+		onClose={() => (linkingPart = null)}
+		onSaved={reload}
 	/>
 
 	<SchedulePlateModal

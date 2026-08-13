@@ -68,6 +68,22 @@ export async function deletePart(id: number): Promise<void> {
 }
 
 /**
+ * Raises how many of a part are needed.
+ *
+ * Used while importing a file that spreads one part across several plates: the
+ * part is created on the first plate and its requirement grows with each further
+ * plate that carries it. Without this, four legs on two plates would be recorded
+ * as "4 needed" while printing both plates counts eight printed.
+ */
+export async function addRequiredQuantity(id: number, delta: number): Promise<void> {
+	if (delta <= 0) return;
+	await execute('UPDATE parts SET required_quantity = required_quantity + ? WHERE id = ?', [
+		delta,
+		id
+	]);
+}
+
+/**
  * Nudges a counter by `delta`, clamped to `>= 0` in SQL so the CHECK
  * constraint can never be violated by a rapid double click.
  */

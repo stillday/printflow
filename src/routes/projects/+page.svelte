@@ -161,10 +161,16 @@
 					{@const ratio = progressOf(project)}
 					<li class="card group relative flex flex-col p-5 transition-colors duration-200 hover:border-indigo-500/40">
 						<div class="flex items-start justify-between gap-3">
+							<!--
+								Stretched link: the whole card is the target, which is what its
+								hover state promises. The action row below opts back out with
+								`relative z-10`. No aria-label here — it would override the title
+								and a screen reader would hear "open project" for every card
+								instead of the project's name.
+							-->
 							<a
 								href="/projects/{project.id}"
-								class="min-w-0 flex-1 rounded-lg outline-offset-4"
-								aria-label={$t('projects.openProject')}
+								class="min-w-0 flex-1 rounded-lg outline-offset-4 after:absolute after:inset-0 after:content-['']"
 							>
 								<p class="truncate text-sm font-semibold text-zinc-100 group-hover:text-indigo-200">
 									{project.title}
@@ -204,7 +210,7 @@
 						</div>
 
 						<div
-							class="mt-4 flex items-center justify-end gap-1 border-t border-white/5 pt-3 opacity-0 transition-opacity group-hover:opacity-100 focus-within:opacity-100"
+							class="relative z-10 mt-4 flex items-center justify-end gap-1 border-t border-white/5 pt-3 opacity-60 transition-opacity group-hover:opacity-100 focus-within:opacity-100"
 						>
 							{#if isExternalUrl(project.sourceUrl)}
 								<IconButton

@@ -4,6 +4,7 @@ import { getDb } from '$lib/db';
 import { SETTING_LOCALE, SETTING_THEME, getSetting, setSetting } from '$lib/db/settings';
 import { DEFAULT_THEME, applyTheme, normalizeTheme } from '$lib/theme';
 import { theme } from '$lib/stores/theme.svelte';
+import { online } from '$lib/stores/online.svelte';
 
 /** Best guess before the database is available, so the UI can always render. */
 function guessLocale(): AppLocale {
@@ -33,6 +34,7 @@ export async function bootstrap(): Promise<void> {
 	await getDb();
 
 	theme.init(normalizeTheme(await getSetting(SETTING_THEME)) ?? DEFAULT_THEME);
+	await online.load();
 
 	const stored = normalizeLocale(await getSetting(SETTING_LOCALE));
 	if (stored) {

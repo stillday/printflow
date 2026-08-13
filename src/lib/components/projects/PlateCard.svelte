@@ -7,6 +7,7 @@
 	import { plateTotalWeight } from '$lib/db/plates';
 	import type { Part, PrintPlateDecoded } from '$lib/types/schema';
 	import { formatDuration, formatGrams, formatNumber } from '$lib/utils/format';
+	import { cn } from '$lib/utils/cn';
 
 	interface Props {
 		plate: PrintPlateDecoded;
@@ -15,9 +16,12 @@
 		onSchedule: (plate: PrintPlateDecoded) => void;
 		onPrint: (plate: PrintPlateDecoded) => void;
 		onDelete: (plate: PrintPlateDecoded) => void;
+		/** Set while the user is being pointed at this card from a part's chip. */
+		highlighted?: boolean;
 	}
 
-	let { plate, parts, onAssign, onSchedule, onPrint, onDelete }: Props = $props();
+	let { plate, parts, onAssign, onSchedule, onPrint, onDelete, highlighted = false }: Props =
+		$props();
 
 	const durationLabels = $derived({
 		day: $t('units.daysShort'),
@@ -36,7 +40,13 @@
 	);
 </script>
 
-<li class="card group p-5 transition-colors duration-200 hover:border-indigo-500/40">
+<li
+	id="plate-{plate.id}"
+	class={cn(
+		'card group p-5 transition-colors duration-200 hover:border-indigo-500/40',
+		highlighted && 'border-indigo-500/60 ring-2 ring-indigo-500/40'
+	)}
+>
 	<div class="flex items-start justify-between gap-3">
 		<div class="min-w-0">
 			<p class="truncate text-sm font-semibold text-zinc-100">{plate.name}</p>

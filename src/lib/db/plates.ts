@@ -1,4 +1,4 @@
-import { execute, nullable, select, selectOne } from './index';
+import { execute, nullable, select, selectOne, transaction } from './index';
 import type {
 	FilamentRequirement,
 	PartOnPlate,
@@ -93,6 +93,45 @@ export async function setPartsOnPlate(id: number, parts: PartOnPlate[]): Promise
 
 export async function deletePlate(id: number): Promise<void> {
 	await execute('DELETE FROM print_plates WHERE id = ?', [id]);
+}
+
+/**
+ * Sets which plates produce a part, from the part's side.
+ *
+ * The link lives in each plate's `parts_on_plate_json`, so editing it for one
+ * part means patching several plates. That runs in one transaction: a half-
+ * applied change would leave a part counted on some plates and not others, and
+ * the print-job flow increments counters from exactly this data.
+ *
+ * Plates not mentioned in `entries` lose the part; a quantity of 0 removes it.
+ */
+export async function setPlatesForPart(
+	projectId: number,
+	partId: number,
+	entries: { plateId: number; quantityOnPlate: number }[]
+): Promise<void> {
+	const plates = await listPlates(projectId);
+	const wanted = new Map(entries.map((entry) => [entry.plateId, entry.quantityOnPlate]));
+
+	const statements = plates.flatMap((plate) => {
+		if (plate.id === undefined) return [];
+		const quantity = wanted.get(plate.id) ?? 0;
+		const next = plate.partsOnPlate.filter((entry) => entry.partId !== partId);
+		if (quantity > 0) next.push({ partId, quantityOnPlate: quantity });
+
+		const json = JSON.stringify(next);
+		// Skip plates whose linkage did not change, so a small edit does not
+		// rewrite every row in the project.
+		if (json === JSON.stringify(plate.partsOnPlate)) return [];
+		return [
+			{
+				sql: 'UPDATE print_plates SET parts_on_plate_json = ? WHERE id = ?',
+				params: [json, plate.id]
+			}
+		];
+	});
+
+	await transaction(statements);
 }
 
 /** Total grams a plate consumes across all filament slots. */

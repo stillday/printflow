@@ -4,7 +4,7 @@
 	import Modal from '$lib/components/ui/Modal.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
 	import ColorSwatch from '$lib/components/ui/ColorSwatch.svelte';
-	import { createPart } from '$lib/db/parts';
+	import { addRequiredQuantity, createPart } from '$lib/db/parts';
 	import { createPlate } from '$lib/db/plates';
 	import { touchProject } from '$lib/db/projects';
 	import { toasts } from '$lib/stores/toast.svelte';
@@ -71,9 +71,14 @@
 	): Promise<number | null> {
 		if (mapping === 'create') {
 			const key = object.name.trim().toLowerCase();
-			// A name may appear on several plates — create it only once.
+			// A name may appear on several plates — create it once, but keep
+			// raising how many are needed, or a part spread over three plates
+			// would be recorded as if only the first plate's copies counted.
 			const existing = created.get(key);
-			if (existing) return existing;
+			if (existing) {
+				await addRequiredQuantity(existing, object.quantity);
+				return existing;
+			}
 
 			const id = await createPart({
 				projectId,
