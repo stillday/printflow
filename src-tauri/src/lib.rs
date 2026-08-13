@@ -116,6 +116,19 @@ fn sidecar(path: &Path, suffix: &str) -> PathBuf {
     PathBuf::from(format!("{}{}", path.to_string_lossy(), suffix))
 }
 
+/// Parses `url` and accepts it only if it is a plain web address.
+///
+/// Only `http` and `https` pass — `file:`, `javascript:` and custom schemes are
+/// refused, so a URL that arrived via an imported backup cannot be used to
+/// launch something local.
+fn web_url(url: &str) -> Result<tauri::Url, String> {
+    let parsed = tauri::Url::parse(url.trim()).map_err(|_| "not a valid URL".to_string())?;
+    if !matches!(parsed.scheme(), "http" | "https") {
+        return Err(format!("refusing to open a `{}` URL", parsed.scheme()));
+    }
+    Ok(parsed)
+}
+
 /// Hand an `http(s)` URL to the user's normal browser.
 ///
 /// PrintFlow is an offline app in a single WebView with no browser chrome: a
@@ -123,16 +136,11 @@ fn sidecar(path: &Path, suffix: &str) -> PathBuf {
 /// leave no way back. Model links (MakerWorld, Printables) therefore go through
 /// here, and `navigation_guard()` below cancels any navigation that slips past.
 ///
-/// Only `http` and `https` are accepted — `file:`, `javascript:` and custom
-/// schemes are refused, so a URL that arrived via an imported backup cannot be
-/// used to launch something local. The URL is passed as a process argument
-/// without a shell, and its scheme guarantees it cannot be read as a flag.
+/// The URL is passed as a process argument without a shell, and its scheme
+/// guarantees it cannot be read as a flag.
 #[tauri::command]
 fn open_external(url: String) -> Result<(), String> {
-    let parsed = tauri::Url::parse(url.trim()).map_err(|_| "not a valid URL".to_string())?;
-    if !matches!(parsed.scheme(), "http" | "https") {
-        return Err(format!("refusing to open a `{}` URL", parsed.scheme()));
-    }
+    let parsed = web_url(&url)?;
     let target = parsed.as_str();
 
     #[cfg(target_os = "linux")]
@@ -168,20 +176,25 @@ fn open_external(url: String) -> Result<(), String> {
 /// tries to navigate, the window keeps showing PrintFlow.
 fn navigation_guard<R: tauri::Runtime>() -> tauri::plugin::TauriPlugin<R> {
     tauri::plugin::Builder::new("navigation-guard")
-        .on_navigation(|_webview, url| {
-            let local_host = matches!(
-                url.host_str(),
-                Some("tauri.localhost") | Some("localhost") | Some("127.0.0.1")
-            );
-            match url.scheme() {
-                // Production: `tauri://localhost` (Linux/macOS), custom protocols.
-                "tauri" | "asset" | "about" | "blob" | "data" => true,
-                // Production on Windows and the dev server.
-                "http" | "https" => local_host,
-                _ => false,
-            }
-        })
+        .on_navigation(|_webview, url| is_app_origin(url))
         .build()
+}
+
+/// Whether `url` belongs to the bundled app rather than the open web.
+///
+/// The app is served from `tauri://localhost` on Linux and macOS, from
+/// `http://tauri.localhost` on Windows, and from the Vite dev server while
+/// developing — all three have to pass, or the window comes up blank.
+fn is_app_origin(url: &tauri::Url) -> bool {
+    let local_host = matches!(
+        url.host_str(),
+        Some("tauri.localhost") | Some("localhost") | Some("127.0.0.1")
+    );
+    match url.scheme() {
+        "tauri" | "asset" | "about" | "blob" | "data" => true,
+        "http" | "https" => local_host,
+        _ => false,
+    }
 }
 
 #[derive(Deserialize)]
@@ -280,4 +293,70 @@ pub fn run() {
         ])
         .run(tauri::generate_context!())
         .expect("error while running PrintFlow");
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn accepts_plain_web_addresses() {
+        assert!(web_url("https://makerworld.com/en/models/12345").is_ok());
+        assert!(web_url("http://192.168.1.50:8080/print").is_ok());
+        // Surrounding whitespace is a paste artefact, not a different URL.
+        assert!(web_url("  https://printables.com/model/7  ").is_ok());
+    }
+
+    #[test]
+    fn refuses_everything_that_is_not_http() {
+        // The cases that matter: a restored backup could hold any of these.
+        for url in [
+            "javascript:alert(1)",
+            "file:///etc/passwd",
+            "data:text/html,<script>alert(1)</script>",
+            "tauri://localhost/settings",
+            "not a url at all",
+            "",
+        ] {
+            assert!(web_url(url).is_err(), "should have refused `{url}`");
+        }
+    }
+
+    #[test]
+    fn backup_path_must_be_absolute() {
+        let live = Path::new("/home/u/.config/app.printflow.desktop/printflow.db");
+        assert!(checked_backup_path("backup.db".into(), live).is_err());
+        assert!(checked_backup_path("../../etc/x.db".into(), live).is_err());
+        assert!(checked_backup_path("/home/u/backup.db".into(), live).is_ok());
+    }
+
+    #[test]
+    fn backup_path_never_targets_the_live_database() {
+        let live = Path::new("/home/u/.config/app.printflow.desktop/printflow.db");
+        for candidate in [
+            "/home/u/.config/app.printflow.desktop/printflow.db",
+            "/home/u/.config/app.printflow.desktop/printflow.db-wal",
+            "/home/u/.config/app.printflow.desktop/printflow.db-shm",
+        ] {
+            assert!(
+                checked_backup_path(candidate.into(), live).is_err(),
+                "should have refused `{candidate}`"
+            );
+        }
+    }
+
+    /// The guard has to let the app's own origin through on every platform —
+    /// getting this wrong ships a blank window.
+    #[test]
+    fn guard_allows_the_app_and_blocks_the_web() {
+        let allowed = |url: &str| is_app_origin(&tauri::Url::parse(url).unwrap());
+
+        assert!(allowed("tauri://localhost"), "production on Linux/macOS");
+        assert!(allowed("http://tauri.localhost/"), "production on Windows");
+        assert!(allowed("http://localhost:1420/"), "dev server");
+        assert!(allowed("about:blank"));
+
+        assert!(!allowed("https://makerworld.com/"));
+        assert!(!allowed("file:///etc/passwd"));
+    }
 }

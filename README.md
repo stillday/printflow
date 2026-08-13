@@ -54,6 +54,8 @@ npm run check          # svelte-check (TypeScript + Svelte)
 npm test               # vitest — slicer file parser test suite
 npm run build          # frontend only, into build/
 npm run tauri:build    # production installer for the current platform
+
+cd src-tauri && cargo test    # Rust side: link and backup-path validation
 ```
 
 ---
@@ -112,6 +114,14 @@ and uses a real `sqlx` transaction. Logging a print — which writes the job,
 deducts filament from several spools and bumps part counters — goes through it,
 so stock can never drift out of step with the counters.
 
+**External links leave the WebView.** The app runs in one WebView with no
+browser chrome, so a `target="_blank"` link to a model page would replace the UI
+with no way back. Model links go through the `open_external` command, which
+accepts `http`/`https` only and hands the URL to the OS browser; the
+`navigation-guard` plugin cancels any navigation that is not the app's own
+origin. A `sourceUrl` is re-validated when it is rendered, not just when it is
+entered — a restored backup has never passed the input check.
+
 **Drag & drop is handled by the WebView.** `dragDropEnabled: false` in the window
 config turns off Tauri's native file-drop interception, so HTML5 drag & drop
 yields real `File` objects that JSZip can read directly — no filesystem
@@ -127,6 +137,7 @@ file costs about 1 MB of memory.
 | --- | --- |
 | `.3mf` from Bambu Studio / OrcaSlicer | `Metadata/slice_info.config` — exact per-plate time, layer count, and per-slot filament type, colour, length and weight |
 | `.gcode.3mf` | the embedded G-code header, one plate per `plate_N.gcode` |
+| Bambu / Orca `.3mf` **saved without slicing** | `Metadata/model_settings.config` — object names and the per-plate layout. Its `slice_info.config` exists but is empty, and `3D/3dmodel.model` carries no names at all, so this is the only place the real part names live |
 | `.3mf` project without slice data (e.g. PrusaSlicer) | `3D/3dmodel.model` — object names and instance counts, so the BOM can still be built |
 | `.gcode` from PrusaSlicer, OrcaSlicer, Bambu Studio, Cura | time, layer count, per-extruder filament weight/length/type/colour, and object names |
 
@@ -148,3 +159,10 @@ git push origin v0.1.0
 
 Keep the version in `package.json` and `src-tauri/tauri.conf.json` in sync with
 the tag.
+
+> **Local AppImage builds fail on rolling-release distros.** The prebuilt
+> `linuxdeploy` ships an old `strip` that rejects the `.relr.dyn` sections
+> produced by current toolchains (Arch, CachyOS, Fedora Rawhide), so
+> `npm run tauri:build` aborts at the AppImage step. Build `.deb` locally with
+> `npm run tauri:build -- --bundles deb`; the release workflow runs on
+> `ubuntu-latest`, where the AppImage step works.
