@@ -6,6 +6,7 @@
 		CalendarArrowDown,
 		CalendarArrowUp,
 		CalendarDays,
+		CalendarPlus,
 		ChevronLeft,
 		ChevronRight,
 		Clock,
@@ -19,6 +20,7 @@
 	import EmptyState from '$lib/components/ui/EmptyState.svelte';
 	import ConfirmDialog from '$lib/components/ui/ConfirmDialog.svelte';
 	import PrintJobModal from '$lib/components/projects/PrintJobModal.svelte';
+	import SchedulePlatesModal from '$lib/components/projects/SchedulePlatesModal.svelte';
 	import {
 		deleteEntry,
 		listOverdue,
@@ -62,6 +64,14 @@
 	/** Plate plus its project's parts, as PrintJobModal needs both. */
 	let printing = $state<{ plate: PrintPlateDecoded; parts: Part[]; entryId: number } | null>(null);
 	let pendingDelete = $state<PlanEntryDecoded | null>(null);
+	/** Open state of the scheduler, plus the day a per-day button was pressed on. */
+	let addOpen = $state(false);
+	let addDate = $state<string | undefined>(undefined);
+
+	function openScheduler(date?: string) {
+		addDate = date;
+		addOpen = true;
+	}
 
 	const days = $derived(planDays(weekStart));
 	const weekEnd = $derived(addPlanDays(weekStart, 6));
@@ -218,6 +228,12 @@
 			>
 				<ChevronRight size={16} />
 			</IconButton>
+
+			<!-- The page is called "print plan" and could not plan anything. -->
+			<Button variant="primary" onclick={() => openScheduler()}>
+				<CalendarPlus size={15} />
+				{$t('plan.add')}
+			</Button>
 		</div>
 	{/snippet}
 </PageHeader>
@@ -298,15 +314,26 @@
 			</section>
 		{/if}
 
+		<!--
+			The empty week used to replace the day grid entirely — hiding the seven
+			days at exactly the moment the user wants somewhere to plan into. The
+			hint now sits above the grid instead of instead of it.
+		-->
 		{#if entries.length === 0}
-			<div class="card">
-				<EmptyState icon={CalendarDays} title={$t('plan.empty')} body={$t('plan.emptyBody')}>
-					{#snippet action()}
-						<Button variant="primary" href="/projects">{$t('nav.projects')}</Button>
-					{/snippet}
-				</EmptyState>
+			<div class="card mb-4 flex flex-wrap items-center gap-4 px-5 py-4">
+				<CalendarDays size={18} class="shrink-0 text-zinc-400" />
+				<div class="min-w-0 flex-1">
+					<p class="text-sm font-medium text-zinc-100">{$t('plan.empty')}</p>
+					<p class="mt-0.5 text-xs text-zinc-400">{$t('plan.emptyBody')}</p>
+				</div>
+				<Button variant="primary" onclick={() => openScheduler()}>
+					<CalendarPlus size={15} />
+					{$t('plan.add')}
+				</Button>
 			</div>
-		{:else}
+		{/if}
+
+		{#key weekStart}
 			<div class="grid gap-4 2xl:grid-cols-2">
 				{#each days as date (date)}
 					{@const dayEntries = byDate.get(date) ?? []}
@@ -336,6 +363,10 @@
 								<p class="mt-0.5 text-[11px] text-zinc-400 tabular-nums">{dayLabel(date)}</p>
 							</div>
 
+							<IconButton label={$t('plan.addToDay')} onclick={() => openScheduler(date)}>
+								<CalendarPlus size={15} />
+							</IconButton>
+
 							{#if dayEntries.length > 0}
 								<span
 									class={cn(
@@ -353,7 +384,13 @@
 						</div>
 
 						{#if dayEntries.length === 0}
-							<p class="mt-4 text-[11px] text-zinc-400">{$t('plan.dayEmpty')}</p>
+							<button
+								type="button"
+								class="mt-4 w-full rounded-xl border border-dashed border-white/10 px-4 py-3 text-[11px] text-zinc-400 transition-colors hover:border-indigo-500/40 hover:text-zinc-200"
+								onclick={() => openScheduler(date)}
+							>
+								+ {$t('plan.addToDay')}
+							</button>
 						{:else}
 							<ul class="mt-4 grid gap-2">
 								{#each dayEntries as entry, index (entry.id)}
@@ -480,9 +517,17 @@
 					</section>
 				{/each}
 			</div>
-		{/if}
+		{/key}
 	{/if}
 </div>
+
+<SchedulePlatesModal
+	open={addOpen}
+	plates={null}
+	date={addDate}
+	onClose={() => (addOpen = false)}
+	onScheduled={load}
+/>
 
 <PrintJobModal
 	plate={printing?.plate ?? null}

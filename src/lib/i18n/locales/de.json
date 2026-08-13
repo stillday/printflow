@@ -49,7 +49,9 @@
 		"never": "Nie",
 		"copy": "Kopieren",
 		"copied": "Kopiert",
-		"continue": "Weiter"
+		"continue": "Weiter",
+		"selectAll": "Alle",
+		"selectNone": "Keine"
 	},
 	"units": {
 		"gram": "g",
@@ -380,7 +382,8 @@
 		"imported": "Sicherung importiert",
 		"languageChanged": "Sprache geändert",
 		"scheduled": "Eingeplant",
-		"moved": "Verschoben"
+		"moved": "Verschoben",
+		"scheduledCount": "{count, plural, one {# Platte eingeplant} other {# Platten eingeplant}}"
 	},
 	"plan": {
 		"title": "Druckplan",
@@ -419,7 +422,17 @@
 		"status": {
 			"done": "Gedruckt",
 			"skipped": "Übersprungen"
-		}
+		},
+		"add": "Einplanen",
+		"addToDay": "An diesem Tag einplanen",
+		"whichPlates": "Welche Platten?",
+		"noPlates": "Dieses Projekt hat noch keine Platten. Importiere zuerst eine Datei.",
+		"scheduleCount": "{count} einplanen",
+		"spread": "Auf Folgetage verteilen",
+		"spreadHint": "Füllt jeden Tag bis 24 Stunden Druckzeit, dann den nächsten.",
+		"spreadPreview": "{count} Platten, zusammen {time} — verteilt ab dem gewählten Tag.",
+		"dayAfter": "Dieser Tag: {before} geplant → {after} danach",
+		"pastDate": "Der Tag liegt in der Vergangenheit — der Eintrag erscheint sofort als überfällig."
 	},
 	"files": {
 		"title": "Dateien",

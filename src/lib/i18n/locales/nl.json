@@ -49,7 +49,9 @@
 		"never": "Nooit",
 		"copy": "Kopiëren",
 		"copied": "Gekopieerd",
-		"continue": "Verder"
+		"continue": "Verder",
+		"selectAll": "Alle",
+		"selectNone": "Geen"
 	},
 	"units": {
 		"gram": "g",
@@ -380,7 +382,8 @@
 		"imported": "Back-up geïmporteerd",
 		"languageChanged": "Taal gewijzigd",
 		"scheduled": "Ingepland",
-		"moved": "Verplaatst"
+		"moved": "Verplaatst",
+		"scheduledCount": "{count, plural, one {# plaat ingepland} other {# platen ingepland}}"
 	},
 	"plan": {
 		"title": "Printplanning",
@@ -419,7 +422,17 @@
 		"status": {
 			"done": "Geprint",
 			"skipped": "Overgeslagen"
-		}
+		},
+		"add": "Inplannen",
+		"addToDay": "Op deze dag inplannen",
+		"whichPlates": "Welke platen?",
+		"noPlates": "Dit project heeft nog geen platen. Importeer eerst een bestand.",
+		"scheduleCount": "{count} inplannen",
+		"spread": "Over volgende dagen verdelen",
+		"spreadHint": "Vult elke dag tot 24 uur printtijd en gaat dan verder.",
+		"spreadPreview": "{count} platen, samen {time} — verdeeld vanaf de gekozen dag.",
+		"dayAfter": "Deze dag: {before} gepland → {after} daarna",
+		"pastDate": "Die dag ligt in het verleden — de planning verschijnt direct als te laat."
 	},
 	"files": {
 		"title": "Bestanden",

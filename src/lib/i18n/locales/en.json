@@ -49,7 +49,9 @@
 		"never": "Never",
 		"copy": "Copy",
 		"copied": "Copied",
-		"continue": "Continue"
+		"continue": "Continue",
+		"selectAll": "All",
+		"selectNone": "None"
 	},
 	"units": {
 		"gram": "g",
@@ -380,7 +382,8 @@
 		"imported": "Backup imported",
 		"languageChanged": "Language changed",
 		"scheduled": "Scheduled",
-		"moved": "Moved"
+		"moved": "Moved",
+		"scheduledCount": "{count, plural, one {# plate scheduled} other {# plates scheduled}}"
 	},
 	"plan": {
 		"title": "Print plan",
@@ -419,7 +422,17 @@
 		"status": {
 			"done": "Printed",
 			"skipped": "Skipped"
-		}
+		},
+		"add": "Schedule",
+		"addToDay": "Schedule on this day",
+		"whichPlates": "Which plates?",
+		"noPlates": "This project has no plates yet. Import a file first.",
+		"scheduleCount": "Schedule {count}",
+		"spread": "Spread over following days",
+		"spreadHint": "Fills each day up to 24 hours of printing, then moves on.",
+		"spreadPreview": "{count} plates, {time} in total — spread from the chosen day.",
+		"dayAfter": "This day: {before} planned → {after} afterwards",
+		"pastDate": "That day is in the past — the entry will show up as overdue straight away."
 	},
 	"files": {
 		"title": "Files",

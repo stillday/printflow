@@ -16,7 +16,7 @@
 	import PlateCard from '$lib/components/projects/PlateCard.svelte';
 	import AssignPartsModal from '$lib/components/projects/AssignPartsModal.svelte';
 	import PrintJobModal from '$lib/components/projects/PrintJobModal.svelte';
-	import SchedulePlateModal from '$lib/components/projects/SchedulePlateModal.svelte';
+	import SchedulePlatesModal from '$lib/components/projects/SchedulePlatesModal.svelte';
 	import LinkPlatesModal from '$lib/components/projects/LinkPlatesModal.svelte';
 	import { deleteProject, getProject } from '$lib/db/projects';
 	import { listParts } from '$lib/db/parts';
@@ -470,8 +470,15 @@
 		onSaved={reload}
 	/>
 
-	<SchedulePlateModal
-		plate={scheduling}
+	<!--
+		Opens with every plate of the project listed and the clicked one ticked, so
+		scheduling a batch needs no separate selection mode — the common case (a
+		project's plates go onto the plan together) is one dialog.
+	-->
+	<SchedulePlatesModal
+		open={scheduling !== null}
+		{plates}
+		preselected={scheduling?.id ? [scheduling.id] : []}
 		onClose={() => (scheduling = null)}
 		onScheduled={reload}
 	/>
