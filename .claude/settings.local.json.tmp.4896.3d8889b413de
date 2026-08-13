@@ -63,7 +63,12 @@
       "Bash(command -v sqlite3)",
       "Bash(sqlite3 /tmp/claude-1000/-home-crash-coding-printing-helper/7ca89f0c-b46c-47d1-bab8-295753ad1c0a/scratchpad/lightprofile/app.printflow.desktop/printflow.db)",
       "Bash(sqlite3 /tmp/claude-1000/-home-crash-coding-printing-helper/7ca89f0c-b46c-47d1-bab8-295753ad1c0a/scratchpad/lightprofile/app.printflow.desktop/printflow.db 'SELECT '\\\\''Katalog'\\\\'',COUNT\\(*\\) FROM filament_catalog UNION ALL SELECT '\\\\''Spulen'\\\\'',COUNT\\(*\\) FROM spools UNION ALL SELECT '\\\\''Projekte'\\\\'',COUNT\\(*\\) FROM projects UNION ALL SELECT '\\\\''Platten'\\\\'',COUNT\\(*\\) FROM print_plates UNION ALL SELECT '\\\\''Planeintraege'\\\\'',COUNT\\(*\\) FROM print_plan_entries;')",
-      "Bash(git -c user.name=Jan -c user.email=jan.drenkhahn@austrosoft.at commit -q -m 'Light Mode ueber CSS-Variablen statt dark:-Varianten *)"
+      "Bash(git -c user.name=Jan -c user.email=jan.drenkhahn@austrosoft.at commit -q -m 'Light Mode ueber CSS-Variablen statt dark:-Varianten *)",
+      "Bash(gh auth *)",
+      "Bash(gh api *)",
+      "Bash(git config *)",
+      "Bash(FILTER_BRANCH_SQUELCH_WARNING=1 git filter-branch -f --env-filter ' *)",
+      "Bash(git commit -q -m 'Fixtures entpersonalisiert *)"
     ]
   }
 }
