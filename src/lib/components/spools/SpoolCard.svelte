@@ -94,7 +94,7 @@
 	</div>
 
 	<div
-		class="relative mt-4 flex items-center justify-end gap-1 border-t border-white/5 pt-3 opacity-0 transition-opacity group-hover:opacity-100 focus-within:opacity-100"
+		class="relative mt-4 flex items-center justify-end gap-1 border-t border-white/5 pt-3 opacity-60 transition-opacity group-hover:opacity-100 focus-within:opacity-100"
 	>
 		{#if spool.status !== 'archived'}
 			<IconButton label={$t('spools.deduct')} onclick={() => onDeduct(spool)}>

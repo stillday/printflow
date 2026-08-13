@@ -340,7 +340,7 @@
 						<IconButton
 							label={$t('common.delete')}
 							tone="danger"
-							class="opacity-0 transition-opacity group-hover:opacity-100 focus:opacity-100"
+							class="opacity-50 transition-opacity group-hover:opacity-100 focus-visible:opacity-100"
 							onclick={() => (pendingDelete = part)}
 						>
 							<Trash2 size={15} />

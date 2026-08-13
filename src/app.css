@@ -163,9 +163,16 @@
 	}
 
 	.input-base {
+		/*
+		 * `focus:outline-none` used to sit here and, being in @layer components,
+		 * outranked the :focus-visible rule above — so the 32 inputs and selects
+		 * had no focus ring at all, only a 1px border tint that misses the 3:1
+		 * contrast threshold. Keyboard focus is visible again.
+		 */
 		@apply w-full rounded-xl border border-white/10 bg-zinc-950/60 px-3 py-2 text-sm text-zinc-100
 			placeholder:text-zinc-400 transition-colors
-			focus:border-indigo-500/60 focus:bg-zinc-950 focus:outline-none;
+			focus:border-indigo-500/60 focus:bg-zinc-950
+			focus-visible:outline-2 focus-visible:outline-offset-0 focus-visible:outline-indigo-500;
 	}
 
 	.label-base {

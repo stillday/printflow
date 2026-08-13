@@ -168,7 +168,9 @@
 			"formula": "Netto = Waage − Leergewicht",
 			"apply": "Übernehmen",
 			"negative": "Der Waagenwert ist kleiner als das Leergewicht — bitte prüfen.",
-			"open": "Tara-Rechner"
+			"open": "Tara-Rechner",
+			"applyAsRemaining": "Als Restmenge speichern",
+			"implausible": "Mehr als die Spule nominal hält ({nominal}) — Tara prüfen."
 		}
 	},
 	"projects": {

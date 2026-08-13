@@ -168,7 +168,9 @@
 			"formula": "Net = scale − tare",
 			"apply": "Apply",
 			"negative": "The scale reading is below the empty spool weight — please check.",
-			"open": "Tare calculator"
+			"open": "Tare calculator",
+			"applyAsRemaining": "Save as remaining weight",
+			"implausible": "More than the spool nominally holds ({nominal}) — check the tare."
 		}
 	},
 	"projects": {

@@ -105,6 +105,8 @@
 
 			<TareCalculator
 				tareWeight={spool.catalog.spoolTareWeight}
+				nominalWeight={spool.catalog.nominalWeight}
+				applyLabelKey="spools.tare.applyAsRemaining"
 				onApply={applyMeasured}
 			/>
 		</div>

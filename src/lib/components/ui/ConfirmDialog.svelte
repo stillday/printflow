@@ -52,13 +52,15 @@
 	</div>
 
 	{#snippet footer()}
-		<Button variant="ghost" onclick={onCancel} disabled={busy}>{$t('common.cancel')}</Button>
-		<Button
-			variant={tone === 'danger' ? 'danger' : 'primary'}
-			onclick={confirm}
-			disabled={busy}
-			data-autofocus
-		>
+		<!--
+			Cancel takes the focus, not the confirming button. This dialog guards
+			deletions and the backup import, which replaces the whole database — a
+			stray Enter right after it opens must not be enough to go through with it.
+		-->
+		<Button variant="ghost" onclick={onCancel} disabled={busy} data-autofocus>
+			{$t('common.cancel')}
+		</Button>
+		<Button variant={tone === 'danger' ? 'danger' : 'primary'} onclick={confirm} disabled={busy}>
 			{confirmLabel ?? $t('common.delete')}
 		</Button>
 	{/snippet}

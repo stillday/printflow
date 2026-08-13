@@ -149,6 +149,7 @@
 		{#if showTare}
 			<TareCalculator
 				tareWeight={selectedCatalog?.spoolTareWeight ?? 250}
+				nominalWeight={selectedCatalog?.nominalWeight}
 				onApply={(net) => {
 					weightInput = String(net);
 					showTare = false;

@@ -14,10 +14,20 @@ class ToastStore {
 	items = $state<Toast[]>([]);
 	#nextId = 1;
 
+	/**
+	 * Errors stay until dismissed; confirmations fade.
+	 *
+	 * A toast is the app's only report of a failure, and several of them carry the
+	 * reason ("could not scan the folder: …"). Three and a half seconds is not
+	 * enough to read that, let alone act on it — while a "Saved" that lingers is
+	 * just noise.
+	 */
 	push(key: string, variant: ToastVariant = 'success', values?: Record<string, string | number>) {
 		const id = this.#nextId++;
 		this.items = [...this.items, { id, key, values, variant }];
-		setTimeout(() => this.dismiss(id), DISMISS_AFTER_MS);
+		if (variant !== 'error') {
+			setTimeout(() => this.dismiss(id), DISMISS_AFTER_MS);
+		}
 	}
 
 	success(key: string, values?: Record<string, string | number>) {

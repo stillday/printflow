@@ -154,7 +154,9 @@
 								</span>
 							</div>
 
-							<div class="flex shrink-0 gap-1 opacity-0 transition-opacity group-hover:opacity-100">
+							<div
+							class="flex shrink-0 gap-1 opacity-60 transition-opacity group-hover:opacity-100 focus-within:opacity-100"
+						>
 								<IconButton label={$t('common.edit')} onclick={() => openEdit(entry)}>
 									<Pencil size={15} />
 								</IconButton>

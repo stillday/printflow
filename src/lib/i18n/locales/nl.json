@@ -168,7 +168,9 @@
 			"formula": "Netto = weegschaal − tarra",
 			"apply": "Overnemen",
 			"negative": "De weegschaalwaarde ligt onder het leeggewicht — controleer dit even.",
-			"open": "Tarra-calculator"
+			"open": "Tarra-calculator",
+			"applyAsRemaining": "Als restgewicht opslaan",
+			"implausible": "Meer dan de spoel nominaal bevat ({nominal}) — controleer de tarra."
 		}
 	},
 	"projects": {
