@@ -11,6 +11,7 @@
 		"catalog": "Filament catalog",
 		"projects": "Projects",
 		"plan": "Print plan",
+		"files": "Files",
 		"settings": "Settings",
 		"section": {
 			"main": "Workshop",
@@ -47,7 +48,8 @@
 		"total": "Total",
 		"never": "Never",
 		"copy": "Copy",
-		"copied": "Copied"
+		"copied": "Copied",
+		"continue": "Continue"
 	},
 	"units": {
 		"gram": "g",
@@ -401,5 +403,28 @@
 			"done": "Printed",
 			"skipped": "Skipped"
 		}
+	},
+	"files": {
+		"title": "Files",
+		"subtitle": "Your .3mf and G-code files on disk",
+		"chooseFolder": "Choose folder",
+		"rescan": "Rescan",
+		"scanning": "Scanning …",
+		"empty": "No folder chosen yet",
+		"emptyBody": "Pick the folder your models live in. PrintFlow scans it for .3mf and G-code files and lists them grouped by folder.",
+		"fileCount": "{count, plural, one {# file} other {# files}}",
+		"searchPlaceholder": "Name or folder …",
+		"rootFolder": "Directly in the folder",
+		"truncated": "There are more files than shown — the list stops at the limit.",
+		"noneFound": "No slicer files found in this folder.",
+		"scanFailed": "Could not scan the folder: {reason}",
+		"readFailed": "Could not read the file.",
+		"import": "Import",
+		"alreadyImported": "Imported",
+		"alreadyImportedHint": "This file is already a plate in a project.",
+		"chooseProject": "Into which project?",
+		"existingProject": "Existing",
+		"newProject": "New",
+		"newProjectHint": "Suggested from the folder name."
 	}
 }

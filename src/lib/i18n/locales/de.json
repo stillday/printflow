@@ -11,6 +11,7 @@
 		"catalog": "Filament-Katalog",
 		"projects": "Projekte",
 		"plan": "Druckplan",
+		"files": "Dateien",
 		"settings": "Einstellungen",
 		"section": {
 			"main": "Werkstatt",
@@ -47,7 +48,8 @@
 		"total": "Gesamt",
 		"never": "Nie",
 		"copy": "Kopieren",
-		"copied": "Kopiert"
+		"copied": "Kopiert",
+		"continue": "Weiter"
 	},
 	"units": {
 		"gram": "g",
@@ -401,5 +403,28 @@
 			"done": "Gedruckt",
 			"skipped": "Übersprungen"
 		}
+	},
+	"files": {
+		"title": "Dateien",
+		"subtitle": "Deine .3mf- und G-code-Dateien auf der Festplatte",
+		"chooseFolder": "Ordner wählen",
+		"rescan": "Neu einlesen",
+		"scanning": "Wird eingelesen …",
+		"empty": "Noch kein Ordner gewählt",
+		"emptyBody": "Wähle den Ordner, in dem deine Modelle liegen. PrintFlow durchsucht ihn nach .3mf- und G-code-Dateien und zeigt sie nach Ordnern gruppiert.",
+		"fileCount": "{count, plural, one {# Datei} other {# Dateien}}",
+		"searchPlaceholder": "Name oder Ordner …",
+		"rootFolder": "Direkt im Ordner",
+		"truncated": "Es gibt mehr Dateien als angezeigt — die Liste ist bei der Obergrenze abgeschnitten.",
+		"noneFound": "In diesem Ordner wurden keine Slicer-Dateien gefunden.",
+		"scanFailed": "Ordner konnte nicht eingelesen werden: {reason}",
+		"readFailed": "Datei konnte nicht gelesen werden.",
+		"import": "Importieren",
+		"alreadyImported": "Importiert",
+		"alreadyImportedHint": "Diese Datei steckt schon als Platte in einem Projekt.",
+		"chooseProject": "In welches Projekt?",
+		"existingProject": "Vorhandenes",
+		"newProject": "Neues",
+		"newProjectHint": "Vorgeschlagen aus dem Ordnernamen."
 	}
 }

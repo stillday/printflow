@@ -16,11 +16,17 @@
 		projectId: number;
 		result: ParseResult | null;
 		parts: Part[];
+		/**
+		 * Absolute path the file came from, when it was picked from disk rather
+		 * than dropped onto the window. Stored so the library scanner can tell
+		 * which files are already in a project.
+		 */
+		sourcePath?: string | null;
 		onClose: () => void;
 		onImported: () => void;
 	}
 
-	let { projectId, result, parts, onClose, onImported }: Props = $props();
+	let { projectId, result, parts, sourcePath = null, onClose, onImported }: Props = $props();
 
 	/** `create` makes a new part, a number links to an existing one, 0 ignores. */
 	type Mapping = number | 'create';
@@ -103,7 +109,8 @@
 					estimatedTimeSeconds: plate.estimatedTimeSeconds,
 					layerCount: plate.layerCount,
 					filamentRequirementsJson: JSON.stringify(plate.filamentRequirements),
-					partsOnPlateJson: JSON.stringify(partsOnPlate)
+					partsOnPlateJson: JSON.stringify(partsOnPlate),
+					sourcePath
 				});
 			}
 

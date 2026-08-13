@@ -1,5 +1,5 @@
 import { execute, now, nullable, select, selectOne } from './index';
-import type { Project, ProjectStatus, ProjectWithProgress } from '$lib/types/schema';
+import type { NewProject, Project, ProjectStatus, ProjectWithProgress } from '$lib/types/schema';
 
 interface ProjectRow {
 	id: number;
@@ -73,7 +73,7 @@ export async function getProject(id: number): Promise<Project | null> {
 	return row ? mapProject(row) : null;
 }
 
-export async function createProject(project: Project): Promise<number> {
+export async function createProject(project: NewProject): Promise<number> {
 	const timestamp = now();
 	const result = await execute(
 		`INSERT INTO projects (title, description, source_url, status, created_at, updated_at)

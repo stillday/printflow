@@ -71,6 +71,20 @@ function parseTimestamp(iso: string): Date | null {
 	return Number.isNaN(date.getTime()) ? null : date;
 }
 
+/** File sizes for the library listing: `812 kB`, `2,4 MB`, `1,1 GB`. */
+export function formatBytes(bytes: number): string {
+	if (!Number.isFinite(bytes) || bytes < 0) return '–';
+	if (bytes < 1000) return `${formatNumber(bytes)} B`;
+	const units = ['kB', 'MB', 'GB', 'TB'];
+	let value = bytes / 1000;
+	let unit = 0;
+	while (value >= 1000 && unit < units.length - 1) {
+		value /= 1000;
+		unit += 1;
+	}
+	return `${formatNumber(value, value < 10 ? 1 : 0)} ${units[unit]}`;
+}
+
 export function formatPercent(ratio: number): string {
 	if (!Number.isFinite(ratio)) return '0 %';
 	return `${formatNumber(Math.round(ratio * 100))} %`;

@@ -86,6 +86,12 @@ export interface Project {
 	updatedAt: string;
 }
 
+/**
+ * A project before it exists: `createProject` stamps both timestamps itself, so
+ * a caller must not have to invent them.
+ */
+export type NewProject = Omit<Project, 'createdAt' | 'updatedAt'>;
+
 /** Aggregated part counters, computed in SQL for the project list. */
 export interface ProjectWithProgress extends Project {
 	partCount: number;
@@ -129,6 +135,12 @@ export interface PrintPlate {
 	layerCount?: number | null;
 	filamentRequirementsJson: string;
 	partsOnPlateJson: string;
+	/**
+	 * Absolute path the file was imported from, when known. Null for plates
+	 * dropped onto the window — the browser hands over no path — and for plates
+	 * imported before the library scanner existed.
+	 */
+	sourcePath?: string | null;
 	createdAt?: string;
 }
 

@@ -11,6 +11,7 @@
 		"catalog": "Filamentcatalogus",
 		"projects": "Projecten",
 		"plan": "Printplanning",
+		"files": "Bestanden",
 		"settings": "Instellingen",
 		"section": {
 			"main": "Werkplaats",
@@ -47,7 +48,8 @@
 		"total": "Totaal",
 		"never": "Nooit",
 		"copy": "Kopiëren",
-		"copied": "Gekopieerd"
+		"copied": "Gekopieerd",
+		"continue": "Verder"
 	},
 	"units": {
 		"gram": "g",
@@ -401,5 +403,28 @@
 			"done": "Geprint",
 			"skipped": "Overgeslagen"
 		}
+	},
+	"files": {
+		"title": "Bestanden",
+		"subtitle": "Je .3mf- en G-code-bestanden op schijf",
+		"chooseFolder": "Map kiezen",
+		"rescan": "Opnieuw inlezen",
+		"scanning": "Wordt ingelezen …",
+		"empty": "Nog geen map gekozen",
+		"emptyBody": "Kies de map waarin je modellen staan. PrintFlow zoekt daar naar .3mf- en G-code-bestanden en groepeert ze per map.",
+		"fileCount": "{count, plural, one {# bestand} other {# bestanden}}",
+		"searchPlaceholder": "Naam of map …",
+		"rootFolder": "Direct in de map",
+		"truncated": "Er zijn meer bestanden dan weergegeven — de lijst stopt bij de limiet.",
+		"noneFound": "Geen slicer-bestanden gevonden in deze map.",
+		"scanFailed": "Map kon niet ingelezen worden: {reason}",
+		"readFailed": "Bestand kon niet gelezen worden.",
+		"import": "Importeren",
+		"alreadyImported": "Geïmporteerd",
+		"alreadyImportedHint": "Dit bestand zit al als plaat in een project.",
+		"chooseProject": "In welk project?",
+		"existingProject": "Bestaand",
+		"newProject": "Nieuw",
+		"newProjectHint": "Voorgesteld op basis van de mapnaam."
 	}
 }

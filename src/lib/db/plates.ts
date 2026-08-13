@@ -1,4 +1,4 @@
-import { execute, select, selectOne } from './index';
+import { execute, nullable, select, selectOne } from './index';
 import type {
 	FilamentRequirement,
 	PartOnPlate,
@@ -15,6 +15,7 @@ interface PlateRow {
 	layer_count: number | null;
 	filament_requirements_json: string;
 	parts_on_plate_json: string;
+	source_path: string | null;
 	created_at: string;
 }
 
@@ -38,6 +39,7 @@ function mapPlate(row: PlateRow): PrintPlateDecoded {
 		layerCount: row.layer_count,
 		filamentRequirementsJson: row.filament_requirements_json,
 		partsOnPlateJson: row.parts_on_plate_json,
+		sourcePath: row.source_path,
 		createdAt: row.created_at,
 		filamentRequirements: parseJson<FilamentRequirement>(row.filament_requirements_json, []),
 		partsOnPlate: parseJson<PartOnPlate>(row.parts_on_plate_json, [])
@@ -62,8 +64,8 @@ export async function createPlate(plate: PrintPlate): Promise<number> {
 	const result = await execute(
 		`INSERT INTO print_plates
 		   (project_id, name, file_name, estimated_time_seconds, layer_count,
-		    filament_requirements_json, parts_on_plate_json)
-		 VALUES (?, ?, ?, ?, ?, ?, ?)`,
+		    filament_requirements_json, parts_on_plate_json, source_path)
+		 VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
 		[
 			plate.projectId,
 			plate.name.trim(),
@@ -71,7 +73,8 @@ export async function createPlate(plate: PrintPlate): Promise<number> {
 			Math.round(plate.estimatedTimeSeconds),
 			plate.layerCount ?? null,
 			plate.filamentRequirementsJson,
-			plate.partsOnPlateJson
+			plate.partsOnPlateJson,
+			nullable(plate.sourcePath)
 		]
 	);
 	return Number(result.lastInsertId);
@@ -95,4 +98,16 @@ export async function deletePlate(id: number): Promise<void> {
 /** Total grams a plate consumes across all filament slots. */
 export function plateTotalWeight(plate: PrintPlateDecoded): number {
 	return plate.filamentRequirements.reduce((sum, req) => sum + (req.weightGrams || 0), 0);
+}
+
+/**
+ * Absolute paths of every plate already imported, for the library scanner.
+ *
+ * A `Set` rather than a list: the scanner checks thousands of rows against it.
+ */
+export async function listImportedPaths(): Promise<Set<string>> {
+	const rows = await select<{ source_path: string }>(
+		"SELECT DISTINCT source_path FROM print_plates WHERE source_path IS NOT NULL AND source_path <> ''"
+	);
+	return new Set(rows.map((row) => row.source_path));
 }

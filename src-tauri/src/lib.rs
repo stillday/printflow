@@ -471,6 +471,12 @@ fn migrations() -> Vec<Migration> {
             sql: include_str!("../migrations/002_print_plan.sql"),
             kind: MigrationKind::Up,
         },
+        Migration {
+            version: 3,
+            description: "plate_source_path",
+            sql: include_str!("../migrations/003_plate_source_path.sql"),
+            kind: MigrationKind::Up,
+        },
     ]
 }
 

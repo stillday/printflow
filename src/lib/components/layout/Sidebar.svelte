@@ -5,6 +5,7 @@
 		Boxes,
 		CalendarDays,
 		FolderKanban,
+		FolderSearch,
 		LayoutDashboard,
 		Layers,
 		Settings
@@ -16,7 +17,8 @@
 		{ href: '/spools', labelKey: 'nav.spools', icon: Boxes },
 		{ href: '/catalog', labelKey: 'nav.catalog', icon: Layers },
 		{ href: '/projects', labelKey: 'nav.projects', icon: FolderKanban },
-		{ href: '/plan', labelKey: 'nav.plan', icon: CalendarDays }
+		{ href: '/plan', labelKey: 'nav.plan', icon: CalendarDays },
+		{ href: '/files', labelKey: 'nav.files', icon: FolderSearch }
 	];
 
 	const secondary = [{ href: '/settings', labelKey: 'nav.settings', icon: Settings }];
