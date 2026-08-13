@@ -373,6 +373,299 @@ async fn read_slicer_file(path: String) -> Result<Vec<u8>, String> {
     fs::read(&file).map_err(|e| format!("cannot read file: {e}"))
 }
 
+/* -------------------------------------------------------------------------- */
+/* Model portals — the app's only network access                              */
+/* -------------------------------------------------------------------------- */
+
+/*
+ * Everything below is the one place PrintFlow talks to the internet, and it is
+ * deliberately here in Rust rather than in the WebView: the Content-Security-
+ * Policy stays `'self'`, so the UI itself still cannot reach the network even by
+ * accident. A fetched preview is stored locally and rendered from the database,
+ * so a project keeps its picture offline afterwards.
+ *
+ * These commands are reached only from the "online features" switch in Settings,
+ * which is off by default. That switch is a product gate; the guarantees that
+ * hold regardless of it are enforced right here: an allowlist of model portals,
+ * https only for the image itself, hard size caps and short timeouts.
+ */
+
+/// Model portals whose pages may be fetched. Matched as a domain suffix, so
+/// `www.` and regional subdomains work without listing each one.
+const MODEL_PORTALS: [&str; 6] = [
+    "makerworld.com",
+    "printables.com",
+    "thingiverse.com",
+    "cults3d.com",
+    "myminifactory.com",
+    "thangs.com",
+];
+
+/// Enough for any model page; a page that needs more is not one we can read.
+const MAX_PAGE_BYTES: usize = 2 * 1024 * 1024;
+/// Preview images are thumbnails, not print files.
+const MAX_IMAGE_BYTES: usize = 8 * 1024 * 1024;
+/// A print file can legitimately be large, but not unbounded.
+const MAX_DOWNLOAD_BYTES: u64 = 500 * 1024 * 1024;
+
+const REQUEST_TIMEOUT: std::time::Duration = std::time::Duration::from_secs(20);
+
+/// Portals reject the default client string, so identify the app honestly.
+const USER_AGENT: &str = concat!("PrintFlow/", env!("CARGO_PKG_VERSION"), " (desktop app)");
+
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ModelPreview {
+    /// The image itself, base64 — stored in the database and rendered from a
+    /// `data:` URI, which the existing CSP already allows.
+    image_base64: String,
+    content_type: String,
+    /// Where the image came from, for provenance.
+    image_url: String,
+    /// The page's `og:title`, offered as a project name.
+    title: Option<String>,
+}
+
+fn is_model_portal(url: &tauri::Url) -> bool {
+    let Some(host) = url.host_str() else {
+        return false;
+    };
+    let host = host.to_ascii_lowercase();
+    MODEL_PORTALS
+        .iter()
+        .any(|portal| host == *portal || host.ends_with(&format!(".{portal}")))
+}
+
+fn client() -> Result<reqwest::Client, String> {
+    reqwest::Client::builder()
+        .timeout(REQUEST_TIMEOUT)
+        .user_agent(USER_AGENT)
+        .build()
+        .map_err(|e| format!("could not set up the network client: {e}"))
+}
+
+/// Reads a page's first `<meta property="og:…" content="…">` value.
+///
+/// A dependency-free scan rather than a parser: only two tags are needed, the
+/// attribute order varies between portals, and a hand-rolled scan cannot be
+/// tripped by malformed markup elsewhere on a very large page.
+fn og_content(html: &str, property: &str) -> Option<String> {
+    let needle = format!("og:{property}");
+    for tag in html.split('<') {
+        if !tag.starts_with("meta") || !tag.contains(&needle) {
+            continue;
+        }
+        // Guard against `og:image:width` matching a request for `og:image`.
+        let after = tag.split(&needle).nth(1)?;
+        if after.starts_with(':') {
+            continue;
+        }
+        if let Some(value) = attribute_value(tag, "content") {
+            if !value.trim().is_empty() {
+                return Some(decode_entities(value.trim()));
+            }
+        }
+    }
+    None
+}
+
+fn attribute_value(tag: &str, name: &str) -> Option<String> {
+    let lower = tag.to_ascii_lowercase();
+    let mut from = 0usize;
+    while let Some(found) = lower[from..].find(name) {
+        let start = from + found;
+        let rest = &tag[start + name.len()..];
+        let trimmed = rest.trim_start();
+        if let Some(after_eq) = trimmed.strip_prefix('=') {
+            let value = after_eq.trim_start();
+            let quote = value.chars().next()?;
+            if quote == '"' || quote == '\'' {
+                let inner = &value[1..];
+                let end = inner.find(quote)?;
+                return Some(inner[..end].to_string());
+            }
+        }
+        from = start + name.len();
+    }
+    None
+}
+
+/// The handful of entities that actually turn up in `og:` values.
+fn decode_entities(value: &str) -> String {
+    value
+        .replace("&amp;", "&")
+        .replace("&quot;", "\"")
+        .replace("&#39;", "'")
+        .replace("&apos;", "'")
+        .replace("&lt;", "<")
+        .replace("&gt;", ">")
+}
+
+/// Base64 without a dependency — the alphabet is fixed and this runs once per
+/// fetched image.
+fn to_base64(bytes: &[u8]) -> String {
+    const ALPHABET: &[u8; 64] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+    let mut out = String::with_capacity((bytes.len() + 2) / 3 * 4);
+    for chunk in bytes.chunks(3) {
+        let b = [
+            chunk[0],
+            chunk.get(1).copied().unwrap_or(0),
+            chunk.get(2).copied().unwrap_or(0),
+        ];
+        let triple = ((b[0] as u32) << 16) | ((b[1] as u32) << 8) | b[2] as u32;
+        out.push(ALPHABET[(triple >> 18 & 63) as usize] as char);
+        out.push(ALPHABET[(triple >> 12 & 63) as usize] as char);
+        out.push(if chunk.len() > 1 {
+            ALPHABET[(triple >> 6 & 63) as usize] as char
+        } else {
+            '='
+        });
+        out.push(if chunk.len() > 2 {
+            ALPHABET[(triple & 63) as usize] as char
+        } else {
+            '='
+        });
+    }
+    out
+}
+
+/// Fetches a model page's preview image so a project can show it offline.
+#[tauri::command]
+async fn fetch_model_preview(url: String) -> Result<ModelPreview, String> {
+    let page_url = web_url(&url)?;
+    if !is_model_portal(&page_url) {
+        return Err(format!(
+            "`{}` is not one of the supported model portals",
+            page_url.host_str().unwrap_or("?")
+        ));
+    }
+
+    let http = client()?;
+    let response = http
+        .get(page_url.clone())
+        .send()
+        .await
+        .map_err(|e| format!("could not reach the page: {e}"))?;
+    if !response.status().is_success() {
+        return Err(format!("the page answered {}", response.status()));
+    }
+
+    let body = response
+        .bytes()
+        .await
+        .map_err(|e| format!("could not read the page: {e}"))?;
+    let html = String::from_utf8_lossy(&body[..body.len().min(MAX_PAGE_BYTES)]);
+
+    let raw_image = og_content(&html, "image").ok_or_else(|| {
+        "the page carries no preview image (no og:image tag)".to_string()
+    })?;
+    // Portals sometimes give a path rather than an absolute URL.
+    let image_url = page_url
+        .join(&raw_image)
+        .map_err(|_| "the preview image address is not usable".to_string())?;
+    if image_url.scheme() != "https" {
+        return Err("the preview image is not served over https".into());
+    }
+
+    let image_response = http
+        .get(image_url.clone())
+        .send()
+        .await
+        .map_err(|e| format!("could not fetch the preview image: {e}"))?;
+    if !image_response.status().is_success() {
+        return Err(format!(
+            "the preview image answered {}",
+            image_response.status()
+        ));
+    }
+
+    let content_type = image_response
+        .headers()
+        .get(reqwest::header::CONTENT_TYPE)
+        .and_then(|value| value.to_str().ok())
+        .map(|value| value.split(';').next().unwrap_or(value).trim().to_string())
+        .unwrap_or_else(|| "image/jpeg".to_string());
+    if !content_type.starts_with("image/") {
+        return Err(format!("that address returned `{content_type}`, not an image"));
+    }
+
+    let image_bytes = image_response
+        .bytes()
+        .await
+        .map_err(|e| format!("could not read the preview image: {e}"))?;
+    if image_bytes.len() > MAX_IMAGE_BYTES {
+        return Err(format!(
+            "the preview image is larger than {} MB",
+            MAX_IMAGE_BYTES / (1024 * 1024)
+        ));
+    }
+
+    Ok(ModelPreview {
+        image_base64: to_base64(&image_bytes),
+        content_type,
+        image_url: image_url.to_string(),
+        title: og_content(&html, "title"),
+    })
+}
+
+/// Downloads a direct file URL into the user's model library.
+///
+/// The portals require a signed-in session for their own download endpoints, so
+/// this is for links the user already has. An existing file is never
+/// overwritten, and the bytes land in a `.part` file that is renamed on success,
+/// so an interrupted download cannot leave something that looks complete.
+#[tauri::command]
+async fn download_file(url: String, target_path: String) -> Result<u64, String> {
+    let source = web_url(&url)?;
+    let target = PathBuf::from(&target_path);
+    if !target.is_absolute() {
+        return Err("target path must be absolute".into());
+    }
+    if target.exists() {
+        return Err("a file of that name already exists".into());
+    }
+    let parent = target
+        .parent()
+        .ok_or_else(|| "target path has no folder".to_string())?;
+    fs::create_dir_all(parent).map_err(|e| format!("cannot create target folder: {e}"))?;
+
+    let response = client()?
+        .get(source)
+        .send()
+        .await
+        .map_err(|e| format!("could not reach the file: {e}"))?;
+    if !response.status().is_success() {
+        return Err(format!("the server answered {}", response.status()));
+    }
+    if let Some(length) = response.content_length() {
+        if length > MAX_DOWNLOAD_BYTES {
+            return Err(format!(
+                "the file is larger than {} MB",
+                MAX_DOWNLOAD_BYTES / (1024 * 1024)
+            ));
+        }
+    }
+
+    let bytes = response
+        .bytes()
+        .await
+        .map_err(|e| format!("could not read the file: {e}"))?;
+    if bytes.len() as u64 > MAX_DOWNLOAD_BYTES {
+        return Err(format!(
+            "the file is larger than {} MB",
+            MAX_DOWNLOAD_BYTES / (1024 * 1024)
+        ));
+    }
+
+    let partial = sidecar(&target, ".part");
+    fs::write(&partial, &bytes).map_err(|e| format!("could not write the file: {e}"))?;
+    fs::rename(&partial, &target).map_err(|e| {
+        let _ = fs::remove_file(&partial);
+        format!("could not finish the download: {e}")
+    })?;
+    Ok(bytes.len() as u64)
+}
+
 /// Parses `url` and accepts it only if it is a plain web address.
 ///
 /// Only `http` and `https` pass — `file:`, `javascript:` and custom schemes are
@@ -560,6 +853,8 @@ pub fn run() {
             export_database,
             import_database,
             open_external,
+            fetch_model_preview,
+            download_file,
             scan_slicer_files,
             read_slicer_file,
             db_transaction

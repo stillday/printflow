@@ -18,6 +18,10 @@ tauri-build = { version = "2", features = [] }
 tauri = { version = "2", features = [] }
 tauri-plugin-sql = { version = "2", features = ["sqlite"] }
 tauri-plugin-dialog = "2"
+# Only reachable through the two opt-in commands in lib.rs. `reqwest` is already
+# in the tree via tauri, but without a TLS backend -- rustls rather than
+# native-tls so the four release targets need no system OpenSSL.
+reqwest = { version = "0.13", default-features = false, features = ["rustls"] }
 tauri-plugin-os = "2"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
