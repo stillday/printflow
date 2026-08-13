@@ -416,6 +416,8 @@
 		"searchPlaceholder": "Name oder Ordner …",
 		"rootFolder": "Direkt im Ordner",
 		"truncated": "Es gibt mehr Dateien als angezeigt — die Liste ist bei der Obergrenze abgeschnitten.",
+		"timedOut": "Der Ordner brauchte zu lange — vermutlich liegt er in der Cloud oder auf einem Netzlaufwerk. Angezeigt wird, was in der Zeit gefunden wurde. Wähle am besten einen engeren Unterordner.",
+		"progress": "{folders} Ordner durchsucht · {files} gefunden",
 		"noneFound": "In diesem Ordner wurden keine Slicer-Dateien gefunden.",
 		"scanFailed": "Ordner konnte nicht eingelesen werden: {reason}",
 		"readFailed": "Datei konnte nicht gelesen werden.",

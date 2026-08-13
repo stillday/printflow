@@ -416,6 +416,8 @@
 		"searchPlaceholder": "Name or folder …",
 		"rootFolder": "Directly in the folder",
 		"truncated": "There are more files than shown — the list stops at the limit.",
+		"timedOut": "The folder took too long — it is probably on a cloud or network drive. What was found in the time is listed. Picking a narrower subfolder helps.",
+		"progress": "{folders} folders scanned · {files} found",
 		"noneFound": "No slicer files found in this folder.",
 		"scanFailed": "Could not scan the folder: {reason}",
 		"readFailed": "Could not read the file.",

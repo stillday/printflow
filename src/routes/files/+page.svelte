@@ -17,7 +17,12 @@
 	import EmptyState from '$lib/components/ui/EmptyState.svelte';
 	import PlateImportModal from '$lib/components/projects/PlateImportModal.svelte';
 	import ChooseProjectModal from '$lib/components/library/ChooseProjectModal.svelte';
-	import { readSlicerFile, scanSlicerFiles, type ScannedFile } from '$lib/db/library';
+	import {
+		onScanProgress,
+		readSlicerFile,
+		scanSlicerFiles,
+		type ScannedFile
+	} from '$lib/db/library';
 	import { listImportedPaths } from '$lib/db/plates';
 	import { listParts } from '$lib/db/parts';
 	import { SETTING_LIBRARY_ROOT, getSetting, setSetting } from '$lib/db/settings';
@@ -32,7 +37,10 @@
 	let files = $state<ScannedFile[]>([]);
 	let imported = $state<Set<string>>(new Set());
 	let truncated = $state(false);
+	let timedOut = $state(false);
 	let scanning = $state(false);
+	/** Live counts while the walk runs, so a slow folder never looks frozen. */
+	let progress = $state<{ folders: number; files: number } | null>(null);
 	let search = $state('');
 	let collapsed = $state<Set<string>>(new Set());
 
@@ -78,6 +86,10 @@
 	async function scan() {
 		if (!root || scanning) return;
 		scanning = true;
+		progress = { folders: 0, files: 0 };
+		const unlisten = await onScanProgress((event) => {
+			progress = { folders: event.foldersScanned, files: event.filesFound };
+		});
 		try {
 			const [result, importedPaths] = await Promise.all([
 				scanSlicerFiles(root),
@@ -85,14 +97,19 @@
 			]);
 			files = result.files;
 			truncated = result.truncated;
+			timedOut = result.timedOut;
 			imported = importedPaths;
-			if (result.files.length === 0) toasts.push('files.noneFound', 'info');
+			if (result.files.length === 0 && !result.timedOut) {
+				toasts.push('files.noneFound', 'info');
+			}
 		} catch (error) {
 			toasts.error('files.scanFailed', {
 				reason: error instanceof Error ? error.message : String(error)
 			});
 		} finally {
+			unlisten();
 			scanning = false;
+			progress = null;
 		}
 	}
 
@@ -175,7 +192,12 @@
 				/>
 			</div>
 
-			{#if truncated}
+			{#if timedOut}
+				<p class="mt-3 flex items-start gap-2 text-[11px] text-amber-300">
+					<TriangleAlert size={13} class="mt-0.5 shrink-0" />
+					<span>{$t('files.timedOut')}</span>
+				</p>
+			{:else if truncated}
 				<p class="mt-3 inline-flex items-center gap-2 text-[11px] text-amber-300">
 					<TriangleAlert size={13} />
 					{$t('files.truncated')}
@@ -184,7 +206,16 @@
 		</div>
 
 		{#if scanning && files.length === 0}
-			<p class="py-16 text-center text-sm text-zinc-400">{$t('files.scanning')}</p>
+			<div class="py-16 text-center">
+				<p class="text-sm text-zinc-400">{$t('files.scanning')}</p>
+				{#if progress}
+					<p class="mt-1.5 text-[11px] text-zinc-400 tabular-nums">
+						{$t('files.progress', {
+							values: { folders: progress.folders, files: progress.files }
+						})}
+					</p>
+				{/if}
+			</div>
 		{:else if groups.length === 0}
 			<div class="card">
 				<EmptyState

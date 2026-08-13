@@ -416,6 +416,8 @@
 		"searchPlaceholder": "Naam of map …",
 		"rootFolder": "Direct in de map",
 		"truncated": "Er zijn meer bestanden dan weergegeven — de lijst stopt bij de limiet.",
+		"timedOut": "De map duurde te lang — die staat vermoedelijk in de cloud of op een netwerkschijf. Wat binnen de tijd gevonden werd, staat hieronder. Kies bij voorkeur een kleinere submap.",
+		"progress": "{folders} mappen doorzocht · {files} gevonden",
 		"noneFound": "Geen slicer-bestanden gevonden in deze map.",
 		"scanFailed": "Map kon niet ingelezen worden: {reason}",
 		"readFailed": "Bestand kon niet gelezen worden.",

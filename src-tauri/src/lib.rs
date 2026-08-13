@@ -3,7 +3,7 @@ use std::path::{Path, PathBuf};
 
 use serde::{Deserialize, Serialize};
 use serde_json::Value as JsonValue;
-use tauri::{Manager, State};
+use tauri::{Emitter, Manager, State};
 use tauri_plugin_sql::{DbInstances, DbPool, Migration, MigrationKind};
 
 /// File name of the SQLite database. `tauri-plugin-sql` resolves relative
@@ -142,25 +142,75 @@ pub struct ScannedFile {
 pub struct ScanResult {
     root: String,
     files: Vec<ScannedFile>,
-    /// True when the limit was hit, so the UI can say the list is incomplete
+    /// True when a limit was hit, so the UI can say the list is incomplete
     /// rather than implying the drive holds nothing else.
     truncated: bool,
+    /// The time budget ran out. Distinct from `truncated` on purpose: it almost
+    /// always means the folder is a network or cloud mount, which needs a
+    /// different hint than "there are more files".
+    timed_out: bool,
+    /// Directories visited, so the UI can report what the scan got through.
+    folders_scanned: u32,
+}
+
+#[derive(Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
+struct ScanProgress {
+    folders_scanned: u32,
+    files_found: u32,
 }
 
 /// Recursively finds slicer files below `root`.
 ///
 /// A model library can hold tens of thousands of files across deep folder
-/// trees, so the walk is bounded on three axes: `max_depth`, `limit`, and
-/// skipping directories that never contain user models. Hidden directories and
-/// symlinks are skipped too — the latter because a link pointing at an ancestor
-/// would otherwise send the walk in circles.
+/// trees, so the walk is bounded on four axes: `max_depth`, `limit`, a wall-clock
+/// budget, and skipping directories that never contain user models. Hidden
+/// directories and symlinks are skipped too — the latter because a link pointing
+/// at an ancestor would otherwise send the walk in circles.
+///
+/// The time budget is what makes this usable on a cloud mount: a recursive walk
+/// of a Google Drive or network share pays round-trip latency per directory and
+/// can run for many minutes, so the scan returns what it has and says it ran
+/// out of time. Progress is emitted as `scan-progress` events meanwhile, so the
+/// UI never looks frozen.
 #[tauri::command]
 async fn scan_slicer_files(
+    app: tauri::AppHandle,
     root: String,
     max_depth: Option<u32>,
     limit: Option<usize>,
+    timeout_secs: Option<u64>,
 ) -> Result<ScanResult, String> {
-    let root_path = PathBuf::from(&root);
+    let budget = std::time::Duration::from_secs(timeout_secs.unwrap_or(30).clamp(1, 600));
+    walk_slicer_files(
+        &root,
+        max_depth.unwrap_or(8),
+        limit.unwrap_or(5_000),
+        budget,
+        |folders_scanned, files_found| {
+            let _ = app.emit(
+                "scan-progress",
+                ScanProgress {
+                    folders_scanned,
+                    files_found,
+                },
+            );
+        },
+    )
+}
+
+/// The walk itself, free of Tauri so it can be tested directly.
+///
+/// `on_progress` is called every 25 directories — often enough to look alive
+/// without flooding the event channel on a fast local disk.
+fn walk_slicer_files(
+    root: &str,
+    max_depth: u32,
+    limit: usize,
+    budget: std::time::Duration,
+    mut on_progress: impl FnMut(u32, u32),
+) -> Result<ScanResult, String> {
+    let root_path = PathBuf::from(root);
     if !root_path.is_absolute() {
         return Err("scan path must be absolute".into());
     }
@@ -168,15 +218,27 @@ async fn scan_slicer_files(
         return Err("scan path is not a folder".into());
     }
 
-    let max_depth = max_depth.unwrap_or(8);
-    let limit = limit.unwrap_or(5_000);
-    let mut files = Vec::new();
+    let deadline = std::time::Instant::now() + budget;
+    let mut files: Vec<ScannedFile> = Vec::new();
     let mut truncated = false;
+    let mut timed_out = false;
+    let mut folders_scanned: u32 = 0;
 
     // Iterative walk with an explicit stack: a deep library must not be able to
     // blow the call stack.
     let mut stack = vec![(root_path.clone(), 0u32)];
     while let Some((dir, depth)) = stack.pop() {
+        if std::time::Instant::now() >= deadline {
+            timed_out = true;
+            truncated = true;
+            break;
+        }
+
+        folders_scanned += 1;
+        if folders_scanned % 25 == 0 {
+            on_progress(folders_scanned, files.len() as u32);
+        }
+
         let entries = match fs::read_dir(&dir) {
             Ok(entries) => entries,
             // An unreadable folder is normal (permissions, vanished mount) and
@@ -228,7 +290,7 @@ async fn scan_slicer_files(
             });
         }
 
-        if truncated {
+        if truncated && !timed_out {
             break;
         }
     }
@@ -246,6 +308,8 @@ async fn scan_slicer_files(
         root: root_path.to_string_lossy().into_owned(),
         files,
         truncated,
+        timed_out,
+        folders_scanned,
     })
 }
 
@@ -578,12 +642,7 @@ mod tests {
             fs::write(file.iter().fold(root.clone(), |p, part| p.join(part)), b"x").unwrap();
         }
 
-        let result = tauri::async_runtime::block_on(scan_slicer_files(
-            root.to_string_lossy().into_owned(),
-            None,
-            None,
-        ))
-        .unwrap();
+        let result = scan(&root, 8, 5_000).unwrap();
 
         // Sorted by folder, then by name — root first, then folders in order.
         let names: Vec<&str> = result.files.iter().map(|f| f.file_name.as_str()).collect();
@@ -606,22 +665,55 @@ mod tests {
         fs::write(root.join("a").join("b").join("two.3mf"), b"x").unwrap();
         fs::write(root.join("a").join("b").join("c").join("three.3mf"), b"x").unwrap();
 
-        let shallow = tauri::async_runtime::block_on(scan_slicer_files(
-            root.to_string_lossy().into_owned(),
-            Some(1),
-            None,
-        ))
-        .unwrap();
+        let shallow = scan(&root, 1, 5_000).unwrap();
         assert_eq!(shallow.files.len(), 1, "depth 1 reaches a/ only");
 
-        let capped = tauri::async_runtime::block_on(scan_slicer_files(
-            root.to_string_lossy().into_owned(),
-            None,
-            Some(2),
-        ))
-        .unwrap();
+        let capped = scan(&root, 8, 2).unwrap();
         assert_eq!(capped.files.len(), 2);
         assert!(capped.truncated, "a capped scan must say so");
+
+        let _ = fs::remove_dir_all(&root);
+    }
+
+    /// A cloud mount answers each directory slowly enough that a deep walk runs
+    /// for minutes. The budget has to end it and say so, rather than letting the
+    /// UI sit there looking frozen.
+    #[test]
+    fn scan_gives_up_when_the_time_budget_runs_out() {
+        let root = std::env::temp_dir().join(format!("printflow-budget-{}", std::process::id()));
+        let _ = fs::remove_dir_all(&root);
+        // Enough directories that a zero-length budget is certain to bite.
+        let mut nested = root.clone();
+        for index in 0..40 {
+            nested = nested.join(format!("d{index}"));
+        }
+        fs::create_dir_all(&nested).unwrap();
+        fs::write(nested.join("deep.3mf"), b"x").unwrap();
+
+        let result = walk_slicer_files(
+            &root.to_string_lossy(),
+            64,
+            5_000,
+            std::time::Duration::from_secs(0),
+            |_, _| {},
+        )
+        .unwrap();
+
+        assert!(result.timed_out, "budget should have expired");
+        assert!(result.truncated, "a timed-out scan is also incomplete");
+
+        // With time to spare the same tree is walked to the bottom.
+        let full = walk_slicer_files(
+            &root.to_string_lossy(),
+            64,
+            5_000,
+            std::time::Duration::from_secs(60),
+            |_, _| {},
+        )
+        .unwrap();
+        assert!(!full.timed_out);
+        assert_eq!(full.files.len(), 1);
+        assert!(full.folders_scanned >= 40);
 
         let _ = fs::remove_dir_all(&root);
     }
@@ -645,6 +737,17 @@ mod tests {
         assert!(read(Path::new("relative.3mf")).is_err(), "relative path");
 
         let _ = fs::remove_dir_all(&dir);
+    }
+
+    /// Runs the walk with a generous budget and no progress reporting.
+    fn scan(root: &Path, max_depth: u32, limit: usize) -> Result<ScanResult, String> {
+        walk_slicer_files(
+            &root.to_string_lossy(),
+            max_depth,
+            limit,
+            std::time::Duration::from_secs(60),
+            |_, _| {},
+        )
     }
 
     /// An absolute path that is absolute on Windows too — a literal `/home/...`
