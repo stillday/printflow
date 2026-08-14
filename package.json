@@ -1,6 +1,6 @@
 {
 	"name": "printflow",
-	"version": "0.2.0",
+	"version": "0.3.0",
 	"description": "PrintFlow \u2014 offline 3D print project & filament manager",
 	"private": true,
 	"type": "module",
