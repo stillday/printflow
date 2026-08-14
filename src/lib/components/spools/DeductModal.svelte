@@ -125,6 +125,7 @@
 				tareWeight={spool.catalog.spoolTareWeight}
 				nominalWeight={spool.catalog.nominalWeight}
 				applyLabelKey="spools.tare.applyAsRemaining"
+				applyOnEnter={false}
 				onApply={applyMeasured}
 			/>
 		</div>

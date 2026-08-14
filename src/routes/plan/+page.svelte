@@ -55,7 +55,12 @@
 	} from '$lib/utils/plan';
 	import { cn } from '$lib/utils/cn';
 
-	const today = todayPlanDate();
+	/**
+	 * Re-read on every load: a desktop app stays open for days, and a fixed
+	 * "today" would keep marking yesterday's column and mis-sort what counts as
+	 * overdue.
+	 */
+	let today = $state(todayPlanDate());
 
 	/**
 	 * `?date=YYYY-MM-DD` opens the week that day falls in. The dashboard links
@@ -63,8 +68,10 @@
 	 * landing on the current week would have shown an empty day instead.
 	 */
 	const linkedDate = page.url.searchParams.get('date');
+	// `todayPlanDate()` rather than the reactive `today`: this is the *initial*
+	// week only, and the user pages away from it freely afterwards.
 	let weekStart = $state(
-		startOfPlanWeek(linkedDate && parsePlanDate(linkedDate) ? linkedDate : today)
+		startOfPlanWeek(linkedDate && parsePlanDate(linkedDate) ? linkedDate : todayPlanDate())
 	);
 	let entries = $state<PlanEntryDecoded[]>([]);
 	let overdue = $state<PlanEntryDecoded[]>([]);
@@ -106,6 +113,7 @@
 	const activeLocale = $derived($locale ?? 'de');
 
 	async function load() {
+		today = todayPlanDate();
 		try {
 			[entries, overdue, spools] = await Promise.all([
 				listPlanRange(weekStart, addPlanDays(weekStart, 6)),

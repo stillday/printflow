@@ -33,8 +33,13 @@
 	const UPCOMING_DAYS = 6;
 	const UPCOMING_ROWS = 3;
 
-	const today = todayPlanDate();
-	const tomorrow = addPlanDays(today, 1);
+	/**
+	 * Re-read on every load rather than captured once at mount: this is a desktop
+	 * app that stays open for days, and a fixed "today" would keep labelling
+	 * yesterday's entries "Today" and query a window that has drifted.
+	 */
+	let today = $state(todayPlanDate());
+	const tomorrow = $derived(addPlanDays(today, 1));
 
 	let stats = $state<DashboardStats | null>(null);
 	let projects = $state<ProjectWithProgress[]>([]);
@@ -55,6 +60,7 @@
 	});
 
 	async function load() {
+		today = todayPlanDate();
 		try {
 			const [statsData, projectData, spoolData, planData, overdueData] = await Promise.all([
 				getDashboardStats(),

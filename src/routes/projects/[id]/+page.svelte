@@ -249,6 +249,8 @@
 	 * Switches to the files tab and points at one card. Called from a part's file
 	 * chip, so following the link lands on the thing that was clicked.
 	 */
+	let highlightTimer: ReturnType<typeof setTimeout> | undefined;
+
 	function showPlate(plate: PrintPlateDecoded) {
 		selectTab('plates');
 		highlightPlateId = plate.id ?? null;
@@ -256,6 +258,11 @@
 		requestAnimationFrame(() => {
 			document.getElementById(`plate-${plate.id}`)?.scrollIntoView({ block: 'center' });
 		});
+		// The ring is a "here it is", not a state: left on, it would still be
+		// there after switching tabs and back, reading as if the card were
+		// selected. Long enough to be seen, short enough not to become furniture.
+		clearTimeout(highlightTimer);
+		highlightTimer = setTimeout(() => (highlightPlateId = null), 2500);
 	}
 
 	/** Resolve the spool ids stored on a job to readable names. */

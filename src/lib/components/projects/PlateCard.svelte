@@ -87,13 +87,27 @@
 	}
 
 	/** Inline rename, so it no longer hides inside the "assign parts" dialog. */
-	async function rename(value: string) {
-		const trimmed = value.trim();
-		if (plate.id === undefined || !trimmed || trimmed === plate.name) return;
+	/**
+	 * `value` is one-way bound, so a rejected or unchanged edit leaves whatever the
+	 * user typed on screen while the database still holds the old name. Both paths
+	 * therefore put the real name back into the field instead of returning quietly.
+	 */
+	async function rename(input: HTMLInputElement) {
+		const trimmed = input.value.trim();
+		if (plate.id === undefined || trimmed === plate.name) {
+			input.value = plate.name;
+			return;
+		}
+		if (!trimmed) {
+			input.value = plate.name;
+			toasts.error('errors.required');
+			return;
+		}
 		try {
 			await renamePlate(plate.id, trimmed);
 			onChanged();
 		} catch {
+			input.value = plate.name;
 			toasts.error('errors.saveFailed');
 		}
 	}
@@ -123,7 +137,7 @@
 				value={plate.name}
 				aria-label={$t('plates.rename')}
 				title={$t('plates.rename')}
-				onblur={(event) => rename(event.currentTarget.value)}
+				onblur={(event) => rename(event.currentTarget)}
 				onkeydown={(event) => event.key === 'Enter' && event.currentTarget.blur()}
 			/>
 			<p class="mt-0.5 truncate px-2 text-[11px] text-zinc-400">{plate.fileName}</p>

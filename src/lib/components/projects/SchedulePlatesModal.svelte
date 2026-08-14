@@ -134,7 +134,15 @@
 		})();
 	});
 
-	const projectedLoad = $derived((dayLoad ?? 0) + (spread ? 0 : chosenSeconds));
+	/**
+	 * Only meaningful for a batch, and its checkbox disappears below two plates —
+	 * so the flag must not survive the selection shrinking, or a single plate
+	 * would silently be written to the *following* day while the field still
+	 * shows the picked one.
+	 */
+	const spreading = $derived(spread && chosen.length > 1);
+
+	const projectedLoad = $derived((dayLoad ?? 0) + (spreading ? 0 : chosenSeconds));
 
 	function toggle(plateId: number) {
 		selected = selected.includes(plateId)
@@ -166,7 +174,7 @@
 		if (!valid || busy) return;
 		busy = true;
 		try {
-			const dates = spread ? spreadDates() : chosen.map(() => dateInput);
+			const dates = spreading ? spreadDates() : chosen.map(() => dateInput);
 			for (const [index, plate] of chosen.entries()) {
 				await createEntry(plate.id!, dates[index], chosen.length === 1 ? note : null);
 			}
@@ -288,7 +296,7 @@
 							: 'border-white/10 bg-zinc-950/40 text-zinc-400'
 					)}
 				>
-					{#if spread}
+					{#if spreading}
 						{$t('plan.spreadPreview', {
 							values: {
 								count: chosen.length,

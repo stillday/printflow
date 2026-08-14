@@ -46,6 +46,7 @@
 	} as const;
 
 	let panel = $state<HTMLDivElement | null>(null);
+	let body = $state<HTMLDivElement | null>(null);
 
 	/**
 	 * Keeps Tab inside the dialog and closes on Escape. Implemented by hand
@@ -84,9 +85,18 @@
 		if (!open || !panel) return;
 
 		const previouslyFocused = document.activeElement as HTMLElement | null;
-		const target = panel.querySelector<HTMLElement>(
-			'[data-autofocus], input:not([type="hidden"]):not([disabled]), textarea, select, button'
-		);
+		/*
+		 * Two separate lookups on purpose. A single selector list would not do
+		 * what it looks like: `querySelector` returns the first match in *tree
+		 * order*, not the first matching branch — so the header's close button,
+		 * which precedes the body, won every time. Every dialog opened with focus
+		 * on the "X", and pressing Enter closed it instead of editing the field.
+		 */
+		const target =
+			panel.querySelector<HTMLElement>('[data-autofocus]') ??
+			body?.querySelector<HTMLElement>(
+				'input:not([type="hidden"]):not([disabled]), textarea:not([disabled]), select:not([disabled]), a[href], button:not([disabled])'
+			);
 		target?.focus();
 
 		const { overflow } = document.body.style;
@@ -140,7 +150,7 @@
 				</button>
 			</header>
 
-			<div class="px-6 py-5">
+			<div bind:this={body} class="px-6 py-5">
 				{@render children()}
 			</div>
 

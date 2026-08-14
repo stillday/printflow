@@ -171,11 +171,16 @@ export async function listImportedPaths(): Promise<Map<string, ImportedPlate>> {
 		project_id: number;
 		project_title: string;
 	}>(
+		// One row per path, and a *defined* one: the same file can be imported into
+		// two projects, and a bare column under GROUP BY would let SQLite pick
+		// either — so the link would point at whichever row it happened to take.
+		// The earliest plate wins, which is the project the file first landed in.
 		`SELECT pl.source_path, pl.project_id, p.title AS project_title
 		 FROM print_plates pl
 		 JOIN projects p ON p.id = pl.project_id
 		 WHERE pl.source_path IS NOT NULL AND pl.source_path <> ''
-		 GROUP BY pl.source_path`
+		   AND pl.id = (SELECT MIN(inner.id) FROM print_plates inner
+		                 WHERE inner.source_path = pl.source_path)`
 	);
 	return new Map(
 		rows.map((row) => [

@@ -25,9 +25,15 @@ class OnlineStore {
 		}
 	}
 
+	/**
+	 * Persist first, then switch. This flag gates network access, so the stored
+	 * value and the running one must not disagree: turning it *off* and being told
+	 * the save failed, while the in-memory gate had already closed, would leave
+	 * `'on'` on disk and quietly re-enable the portal commands on the next launch.
+	 */
 	async set(enabled: boolean) {
-		this.enabled = enabled;
 		await setSetting(SETTING_ONLINE, enabled ? 'on' : 'off');
+		this.enabled = enabled;
 	}
 }
 

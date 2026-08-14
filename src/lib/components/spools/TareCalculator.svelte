@@ -20,13 +20,21 @@
 		applyLabelKey?: string;
 		/** Nominal spool weight, to catch a mistyped tare. */
 		nominalWeight?: number;
+		/**
+		 * Whether Enter may apply. False where applying *commits* — in the deduct
+		 * dialog it writes the remaining weight and closes, and Enter one field
+		 * higher means "deduct this amount", so the same key would mean two very
+		 * different things in one dialog.
+		 */
+		applyOnEnter?: boolean;
 	}
 
 	let {
 		tareWeight,
 		onApply,
 		applyLabelKey = 'spools.tare.apply',
-		nominalWeight
+		nominalWeight,
+		applyOnEnter = true
 	}: Props = $props();
 
 	let scaleInput = $state('');
@@ -75,8 +83,10 @@
 	 */
 	function onEnter(event: KeyboardEvent) {
 		if (event.key !== 'Enter') return;
+		// Still swallow the key: letting it through would submit the surrounding
+		// spool form with the *old* weight, discarding the calculation.
 		event.preventDefault();
-		apply();
+		if (applyOnEnter) apply();
 	}
 </script>
 

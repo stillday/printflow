@@ -70,7 +70,11 @@
 		created: Map<string, number>
 	): Promise<number | null> {
 		if (mapping === 'create') {
-			const key = object.name.trim().toLowerCase();
+			// Keyed exactly as the parser groups objects (`countObjects`, case
+			// sensitive). Lower-casing here merged "Leg" and "leg" into one part,
+			// which double-counted the requirement and wrote two entries with the
+			// same partId onto the plate.
+			const key = object.name.trim();
 			// A name may appear on several plates — create it once, but keep
 			// raising how many are needed, or a part spread over three plates
 			// would be recorded as if only the first plate's copies counted.
