@@ -109,7 +109,7 @@
 		</p>
 		{#if !parsing && !dragging}
 			<p class="mt-1 text-xs text-zinc-400">{$t('plates.dropzone.subtitle')}</p>
-			<p class="mt-2 text-[11px] text-zinc-400">{$t('plates.dropzone.formats')}</p>
+			<p class="mt-2 text-xs text-zinc-400">{$t('plates.dropzone.formats')}</p>
 		{/if}
 	</div>
 

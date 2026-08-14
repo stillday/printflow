@@ -38,7 +38,7 @@ theme.
 `src-tauri/tauri.conf.json` restricts it to `'self'` plus the Tauri IPC channel,
 so the interface cannot phone home even by accident.
 
-Two optional features do use the network, and they are **off by default** and run
+Two optional features do use the network. They are **on unless switched off** and run
 in Rust rather than in the WebView, which is why the policy above stays closed:
 fetching a project's preview image once from its model page (it is then stored
 locally and rendered from a `data:` URI), and downloading a file from a link you

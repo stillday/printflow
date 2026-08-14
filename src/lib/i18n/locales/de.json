@@ -2,8 +2,8 @@
 	"app": {
 		"name": "PrintFlow",
 		"tagline": "3D-Druck Projekt- & Filamentverwaltung",
-		"offline": "Offline",
-		"offlineHint": "Alle Daten bleiben lokal auf diesem Gerät"
+		"offline": "Lokal",
+		"offlineHint": "Deine Daten bleiben auf diesem Gerät"
 	},
 	"nav": {
 		"dashboard": "Übersicht",
@@ -319,13 +319,23 @@
 			"dark": "Dunkel",
 			"light": "Hell"
 		},
+		"layout": "Layout",
+		"layoutHint": "Wie dicht die Oberfläche gepackt ist.",
+		"layouts": {
+			"console": "Kompakt",
+			"consoleHint": "Viel auf einen Blick. Für den Dauerbetrieb.",
+			"studio": "Großzügig",
+			"studioHint": "Größere Schrift, mehr Luft.",
+			"workbench": "Werkbank",
+			"workbenchHint": "Schmale Symbolleiste statt Seitenleiste — mehr Platz für den Inhalt."
+		},
 		"language": "Sprache",
 		"languageHint": "Wird sofort übernommen und gespeichert.",
 		"online": "Online-Funktionen",
-		"onlineHint": "Standardmäßig aus. PrintFlow arbeitet ohne Internet.",
-		"onlineOff": "Aus (empfohlen)",
+		"onlineHint": "Vorschaubilder und Downloads von Modellportalen. Lässt sich abschalten.",
+		"onlineOff": "Aus",
 		"onlineOffHint": "Kein Netzzugriff. Alles bleibt auf diesem Gerät.",
-		"onlineOn": "Erlauben",
+		"onlineOn": "Erlauben (Standard)",
 		"onlineOnHint": "Vorschaubilder von Modellportalen holen und Dateien von Links laden.",
 		"onlineDetail": "Freigeschaltet sind genau zwei Dinge: das Vorschaubild eines Projekts einmalig von der Modellseite holen (danach liegt es lokal in der Datenbank), und eine Datei von einem Link herunterladen, den du selbst angibst. Erlaubt sind nur MakerWorld, Printables, Thingiverse, Cults3D, MyMiniFactory und Thangs. Die Anfragen laufen im Programmkern, nicht in der Oberfläche — die Oberfläche selbst bleibt vom Netz getrennt.",
 		"database": "Datenbank",
@@ -341,7 +351,7 @@
 		"importDialogTitle": "Sicherung wählen",
 		"about": "Über",
 		"version": "Version",
-		"aboutBody": "PrintFlow läuft vollständig offline. Es werden keinerlei Daten an externe Server gesendet.",
+		"aboutBody": "Deine Daten bleiben auf diesem Gerät — es gibt keine Anmeldung, keine Synchronisierung, keinen Server. Nur wenn du unten die Online-Funktionen aktiv lässt, holt PrintFlow Vorschaubilder von Modellportalen und lädt Dateien von Links, die du selbst angibst.",
 		"dataSummary": "Datenbestand",
 		"stats": {
 			"catalog": "Filament-Typen",

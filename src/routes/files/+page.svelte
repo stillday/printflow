@@ -184,7 +184,7 @@
 	{/snippet}
 </PageHeader>
 
-<div class="px-8 pb-10">
+<div class="page-x pb-10">
 	{#if !root}
 		<div class="card">
 			<EmptyState icon={FolderSearch} title={$t('files.empty')} body={$t('files.emptyBody')}>
@@ -198,7 +198,7 @@
 		</div>
 	{:else}
 		<div class="card mb-5 px-5 py-4">
-			<p class="font-mono text-[11px] break-all text-zinc-400">{root}</p>
+			<p class="font-mono text-xs break-all text-zinc-400">{root}</p>
 			<div class="mt-2 flex flex-wrap items-center gap-x-5 gap-y-2">
 				<p class="text-sm font-semibold text-zinc-100 tabular-nums">
 					{$t('files.fileCount', { values: { count: visible.length } })}
@@ -219,7 +219,7 @@
 				and it decides whether we can suggest project names at all.
 			-->
 			{#if shape.shape !== 'empty' && !scanning}
-				<p class="mt-3 text-[11px] leading-relaxed text-zinc-400">
+				<p class="mt-3 text-xs leading-relaxed text-zinc-400">
 					<span class="font-medium text-zinc-300">{$t('files.shape.title')}:</span>
 					{$t(`files.shape.${shape.shape}`, {
 						values: {
@@ -233,12 +233,12 @@
 			{/if}
 
 			{#if timedOut}
-				<p class="mt-3 flex items-start gap-2 text-[11px] text-amber-300">
+				<p class="mt-3 flex items-start gap-2 text-xs text-amber-300">
 					<TriangleAlert size={13} class="mt-0.5 shrink-0" />
 					<span>{$t('files.timedOut')}</span>
 				</p>
 			{:else if truncated}
-				<p class="mt-3 inline-flex items-center gap-2 text-[11px] text-amber-300">
+				<p class="mt-3 inline-flex items-center gap-2 text-xs text-amber-300">
 					<TriangleAlert size={13} />
 					{$t('files.truncated')}
 				</p>
@@ -255,7 +255,7 @@
 				<Loader size={15} class="shrink-0 animate-spin text-zinc-400" />
 				<p class="text-sm text-zinc-300">{$t('files.scanning')}</p>
 				{#if progress}
-					<p class="ml-auto text-[11px] text-zinc-400 tabular-nums">
+					<p class="ml-auto text-xs text-zinc-400 tabular-nums">
 						{$t('files.progress', {
 							values: { folders: progress.folders, files: progress.files }
 						})}
@@ -313,7 +313,7 @@
 										{group.segments.join(' / ')}
 									{/if}
 								</span>
-								<span class="mt-0.5 block text-[11px] text-zinc-400 tabular-nums">
+								<span class="mt-0.5 block text-xs text-zinc-400 tabular-nums">
 									{$t('files.fileCount', { values: { count: group.files.length } })}
 									· {formatBytes(group.totalBytes)}
 								</span>
@@ -321,7 +321,7 @@
 
 							{#if group.importedCount > 0}
 								<span
-									class="inline-flex shrink-0 items-center gap-1.5 rounded-md border border-emerald-500/20 bg-emerald-500/10 px-2 py-1 text-[11px] text-emerald-300 tabular-nums"
+									class="inline-flex shrink-0 items-center gap-1.5 rounded-md border border-emerald-500/20 bg-emerald-500/10 px-2 py-1 text-xs text-emerald-300 tabular-nums"
 								>
 									<Check size={12} />
 									{group.importedCount}/{group.files.length}
@@ -340,7 +340,7 @@
 											>
 												{file.fileName}
 											</p>
-											<p class="mt-0.5 text-[11px] text-zinc-400 tabular-nums">
+											<p class="mt-0.5 text-xs text-zinc-400 tabular-nums">
 												{formatBytes(file.sizeBytes)}
 												{#if file.modifiedAt}
 													· {formatDate(new Date(file.modifiedAt * 1000).toISOString())}
@@ -352,7 +352,7 @@
 											<!-- "Imported" alone left the user stuck; the project is the way out. -->
 											<a
 												href="/projects/{inProject.projectId}"
-												class="inline-flex max-w-[14rem] items-center gap-1.5 text-[11px] text-emerald-300 transition-colors hover:text-emerald-200"
+												class="inline-flex max-w-[14rem] items-center gap-1.5 text-xs text-emerald-300 transition-colors hover:text-emerald-200"
 												title={$t('files.alreadyImportedIn', {
 													values: { project: inProject.projectTitle }
 												})}
@@ -403,7 +403,7 @@
 			<Loader size={18} class="shrink-0 animate-spin text-indigo-300" />
 			<div class="min-w-0">
 				<p class="text-sm font-medium text-zinc-100">{$t('files.preparingImport')}</p>
-				<p class="mt-0.5 truncate text-[11px] text-zinc-400">{preparing.fileName}</p>
+				<p class="mt-0.5 truncate text-xs text-zinc-400">{preparing.fileName}</p>
 			</div>
 		</div>
 	</div>

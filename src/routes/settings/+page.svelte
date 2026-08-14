@@ -10,6 +10,7 @@
 		FolderSearch,
 		Globe,
 		Info,
+		LayoutGrid,
 		Palette,
 		Upload,
 		WifiOff
@@ -31,7 +32,9 @@
 	import { toasts } from '$lib/stores/toast.svelte';
 	import { SUPPORTED_LOCALES, setLocale, type AppLocale } from '$lib/i18n';
 	import { THEMES, type ThemePreference } from '$lib/theme';
+	import { LAYOUTS, type Layout } from '$lib/layout';
 	import { theme } from '$lib/stores/theme.svelte';
+	import { layout } from '$lib/stores/layout.svelte';
 	import { online } from '$lib/stores/online.svelte';
 	import { formatNumber } from '$lib/utils/format';
 	import { getSetting } from '$lib/db/settings';
@@ -81,6 +84,24 @@
 		if (enabled === online.enabled) return;
 		try {
 			await online.set(enabled);
+			toasts.success('toast.updated');
+		} catch {
+			toasts.error('errors.saveFailed');
+		}
+	}
+
+	const layoutOptions = $derived(
+		LAYOUTS.map((value) => ({
+			value,
+			label: $t(`settings.layouts.${value}`),
+			hint: $t(`settings.layouts.${value}Hint`)
+		}))
+	);
+
+	async function chooseLayout(next: Layout) {
+		if (next === layout.current) return;
+		try {
+			await layout.set(next);
 			toasts.success('toast.updated');
 		} catch {
 			toasts.error('errors.saveFailed');
@@ -207,13 +228,22 @@
 
 <PageHeader title={$t('settings.title')} subtitle={$t('settings.subtitle')} />
 
-<div class="grid max-w-3xl gap-6 px-8 pb-10">
+<div class="grid max-w-3xl gap-6 page-x pb-10">
 	<SectionCard icon={Palette} title={$t('settings.theme')} hint={$t('settings.themeHint')}>
 		<OptionCardGroup
 			options={themeOptions}
 			value={theme.preference}
 			label={$t('settings.theme')}
 			onchange={(value) => chooseTheme(value as ThemePreference)}
+		/>
+	</SectionCard>
+
+	<SectionCard icon={LayoutGrid} title={$t('settings.layout')} hint={$t('settings.layoutHint')}>
+		<OptionCardGroup
+			options={layoutOptions}
+			value={layout.current}
+			label={$t('settings.layout')}
+			onchange={(value) => chooseLayout(value as Layout)}
 		/>
 	</SectionCard>
 
@@ -229,7 +259,7 @@
 	<SectionCard icon={FolderSearch} title={$t('files.root.title')} hint={$t('files.root.hint')}>
 		<div class="flex flex-wrap items-center gap-4">
 			<p
-				class="min-w-0 flex-1 font-mono text-[11px] break-all {libraryRoot
+				class="min-w-0 flex-1 font-mono text-xs break-all {libraryRoot
 					? 'text-zinc-300'
 					: 'text-zinc-400'}"
 			>
@@ -257,7 +287,7 @@
 		/>
 
 		{#if online.enabled}
-			<p class="mt-4 text-[11px] leading-relaxed text-zinc-400">
+			<p class="mt-4 text-xs leading-relaxed text-zinc-400">
 				{$t('settings.onlineDetail')}
 			</p>
 		{/if}
@@ -290,7 +320,7 @@
 						<dl class="grid grid-cols-2 gap-2 sm:grid-cols-3">
 							{#each summaryRows as row (row.key)}
 								<div class="rounded-xl border border-white/10 bg-zinc-950/40 px-3 py-2">
-									<dt class="text-[11px] text-zinc-400">{$t(row.key)}</dt>
+									<dt class="text-xs text-zinc-400">{$t(row.key)}</dt>
 									<dd class="mt-0.5 text-sm font-semibold text-zinc-100 tabular-nums">
 										{formatNumber(row.value)}
 									</dd>
@@ -304,7 +334,7 @@
 			<div class="grid gap-3 sm:grid-cols-2">
 				<div class="rounded-xl border border-white/10 bg-zinc-950/40 p-4">
 					<p class="text-xs font-medium text-zinc-200">{$t('settings.export')}</p>
-					<p class="mt-1 mb-3 text-[11px] leading-relaxed text-zinc-400">
+					<p class="mt-1 mb-3 text-xs leading-relaxed text-zinc-400">
 						{$t('settings.exportHint')}
 					</p>
 					<Button variant="secondary" size="sm" onclick={exportBackup} disabled={busy}>
@@ -315,7 +345,7 @@
 
 				<div class="rounded-xl border border-white/10 bg-zinc-950/40 p-4">
 					<p class="text-xs font-medium text-zinc-200">{$t('settings.import')}</p>
-					<p class="mt-1 mb-3 text-[11px] leading-relaxed text-zinc-400">
+					<p class="mt-1 mb-3 text-xs leading-relaxed text-zinc-400">
 						{$t('settings.importHint')}
 					</p>
 					<Button variant="secondary" size="sm" onclick={chooseBackup} disabled={busy}>

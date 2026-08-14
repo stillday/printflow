@@ -105,7 +105,7 @@
 				<span class="min-w-0">
 					<span class="block font-medium">{option.label}</span>
 					{#if option.hint}
-						<span class="mt-0.5 block text-[11px] leading-snug text-zinc-400">{option.hint}</span>
+						<span class="mt-0.5 block text-xs leading-snug text-zinc-400">{option.hint}</span>
 					{/if}
 				</span>
 			</span>

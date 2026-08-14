@@ -186,7 +186,7 @@
 							{/if}
 							{titleBusy ? $t('portal.title.busy') : $t('portal.title.fetch')}
 						</Button>
-						<p class="text-[11px] leading-relaxed text-zinc-400">{$t('portal.title.hint')}</p>
+						<p class="text-xs leading-relaxed text-zinc-400">{$t('portal.title.hint')}</p>
 					</div>
 
 					{#if suggestion}
@@ -205,7 +205,7 @@
 						</div>
 					{/if}
 				{:else}
-					<p class="text-[11px] leading-relaxed text-zinc-400">
+					<p class="text-xs leading-relaxed text-zinc-400">
 						{$t('portal.title.offline')}
 						<a
 							href="/settings"

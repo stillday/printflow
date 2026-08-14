@@ -29,7 +29,7 @@
 		<span class="mb-1.5 flex items-baseline justify-between gap-2">
 			<span class="text-xs font-medium tracking-wide text-zinc-400 uppercase">{label}</span>
 			{#if optional}
-				<span class="text-[10px] tracking-wide text-zinc-400 uppercase">
+				<span class="text-2xs tracking-wide text-zinc-400 uppercase">
 					{$t('common.optional')}
 				</span>
 			{/if}

@@ -2,8 +2,8 @@
 	"app": {
 		"name": "PrintFlow",
 		"tagline": "3D-print project- en filamentbeheer",
-		"offline": "Offline",
-		"offlineHint": "Alle gegevens blijven lokaal op dit apparaat"
+		"offline": "Lokaal",
+		"offlineHint": "Je gegevens blijven op dit apparaat"
 	},
 	"nav": {
 		"dashboard": "Overzicht",
@@ -319,13 +319,23 @@
 			"dark": "Donker",
 			"light": "Licht"
 		},
+		"layout": "Lay-out",
+		"layoutHint": "Hoe compact de interface is.",
+		"layouts": {
+			"console": "Compact",
+			"consoleHint": "Veel in één oogopslag. Voor dagelijks gebruik.",
+			"studio": "Ruim",
+			"studioHint": "Groter lettertype, meer lucht.",
+			"workbench": "Werkbank",
+			"workbenchHint": "Smalle pictogrambalk in plaats van de zijbalk — meer ruimte voor de inhoud."
+		},
 		"language": "Taal",
 		"languageHint": "Wordt direct toegepast en onthouden.",
 		"online": "Onlinefuncties",
-		"onlineHint": "Standaard uit. PrintFlow werkt zonder internet.",
-		"onlineOff": "Uit (aanbevolen)",
+		"onlineHint": "Voorbeeldafbeeldingen en downloads van modelportalen. Kan uit.",
+		"onlineOff": "Uit",
 		"onlineOffHint": "Geen netwerktoegang. Alles blijft op dit apparaat.",
-		"onlineOn": "Toestaan",
+		"onlineOn": "Toestaan (standaard)",
 		"onlineOnHint": "Voorbeeldafbeeldingen van modelportalen halen en bestanden via links downloaden.",
 		"onlineDetail": "Dit ontsluit precies twee dingen: de voorbeeldafbeelding van een project eenmalig van de modelpagina halen (daarna staat die lokaal in de database), en een bestand downloaden via een link die je zelf opgeeft. Alleen MakerWorld, Printables, Thingiverse, Cults3D, MyMiniFactory en Thangs zijn toegestaan. De verzoeken lopen in de programmakern, niet in de interface — die blijft van het netwerk afgesloten.",
 		"database": "Database",
@@ -341,7 +351,7 @@
 		"importDialogTitle": "Back-up kiezen",
 		"about": "Over",
 		"version": "Versie",
-		"aboutBody": "PrintFlow werkt volledig offline. Er worden nooit gegevens naar externe servers gestuurd.",
+		"aboutBody": "Je gegevens blijven op dit apparaat — geen account, geen synchronisatie, geen server. Alleen als je de onlinefuncties hieronder aan laat staan, haalt PrintFlow voorbeeldafbeeldingen van modelportalen en downloadt het bestanden via links die je zelf opgeeft.",
 		"dataSummary": "Opgeslagen gegevens",
 		"stats": {
 			"catalog": "Filamentsoorten",

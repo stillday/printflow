@@ -171,6 +171,9 @@ export async function listImportedPaths(): Promise<Map<string, ImportedPlate>> {
 		project_id: number;
 		project_title: string;
 	}>(
+		// The alias must not be `inner`: SQLite reads that as the start of an
+		// INNER JOIN and the statement fails to parse — which silently broke the
+		// whole file library, because the scan was awaited alongside it.
 		// One row per path, and a *defined* one: the same file can be imported into
 		// two projects, and a bare column under GROUP BY would let SQLite pick
 		// either — so the link would point at whichever row it happened to take.
@@ -179,8 +182,8 @@ export async function listImportedPaths(): Promise<Map<string, ImportedPlate>> {
 		 FROM print_plates pl
 		 JOIN projects p ON p.id = pl.project_id
 		 WHERE pl.source_path IS NOT NULL AND pl.source_path <> ''
-		   AND pl.id = (SELECT MIN(inner.id) FROM print_plates inner
-		                 WHERE inner.source_path = pl.source_path)`
+		   AND pl.id = (SELECT MIN(earlier.id) FROM print_plates earlier
+		                 WHERE earlier.source_path = pl.source_path)`
 	);
 	return new Map(
 		rows.map((row) => [

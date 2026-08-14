@@ -126,23 +126,23 @@
 <li
 	id="plate-{plate.id}"
 	class={cn(
-		'card group p-5 transition-colors duration-200 hover:border-indigo-500/40',
+		'card group p-5 transition-colors duration-200 hover:border-indigo-500/40 hover:bg-white/[0.04]',
 		highlighted && 'border-indigo-500/60 ring-2 ring-indigo-500/40'
 	)}
 >
 	<div class="flex items-start justify-between gap-3">
 		<div class="min-w-0 flex-1">
 			<input
-				class="w-full min-w-0 rounded-lg border border-transparent bg-transparent px-2 py-1 text-sm font-semibold text-zinc-100 transition-colors hover:border-white/10 focus:border-indigo-500/60 focus:bg-zinc-950 focus:outline-none"
+				class="w-full min-w-0 rounded-lg border border-transparent bg-transparent px-2 py-1 text-sm font-semibold text-zinc-100 transition-colors hover:border-white/10 focus:border-indigo-500/60 focus:bg-zinc-950"
 				value={plate.name}
 				aria-label={$t('plates.rename')}
 				title={$t('plates.rename')}
 				onblur={(event) => rename(event.currentTarget)}
 				onkeydown={(event) => event.key === 'Enter' && event.currentTarget.blur()}
 			/>
-			<p class="mt-0.5 truncate px-2 text-[11px] text-zinc-400">{plate.fileName}</p>
+			<p class="mt-0.5 truncate px-2 text-xs text-zinc-400">{plate.fileName}</p>
 			{#if sourceFolder}
-				<p class="truncate px-2 text-[10px] text-zinc-400" title={plate.sourcePath ?? undefined}>
+				<p class="truncate px-2 text-xs text-zinc-400" title={plate.sourcePath ?? undefined}>
 					{elideMiddle(sourceFolder)}
 				</p>
 			{/if}
@@ -158,7 +158,7 @@
 		<a
 			href="/plan"
 			class={cn(
-				'mt-3 inline-flex items-center gap-1.5 rounded-md border px-2 py-1 text-[11px] transition-colors',
+				'mt-3 inline-flex items-center gap-1.5 rounded-md border px-2 py-1 text-xs transition-colors',
 				plate.nextPlannedDate
 					? 'border-indigo-500/30 bg-indigo-500/10 text-indigo-200 hover:border-indigo-500/50'
 					: 'border-amber-500/30 bg-amber-500/10 text-amber-300 hover:border-amber-500/50'
@@ -192,7 +192,7 @@
 		<ul class="mt-3 flex flex-wrap gap-2">
 			{#each plate.filamentRequirements as requirement (requirement.slotIndex)}
 				<li
-					class="inline-flex items-center gap-2 rounded-lg border border-white/10 bg-white/5 px-2.5 py-1.5 text-[11px]"
+					class="inline-flex items-center gap-2 rounded-lg border border-white/10 bg-white/5 px-2.5 py-1.5 text-xs"
 				>
 					<ColorSwatch color={requirement.colorHex} size={12} />
 					<span class="text-zinc-400">
@@ -206,18 +206,18 @@
 			{/each}
 		</ul>
 	{:else}
-		<p class="mt-3 text-[11px] text-zinc-400">{$t('plates.noFilamentData')}</p>
+		<p class="mt-3 text-xs text-zinc-400">{$t('plates.noFilamentData')}</p>
 	{/if}
 
 	<div class="mt-4 border-t border-white/5 pt-4">
-		<p class="text-[10px] font-semibold tracking-widest text-zinc-400 uppercase">
+		<p class="text-2xs font-semibold tracking-widest text-zinc-400 uppercase">
 			{$t('plates.partsOnPlate')}
 		</p>
 		{#if assigned.length > 0}
 			<ul class="mt-2 flex flex-wrap gap-1.5">
 				{#each assigned as entry (entry.part.id)}
 					<li
-						class="inline-flex items-center gap-1.5 rounded-md border border-white/10 bg-white/5 px-2 py-1 text-[11px] text-zinc-300"
+						class="inline-flex items-center gap-1.5 rounded-md border border-white/10 bg-white/5 px-2 py-1 text-xs text-zinc-300"
 					>
 						<span class="truncate">{entry.part.name}</span>
 						<span class="text-zinc-400 tabular-nums">{entry.quantity}×</span>
@@ -225,7 +225,7 @@
 				{/each}
 			</ul>
 		{:else}
-			<p class="mt-2 text-[11px] text-zinc-400">{$t('plates.noPartsAssigned')}</p>
+			<p class="mt-2 text-xs text-zinc-400">{$t('plates.noPartsAssigned')}</p>
 		{/if}
 	</div>
 

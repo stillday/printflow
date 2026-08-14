@@ -132,7 +132,7 @@
 			bind:value={term}
 			type="search"
 			role="combobox"
-			class="input-base h-9 pr-20 pl-9"
+			class="input-base h-9 pr-24 pl-9"
 			placeholder={$t('search.placeholder')}
 			aria-label={$t('common.search')}
 			aria-expanded={open}
@@ -149,6 +149,9 @@
 			The shortcut existed but was invisible. Hidden as soon as there is text,
 			where it would collide with the search field's native clear button, and
 			hidden from screen readers, which get `aria-keyshortcuts` instead.
+
+			The input reserves `pr-24` for them: at the token scale "Strg"+"K" needs
+			more than the 5rem the 10px hardcode used to fit into.
 		-->
 		{#if term.length === 0}
 			<span
@@ -156,12 +159,12 @@
 				aria-hidden="true"
 			>
 				<kbd
-					class="rounded border border-white/10 bg-white/5 px-1.5 py-0.5 font-sans text-[10px] text-zinc-400"
+					class="rounded border border-white/10 bg-white/5 px-1.5 py-0.5 font-sans text-xs text-zinc-400"
 				>
 					{isMac ? '⌘' : $t('search.shortcutModifier')}
 				</kbd>
 				<kbd
-					class="rounded border border-white/10 bg-white/5 px-1.5 py-0.5 font-sans text-[10px] text-zinc-400"
+					class="rounded border border-white/10 bg-white/5 px-1.5 py-0.5 font-sans text-xs text-zinc-400"
 				>
 					K
 				</kbd>
@@ -212,7 +215,7 @@
 										{hit.subtitleKey ? $t(hit.subtitleKey) : hit.subtitle}
 									</span>
 								</span>
-								<span class="shrink-0 text-[10px] tracking-wide text-zinc-400 uppercase">
+								<span class="shrink-0 text-2xs tracking-wide text-zinc-400 uppercase">
 									{$t(kindLabelKeys[hit.kind])}
 								</span>
 							</button>

@@ -219,7 +219,7 @@
 				tone={ratio >= 1 ? 'emerald' : 'indigo'}
 			/>
 			{#if totals.failed > 0}
-				<p class="mt-2.5 text-[11px] text-zinc-400">
+				<p class="mt-2.5 text-xs text-zinc-400">
 					{$t('parts.failed')}: <span class="text-rose-400 tabular-nums">{totals.failed}</span>
 					<span class="ml-2">{$t('parts.failedRate')}: {formatPercent(failureRate)}</span>
 				</p>
@@ -243,9 +243,11 @@
 					{@const linkedPlates = platesForPart.get(part.id) ?? []}
 					{@const covered = coveredForPart.get(part.id) ?? 0}
 					<li class="group flex flex-wrap items-start gap-4 px-5 py-3.5">
+						<!-- `min-w-7` rather than `w-7`: on the roomier layout a three-digit
+						     open count no longer fits a fixed 28 px square. -->
 						<div
 							class={cn(
-								'mt-1 flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border text-[11px] font-semibold',
+								'mt-1 flex h-7 min-w-7 shrink-0 items-center justify-center rounded-lg border px-1 text-xs font-semibold',
 								done
 									? 'border-emerald-500/20 bg-emerald-500/10 text-emerald-400'
 									: 'border-white/10 bg-white/5 text-zinc-400'
@@ -261,7 +263,7 @@
 
 						<div class="min-w-0 flex-1">
 							<input
-								class="w-full min-w-0 rounded-lg border border-transparent bg-transparent px-2 py-1 text-sm text-zinc-100 transition-colors hover:border-white/10 focus:border-indigo-500/60 focus:bg-zinc-950 focus:outline-none"
+								class="w-full min-w-0 rounded-lg border border-transparent bg-transparent px-2 py-1 text-sm text-zinc-100 transition-colors hover:border-white/10 focus:border-indigo-500/60 focus:bg-zinc-950"
 								value={part.name}
 								aria-label={$t('parts.edit')}
 								onblur={(event) => renamePart(part, event.currentTarget.value)}
@@ -277,7 +279,7 @@
 								{#each linkedPlates as entry (entry.plate.id)}
 									<button
 										type="button"
-										class="inline-flex max-w-full items-center gap-1.5 rounded-md border border-white/10 bg-white/5 px-2 py-0.5 text-[11px] text-zinc-300 transition-colors hover:border-indigo-500/40 hover:text-zinc-100"
+										class="inline-flex max-w-full items-center gap-1.5 min-h-6 rounded-md border border-white/10 bg-white/5 px-2 py-1 text-xs text-zinc-300 transition-colors hover:border-indigo-500/40 hover:text-zinc-100"
 										title={entry.plate.sourcePath ?? entry.plate.fileName}
 										onclick={() => onShowPlate(entry.plate)}
 									>
@@ -290,7 +292,7 @@
 								<button
 									type="button"
 									class={cn(
-										'inline-flex items-center gap-1.5 rounded-md border px-2 py-0.5 text-[11px] transition-colors',
+										'inline-flex min-h-6 items-center gap-1.5 rounded-md border px-2 py-1 text-xs transition-colors',
 										linkedPlates.length === 0
 											? 'border-amber-500/30 bg-amber-500/10 text-amber-300 hover:border-amber-500/50'
 											: 'border-transparent text-zinc-400 hover:border-white/10 hover:text-zinc-200'
@@ -304,7 +306,7 @@
 								{#if linkedPlates.length > 0 && covered !== part.requiredQuantity}
 									<span
 										class={cn(
-											'text-[11px] tabular-nums',
+											'text-xs tabular-nums',
 											covered < part.requiredQuantity ? 'text-amber-300' : 'text-rose-400'
 										)}
 										title={$t('parts.coverageHint')}
@@ -320,7 +322,7 @@
 							     which one actually ran before it deducts anything. -->
 							{#if choosingId === part.id && linkedPlates.length > 1}
 								<div class="mt-2 rounded-xl border border-indigo-500/30 bg-indigo-500/5 p-2">
-									<p class="px-1 pb-1.5 text-[11px] text-zinc-400">
+									<p class="px-1 pb-1.5 text-xs text-zinc-400">
 										{$t('parts.whichPlatePrinted')}
 									</p>
 									<ul class="flex flex-wrap gap-1.5">
@@ -328,7 +330,7 @@
 											<li>
 												<button
 													type="button"
-													class="inline-flex max-w-full items-center gap-1.5 rounded-md border border-white/10 bg-white/5 px-2 py-1 text-[11px] text-zinc-200 transition-colors hover:border-indigo-500/50 hover:bg-indigo-500/10"
+													class="inline-flex max-w-full items-center gap-1.5 rounded-md border border-white/10 bg-white/5 px-2 py-1 text-xs text-zinc-200 transition-colors hover:border-indigo-500/50 hover:bg-indigo-500/10"
 													onclick={() => {
 														choosingId = null;
 														onPrint(entry.plate);
@@ -352,14 +354,14 @@
 								<p class="text-sm font-semibold text-zinc-100 tabular-nums" aria-live="polite">
 									{part.printedQuantity}<span class="text-zinc-400">/{part.requiredQuantity}</span>
 								</p>
-								<p class="text-[10px] tracking-widest text-zinc-400 uppercase">
+								<p class="text-2xs tracking-widest text-zinc-400 uppercase">
 									{$t('parts.printed')}
 								</p>
 							</div>
 							{#if part.failedQuantity > 0}
 								<div>
 									<p class="text-sm text-rose-400 tabular-nums">{part.failedQuantity}</p>
-									<p class="text-[10px] tracking-widest text-zinc-400 uppercase">
+									<p class="text-2xs tracking-widest text-zinc-400 uppercase">
 										{$t('parts.failed')}
 									</p>
 								</div>
@@ -391,7 +393,7 @@
 							<IconButton
 								label={$t('common.delete')}
 								tone="danger"
-								class="opacity-50 transition-opacity group-hover:opacity-100 focus-visible:opacity-100"
+								class="opacity-75 transition-opacity group-hover:opacity-100 focus-visible:opacity-100"
 								onclick={() => (pendingDelete = part)}
 							>
 								<Trash2 size={15} />
@@ -402,12 +404,12 @@
 							<div
 								class="w-full rounded-xl border border-white/10 bg-zinc-950/40 px-4 py-3"
 							>
-								<p class="text-[11px] leading-relaxed text-zinc-400">
+								<p class="text-xs leading-relaxed text-zinc-400">
 									{$t('parts.correctCountersHint')}
 								</p>
 								<div class="mt-3 flex flex-wrap items-center gap-x-5 gap-y-3">
 									<div class="flex items-center gap-1.5">
-										<span class="text-[10px] tracking-widest text-zinc-400 uppercase">
+										<span class="text-2xs tracking-widest text-zinc-400 uppercase">
 											{$t('parts.printed')}
 										</span>
 										<IconButton
@@ -433,7 +435,7 @@
 									</div>
 
 									<div class="flex items-center gap-1.5">
-										<span class="text-[10px] tracking-widest text-zinc-400 uppercase">
+										<span class="text-2xs tracking-widest text-zinc-400 uppercase">
 											{$t('parts.failed')}
 										</span>
 										<IconButton
@@ -463,7 +465,7 @@
 									</div>
 
 									<div class="flex items-center gap-1.5">
-										<span class="text-[10px] tracking-widest text-zinc-400 uppercase">
+										<span class="text-2xs tracking-widest text-zinc-400 uppercase">
 											{$t('parts.required')}
 										</span>
 										<input

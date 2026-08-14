@@ -275,7 +275,7 @@
 {#if loading}
 	<p class="py-20 text-center text-sm text-zinc-400">{$t('common.loading')}</p>
 {:else if notFound || !project}
-	<div class="px-8 py-16">
+	<div class="page-x py-16">
 		<div class="card">
 			<EmptyState icon={Layers3} title={$t('errors.notFound')} body={$t('errors.notFoundBody')}>
 				{#snippet action()}
@@ -327,7 +327,7 @@
 		{/snippet}
 	</PageHeader>
 
-	<div class="px-8 pb-10">
+	<div class="page-x pb-10">
 		<!--
 			The model page's own picture, fetched once and then stored locally — for
 			a project that came from MakerWorld or Printables it is the fastest way
@@ -371,11 +371,13 @@
 					{$t(item.labelKey)}
 					<!--
 						A badge, not a loose digit: "Teile 12 Druckplatten 3" read as one
-						sentence with numbers in it rather than as three counts.
+						sentence with numbers in it rather than as three counts. `h-5`
+						rather than `h-4.5`, because the badge now carries 12–13 px type
+						whose line box no longer fits an 18 px pill.
 					-->
 					<span
 						class={cn(
-							'ml-1.5 inline-flex h-4.5 min-w-4.5 items-center justify-center rounded-full border px-1.5 text-[10px] font-semibold tabular-nums',
+							'ml-1.5 inline-flex h-5 min-w-5 items-center justify-center rounded-full border px-1.5 text-xs font-semibold tabular-nums',
 							selected
 								? 'border-indigo-400/40 bg-indigo-500/15 text-indigo-200'
 								: 'border-white/10 bg-white/5 text-zinc-400'
@@ -456,14 +458,14 @@
 
 								<div class="min-w-0 flex-1">
 									<p class="truncate text-sm text-zinc-200">{job.plateName}</p>
-									<p class="mt-0.5 text-[11px] text-zinc-400">
+									<p class="mt-0.5 text-xs text-zinc-400">
 										{formatDateTime(job.completedAt ?? job.startedAt)}
 										{#if job.actualDurationSeconds}
 											· {formatDuration(job.actualDurationSeconds, durationLabels)}
 										{/if}
 									</p>
 									{#if job.failureReason}
-										<p class="mt-1 text-[11px] text-rose-400">{job.failureReason}</p>
+										<p class="mt-1 text-xs text-rose-400">{job.failureReason}</p>
 									{/if}
 								</div>
 
@@ -471,7 +473,7 @@
 									<div class="flex min-w-0 flex-wrap justify-end gap-1.5">
 										{#each job.spoolsUsed as usage (usage.slotIndex)}
 											<span
-												class="inline-flex items-center gap-1.5 rounded-md border border-white/10 bg-white/5 px-2 py-1 text-[11px] text-zinc-400"
+												class="inline-flex items-center gap-1.5 rounded-md border border-white/10 bg-white/5 px-2 py-1 text-xs text-zinc-400"
 												title={$t('job.deductedFrom')}
 											>
 												<span class="max-w-40 truncate">{spoolLabel(usage.spoolId)}</span>
@@ -486,7 +488,7 @@
 								<IconButton
 									label={$t('common.delete')}
 									tone="danger"
-									class="opacity-50 transition-opacity group-hover:opacity-100 focus-visible:opacity-100"
+									class="opacity-75 transition-opacity group-hover:opacity-100 focus-visible:opacity-100"
 									onclick={() => (pendingJobDelete = job)}
 								>
 									<Trash2 size={15} />

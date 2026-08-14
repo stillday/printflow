@@ -212,7 +212,7 @@
 					</span>
 					<button
 						type="button"
-						class="text-[11px] text-indigo-400 transition-colors hover:text-indigo-300"
+						class="-my-1 min-h-6 px-1.5 py-1 text-xs text-indigo-400 transition-colors hover:text-indigo-300"
 						onclick={() =>
 							(selected =
 								selected.length === available.length ? [] : available.map((plate) => plate.id!))}
@@ -241,9 +241,9 @@
 								/>
 								<span class="min-w-0 flex-1">
 									<span class="block truncate text-zinc-100">{plate.name}</span>
-									<span class="block truncate text-[11px] text-zinc-400">{plate.fileName}</span>
+									<span class="block truncate text-xs text-zinc-400">{plate.fileName}</span>
 								</span>
-								<span class="inline-flex shrink-0 items-center gap-1.5 text-[11px] text-zinc-400">
+								<span class="inline-flex shrink-0 items-center gap-1.5 text-xs text-zinc-400">
 									<Clock size={12} />
 									{formatDuration(plate.estimatedTimeSeconds, durationLabels)}
 								</span>
@@ -280,7 +280,7 @@
 					<input type="checkbox" class="mt-0.5 h-4 w-4 accent-indigo-500" bind:checked={spread} />
 					<span>
 						{$t('plan.spread')}
-						<span class="mt-0.5 block text-[11px] text-zinc-400">{$t('plan.spreadHint')}</span>
+						<span class="mt-0.5 block text-xs text-zinc-400">{$t('plan.spreadHint')}</span>
 					</span>
 				</label>
 			{/if}

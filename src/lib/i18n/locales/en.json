@@ -2,8 +2,8 @@
 	"app": {
 		"name": "PrintFlow",
 		"tagline": "3D print project & filament manager",
-		"offline": "Offline",
-		"offlineHint": "All data stays local on this device"
+		"offline": "Local",
+		"offlineHint": "Your data stays on this device"
 	},
 	"nav": {
 		"dashboard": "Dashboard",
@@ -319,13 +319,23 @@
 			"dark": "Dark",
 			"light": "Light"
 		},
+		"layout": "Layout",
+		"layoutHint": "How densely the interface is packed.",
+		"layouts": {
+			"console": "Compact",
+			"consoleHint": "A lot at a glance. For everyday use.",
+			"studio": "Roomy",
+			"studioHint": "Larger type, more air.",
+			"workbench": "Workbench",
+			"workbenchHint": "A narrow icon rail instead of the sidebar — more room for content."
+		},
 		"language": "Language",
 		"languageHint": "Applied immediately and remembered.",
 		"online": "Online features",
-		"onlineHint": "Off by default. PrintFlow works without the internet.",
-		"onlineOff": "Off (recommended)",
+		"onlineHint": "Preview images and downloads from model portals. Can be switched off.",
+		"onlineOff": "Off",
 		"onlineOffHint": "No network access. Everything stays on this device.",
-		"onlineOn": "Allow",
+		"onlineOn": "Allow (default)",
 		"onlineOnHint": "Fetch preview images from model portals and download files from links.",
 		"onlineDetail": "This unlocks exactly two things: fetching a project's preview image once from its model page (it then lives locally in the database), and downloading a file from a link you supply. Only MakerWorld, Printables, Thingiverse, Cults3D, MyMiniFactory and Thangs are allowed. The requests run in the app core, not in the interface — the interface itself stays cut off from the network.",
 		"database": "Database",
@@ -341,7 +351,7 @@
 		"importDialogTitle": "Choose backup",
 		"about": "About",
 		"version": "Version",
-		"aboutBody": "PrintFlow runs fully offline. No data is ever sent to external servers.",
+		"aboutBody": "Your data stays on this device — no account, no sync, no server. Only if you leave the online features on below does PrintFlow fetch preview images from model portals and download files from links you supply.",
 		"dataSummary": "Stored data",
 		"stats": {
 			"catalog": "Filament types",

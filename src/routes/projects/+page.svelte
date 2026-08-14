@@ -145,7 +145,7 @@
 	{/snippet}
 </PageHeader>
 
-<div class="px-8 pb-10">
+<div class="page-x pb-10">
 	{#if loading}
 		<p class="py-16 text-center text-sm text-zinc-400">{$t('common.loading')}</p>
 	{:else if projects.length === 0}
@@ -216,7 +216,7 @@
 			<ul class="grid gap-4 lg:grid-cols-2 2xl:grid-cols-3">
 				{#each filtered as project (project.id)}
 					{@const ratio = progressOf(project)}
-					<li class="card group relative flex flex-col p-5 transition-colors duration-200 hover:border-indigo-500/40">
+					<li class="card group relative flex flex-col p-5 transition-colors duration-200 hover:border-indigo-500/40 hover:bg-white/[0.04]">
 						<div class="flex items-start justify-between gap-3">
 							<!--
 								Stretched link: the whole card is the target, which is what its
@@ -260,7 +260,7 @@
 									: 0}
 								tone={ratio >= 1 ? 'emerald' : 'indigo'}
 							/>
-							<p class="mt-2 text-[11px] text-zinc-400">
+							<p class="mt-2 text-xs text-zinc-400">
 								{$t('projects.partsProgress', {
 									values: { printed: project.printedTotal, required: project.requiredTotal }
 								})}
@@ -268,7 +268,7 @@
 						</div>
 
 						<div
-							class="relative z-10 mt-4 flex items-center justify-end gap-1 border-t border-white/5 pt-3 opacity-60 transition-opacity group-hover:opacity-100 focus-within:opacity-100"
+							class="relative z-10 mt-4 flex items-center justify-end gap-1 border-t border-white/5 pt-3 opacity-85 transition-opacity group-hover:opacity-100 focus-within:opacity-100"
 						>
 							{#if isExternalUrl(project.sourceUrl)}
 								<IconButton

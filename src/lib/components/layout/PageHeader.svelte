@@ -13,7 +13,7 @@
 	let { title, subtitle, actions, eyebrow }: Props = $props();
 </script>
 
-<div class="flex flex-wrap items-end justify-between gap-4 px-8 pt-8 pb-6">
+<div class="flex flex-wrap items-end justify-between gap-4 page-x pt-8 pb-6">
 	<div class="min-w-0">
 		{#if eyebrow}
 			<div class="mb-2">{@render eyebrow()}</div>

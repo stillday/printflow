@@ -17,10 +17,11 @@ export async function setSetting(key: string, value: string): Promise<void> {
 
 export const SETTING_LOCALE = 'locale';
 export const SETTING_THEME = 'theme';
+export const SETTING_LAYOUT = 'layout';
 export const SETTING_LIBRARY_ROOT = 'libraryRoot';
 /**
- * Whether the two model-portal commands may be used at all. Off unless the
- * user turns it on in Settings — the app is offline by default and says so.
+ * Whether the two model-portal commands may be used at all. On unless switched
+ * off — see `stores/online.svelte.ts` for why absent means on.
  */
 export const SETTING_ONLINE = 'onlineFeatures';
 

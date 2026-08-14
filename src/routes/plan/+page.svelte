@@ -288,7 +288,7 @@
 {#snippet moveDate(entry: PlanEntryDecoded)}
 	<input
 		type="date"
-		class="h-8 shrink-0 rounded-lg border border-white/10 bg-white/5 px-2 text-[11px] text-zinc-300 transition-colors tabular-nums hover:border-white/20 focus:border-indigo-500/60 focus-visible:outline-2 focus-visible:outline-indigo-500"
+		class="h-8 shrink-0 rounded-lg border border-white/10 bg-white/5 px-2 text-xs text-zinc-300 transition-colors tabular-nums hover:border-white/20 focus:border-indigo-500/60 focus-visible:outline-2 focus-visible:outline-indigo-500"
 		value={entry.plannedDate}
 		draggable="false"
 		aria-label={$t('plan.moveToDate')}
@@ -329,14 +329,14 @@
 	{/snippet}
 </PageHeader>
 
-<div class="px-8 pb-10">
+<div class="page-x pb-10">
 	{#if loading}
 		<p class="py-16 text-center text-sm text-zinc-400">{$t('common.loading')}</p>
 	{:else}
 		<!-- Week summary: total time and the filament it will consume. -->
 		<div class="card mb-5 flex flex-wrap items-center gap-x-6 gap-y-3 px-5 py-4">
 			<div>
-				<p class="text-[10px] font-semibold tracking-widest text-zinc-400 uppercase">
+				<p class="text-2xs font-semibold tracking-widest text-zinc-400 uppercase">
 					{$t('plan.weekOf', {
 						values: { from: dayLabel(weekStart), to: dayLabel(weekEnd) }
 					})}
@@ -353,7 +353,7 @@
 				<ul class="ml-auto flex flex-wrap gap-2">
 					{#each weekMaterials as total (total.material)}
 						<li
-							class="inline-flex items-center gap-2 rounded-lg border border-white/10 bg-white/5 px-2.5 py-1.5 text-[11px]"
+							class="inline-flex items-center gap-2 rounded-lg border border-white/10 bg-white/5 px-2.5 py-1.5 text-xs"
 						>
 							<span class="text-zinc-300">{total.material}</span>
 							<span class="font-medium text-zinc-100 tabular-nums">
@@ -382,12 +382,12 @@
 						<li
 							class="flex flex-wrap items-center gap-3 rounded-xl border border-white/10 bg-zinc-950/40 px-4 py-3"
 						>
-							<span class="text-[11px] text-amber-300 tabular-nums">
+							<span class="text-xs text-amber-300 tabular-nums">
 								{dayLabel(entry.plannedDate)}
 							</span>
 							<div class="min-w-0 flex-1">
 								<p class="truncate text-sm text-zinc-100">{entry.plateName}</p>
-								<p class="truncate text-[11px] text-zinc-400">{entry.projectTitle}</p>
+								<p class="truncate text-xs text-zinc-400">{entry.projectTitle}</p>
 							</div>
 							<!-- "Today" alone forced everything onto one already busy day. -->
 							<Button variant="secondary" size="sm" onclick={() => moveTo(entry, today)}>
@@ -434,7 +434,7 @@
 		{:else}
 			<!-- Dragging and the date field are both invisible affordances, so the
 			     two ways to move an entry are spelled out once above the week. -->
-			<p class="mb-3 text-[11px] text-zinc-400">{$t('plan.moveHint')}</p>
+			<p class="mb-3 text-xs text-zinc-400">{$t('plan.moveHint')}</p>
 		{/if}
 
 		{#key weekStart}
@@ -470,12 +470,12 @@
 								>
 									{weekdayName(date)}
 									{#if isToday}
-										<span class="ml-1.5 text-[10px] tracking-widest uppercase">
+										<span class="ml-1.5 text-2xs tracking-widest uppercase">
 											{$t('plan.today')}
 										</span>
 									{/if}
 								</h2>
-								<p class="mt-0.5 text-[11px] text-zinc-400 tabular-nums">{dayLabel(date)}</p>
+								<p class="mt-0.5 text-xs text-zinc-400 tabular-nums">{dayLabel(date)}</p>
 							</div>
 
 							<!-- Day load and "add here" belong together on the right; the add
@@ -484,7 +484,7 @@
 								{#if dayEntries.length > 0}
 									<span
 										class={cn(
-											'inline-flex shrink-0 items-center gap-1.5 rounded-md border px-2 py-1 text-[11px] tabular-nums',
+											'inline-flex shrink-0 items-center gap-1.5 rounded-md border px-2 py-1 text-xs tabular-nums',
 											isOverloaded(load)
 												? 'border-amber-500/30 bg-amber-500/10 text-amber-300'
 												: 'border-white/10 bg-white/5 text-zinc-300'
@@ -506,7 +506,7 @@
 							<button
 								type="button"
 								class={cn(
-									'mt-4 w-full rounded-xl border border-dashed px-4 py-3 text-[11px] transition-colors',
+									'mt-4 w-full rounded-xl border border-dashed px-4 py-3 text-xs transition-colors',
 									isDropTarget
 										? 'border-indigo-400/60 text-indigo-200'
 										: 'border-white/10 text-zinc-400 hover:border-indigo-500/40 hover:text-zinc-200'
@@ -545,7 +545,7 @@
 													<GripVertical size={14} />
 												</span>
 											{/if}
-											<span class="text-[11px] text-zinc-400 tabular-nums">{index + 1}</span>
+											<span class="text-xs text-zinc-400 tabular-nums">{index + 1}</span>
 
 											<div class="min-w-0 flex-1">
 												<p
@@ -556,7 +556,7 @@
 												>
 													{entry.plateName}
 												</p>
-												<p class="truncate text-[11px] text-zinc-400">
+												<p class="truncate text-xs text-zinc-400">
 													<a
 														href="/projects/{entry.projectId}"
 														class="transition-colors hover:text-zinc-200"
@@ -566,7 +566,7 @@
 													· {formatDuration(entry.estimatedTimeSeconds, durationLabels)}
 												</p>
 												{#if entry.note}
-													<p class="mt-1 truncate text-[11px] text-zinc-400 italic">
+													<p class="mt-1 truncate text-xs text-zinc-400 italic">
 														{entry.note}
 													</p>
 												{/if}
@@ -591,7 +591,7 @@
 														>
 															<ArrowUp size={14} />
 														</IconButton>
-														<span class="text-[10px] text-zinc-400 tabular-nums">
+														<span class="text-xs text-zinc-400 tabular-nums">
 															{index + 1}/{dayEntries.length}
 														</span>
 														<IconButton
@@ -640,7 +640,7 @@
 													</Button>
 												</div>
 											{:else}
-												<span class="text-[11px] tracking-wide text-zinc-400 uppercase">
+												<span class="text-2xs tracking-wide text-zinc-400 uppercase">
 													{$t(`plan.status.${entry.status}`)}
 												</span>
 												<Button variant="ghost" size="sm" onclick={() => reopen(entry)}>
@@ -663,7 +663,7 @@
 							{#if isDropTarget}
 								<!-- Dropped entries land at the end of the day's queue. -->
 								<p
-									class="mt-2 rounded-xl border border-dashed border-indigo-400/60 px-4 py-2 text-center text-[11px] text-indigo-200"
+									class="mt-2 rounded-xl border border-dashed border-indigo-400/60 px-4 py-2 text-center text-xs text-indigo-200"
 								>
 									{$t('plan.dropHere')}
 								</p>

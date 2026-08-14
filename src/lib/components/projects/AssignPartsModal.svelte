@@ -129,7 +129,7 @@
 									)}
 								>
 									<span class="min-w-0 flex-1 truncate text-sm text-zinc-200">{part.name}</span>
-									<span class="shrink-0 text-[11px] text-zinc-400 tabular-nums">
+									<span class="shrink-0 text-xs text-zinc-400 tabular-nums">
 										{part.printedQuantity}/{part.requiredQuantity}
 									</span>
 									<input

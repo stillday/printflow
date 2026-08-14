@@ -169,7 +169,7 @@
 		<div class="grid gap-6">
 			<section>
 				<h3 class="text-xs font-semibold text-zinc-200">{$t('job.assignSpools')}</h3>
-				<p class="mt-1 text-[11px] leading-relaxed text-zinc-400">{$t('job.assignSpoolsHint')}</p>
+				<p class="mt-1 text-xs leading-relaxed text-zinc-400">{$t('job.assignSpoolsHint')}</p>
 
 				{#if activeSpools.length === 0}
 					<p class="mt-3 rounded-xl border border-amber-500/20 bg-amber-500/10 px-4 py-3 text-xs text-amber-200">
@@ -183,7 +183,7 @@
 							<li class="rounded-xl border border-white/10 bg-zinc-950/40 p-3">
 								<div class="flex flex-wrap items-center gap-3">
 									<span
-										class="inline-flex shrink-0 items-center gap-2 rounded-lg border border-white/10 bg-white/5 px-2.5 py-1.5 text-[11px]"
+										class="inline-flex shrink-0 items-center gap-2 rounded-lg border border-white/10 bg-white/5 px-2.5 py-1.5 text-xs"
 									>
 										<ColorSwatch color={slot.requirement.colorHex} size={12} />
 										{$t('plates.slot', { values: { index: slot.requirement.slotIndex } })}
@@ -201,7 +201,7 @@
 									</select>
 								</div>
 
-								<dl class="mt-3 grid grid-cols-3 gap-2 text-[11px]">
+								<dl class="mt-3 grid grid-cols-3 gap-2 text-xs">
 									<div>
 										<dt class="text-zinc-400">{$t('job.needs')}</dt>
 										<dd class="mt-0.5 text-zinc-300 tabular-nums">
@@ -271,7 +271,7 @@
 								<outcome.icon size={14} />
 								{$t(outcome.labelKey)}
 							</span>
-							<span class="mt-1 block text-[11px] leading-snug text-zinc-400">
+							<span class="mt-1 block text-xs leading-snug text-zinc-400">
 								{$t(outcome.hintKey)}
 							</span>
 						</button>
@@ -306,14 +306,14 @@
 
 			{#if status !== 'cancelled' && affectedParts.length > 0}
 				<section class="rounded-xl border border-white/10 bg-zinc-950/40 p-4">
-					<p class="text-[10px] font-semibold tracking-widest text-zinc-400 uppercase">
+					<p class="text-2xs font-semibold tracking-widest text-zinc-400 uppercase">
 						{$t('job.partsCounted')}
 					</p>
 					<ul class="mt-2 flex flex-wrap gap-1.5">
 						{#each affectedParts as entry (entry.part.id)}
 							<li
 								class={cn(
-									'inline-flex items-center gap-1.5 rounded-md border px-2 py-1 text-[11px]',
+									'inline-flex items-center gap-1.5 rounded-md border px-2 py-1 text-xs',
 									status === 'success'
 										? 'border-emerald-500/20 bg-emerald-500/10 text-emerald-300'
 										: 'border-rose-500/20 bg-rose-500/10 text-rose-300'
@@ -327,7 +327,7 @@
 				</section>
 			{/if}
 
-			<p class="text-[11px] text-zinc-400">
+			<p class="text-xs text-zinc-400">
 				{$t('plates.estimatedTime')}: {formatDuration(plate.estimatedTimeSeconds, durationLabels)}
 			</p>
 		</div>

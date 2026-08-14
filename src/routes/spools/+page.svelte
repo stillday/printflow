@@ -120,7 +120,7 @@
 	{/snippet}
 </PageHeader>
 
-<div class="px-8 pb-10">
+<div class="page-x pb-10">
 	{#if loading}
 		<p class="py-16 text-center text-sm text-zinc-400">{$t('common.loading')}</p>
 	{:else if catalog.length === 0}

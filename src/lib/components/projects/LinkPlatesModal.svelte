@@ -126,24 +126,24 @@
 
 							<div class="min-w-0 flex-1">
 								<p class="truncate text-sm text-zinc-100">{plate.name}</p>
-								<p class="truncate text-[11px] text-zinc-400" title={plate.sourcePath ?? undefined}>
+								<p class="truncate text-xs text-zinc-400" title={plate.sourcePath ?? undefined}>
 									{plate.fileName}
 								</p>
 							</div>
 
-							<span class="inline-flex items-center gap-1.5 text-[11px] text-zinc-400">
+							<span class="inline-flex items-center gap-1.5 text-xs text-zinc-400">
 								<Clock size={12} />
 								{formatDuration(plate.estimatedTimeSeconds, durationLabels)}
 							</span>
 
 							{#if plate.filamentRequirements.length > 0}
-								<span class="inline-flex items-center gap-1.5 text-[11px] text-zinc-400">
+								<span class="inline-flex items-center gap-1.5 text-xs text-zinc-400">
 									<ColorSwatch color={plate.filamentRequirements[0].colorHex} size={11} />
 									{formatGrams(plateTotalWeight(plate))}
 								</span>
 							{/if}
 
-							<label class="flex items-center gap-2 text-[11px] text-zinc-400">
+							<label class="flex items-center gap-2 text-xs text-zinc-400">
 								{$t('plates.quantityOnPlate')}
 								<input
 									class="input-base w-20 text-center"

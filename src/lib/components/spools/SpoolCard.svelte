@@ -30,7 +30,7 @@
 </script>
 
 <li
-	class="card group relative overflow-hidden p-5 transition-colors duration-200 hover:border-indigo-500/40"
+	class="card group relative overflow-hidden p-5 transition-colors duration-200 hover:border-indigo-500/40 hover:bg-white/[0.04]"
 	class:opacity-60={spool.status === 'archived'}
 >
 	<div
@@ -61,7 +61,7 @@
 			<p class="mt-3 text-lg font-semibold text-zinc-50 tabular-nums">
 				{formatGrams(spool.currentWeightNet)}
 			</p>
-			<p class="text-[11px] text-zinc-400">
+			<p class="text-xs text-zinc-400">
 				{$t('spools.remainingOf', {
 					values: {
 						current: Math.round(spool.currentWeightNet),
@@ -72,17 +72,17 @@
 
 			<div class="mt-3 flex flex-wrap items-center gap-2">
 				<span
-					class="inline-flex rounded-md border border-white/10 bg-white/5 px-2 py-0.5 text-[11px] font-medium text-zinc-300"
+					class="inline-flex rounded-md border border-white/10 bg-white/5 px-2 py-0.5 text-xs font-medium text-zinc-300"
 				>
 					{spool.catalog.material}
 				</span>
-				<span class="inline-flex items-center gap-1 text-[11px] text-zinc-400">
+				<span class="inline-flex items-center gap-1 text-xs text-zinc-400">
 					<MapPin size={11} />
 					{spool.location || $t('spools.noLocation')}
 				</span>
 				{#if spool.cost > 0}
 					<span
-						class="inline-flex items-center gap-1 text-[11px] text-zinc-400"
+						class="inline-flex items-center gap-1 text-xs text-zinc-400"
 						title={$t('spools.cost')}
 					>
 						<Tag size={11} />
@@ -94,7 +94,7 @@
 	</div>
 
 	<div
-		class="relative mt-4 flex items-center justify-end gap-1 border-t border-white/5 pt-3 opacity-60 transition-opacity group-hover:opacity-100 focus-within:opacity-100"
+		class="relative mt-4 flex items-center justify-end gap-1 border-t border-white/5 pt-3 opacity-85 transition-opacity group-hover:opacity-100 focus-within:opacity-100"
 	>
 		{#if spool.status !== 'archived'}
 			<IconButton label={$t('spools.deduct')} onclick={() => onDeduct(spool)}>

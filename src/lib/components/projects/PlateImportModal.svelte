@@ -41,9 +41,14 @@
 		minute: $t('units.minutesShort')
 	});
 
-	// Seed the form each time a new parse result arrives. Objects are matched to
-	// existing parts by name so re-importing a revised plate keeps its links.
-	$effect(() => {
+	/*
+	 * `$effect.pre`, not `$effect`: the markup binds `mappings[index][objectIndex]`,
+	 * so seeding has to happen *before* the DOM update. As a plain effect it ran
+	 * after, the first render read `undefined[0]` and threw — which aborted the
+	 * flush, so the seeding never happened at all and every import of a file with
+	 * objects failed. Files without objects imported fine, which is why it hid.
+	 */
+	$effect.pre(() => {
 		if (!result) return;
 		plateNames = result.plates.map((plate) =>
 			suggestPlateName(result.fileName, plate, result.plates.length)
@@ -142,7 +147,8 @@
 	size="lg"
 	{onClose}
 >
-	{#if result}
+	<!-- Belt and braces: never render the rows before the seeding above has run. -->
+	{#if result && mappings.length === result.plates.length}
 		<div class="grid gap-5">
 			{#each result.warnings as warning (warning)}
 				<div
@@ -181,7 +187,7 @@
 						<ul class="mt-3 flex flex-wrap gap-2">
 							{#each plate.filamentRequirements as requirement (requirement.slotIndex)}
 								<li
-									class="inline-flex items-center gap-2 rounded-lg border border-white/10 bg-white/5 px-2.5 py-1.5 text-[11px]"
+									class="inline-flex items-center gap-2 rounded-lg border border-white/10 bg-white/5 px-2.5 py-1.5 text-xs"
 								>
 									<ColorSwatch color={requirement.colorHex} size={12} />
 									<span class="text-zinc-400">
@@ -195,13 +201,13 @@
 							{/each}
 						</ul>
 					{:else}
-						<p class="mt-3 text-[11px] text-zinc-400">{$t('plates.noFilamentData')}</p>
+						<p class="mt-3 text-xs text-zinc-400">{$t('plates.noFilamentData')}</p>
 					{/if}
 
 					{#if plate.objects.length > 0}
 						<div class="mt-4 border-t border-white/5 pt-4">
 							<p class="text-xs font-medium text-zinc-300">{$t('plates.assignParts')}</p>
-							<p class="mt-1 text-[11px] leading-relaxed text-zinc-400">
+							<p class="mt-1 text-xs leading-relaxed text-zinc-400">
 								{$t('plates.assignPartsHint')}
 							</p>
 
@@ -211,7 +217,7 @@
 										<span class="min-w-0 flex-1 truncate text-xs text-zinc-300">
 											{object.name}
 										</span>
-										<span class="shrink-0 text-[11px] text-zinc-400 tabular-nums">
+										<span class="shrink-0 text-xs text-zinc-400 tabular-nums">
 											{object.quantity}× {$t('units.pieces')}
 										</span>
 										<select class="input-base h-8 w-52 shrink-0 py-0 text-xs" bind:value={mappings[index][objectIndex]}>

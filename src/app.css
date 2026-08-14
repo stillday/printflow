@@ -20,6 +20,75 @@
 
 	--color-scrollbar-thumb: #3f3f46;
 	--color-scrollbar-thumb-hover: #52525b;
+
+	/*
+	 * Type scale as variables, so a layout can change density without touching
+	 * markup. The app previously hardcoded `text-[11px]` in 94 places and
+	 * `text-[10px]` in 19 — sizes no variable can reach, and below the 13 px
+	 * macOS body / 14 px Fluent body that desktop guidelines settle on. `2xs` is
+	 * for uppercase micro-labels only, never for content.
+	 */
+	--text-2xs: 11px;
+	--text-2xs--line-height: 15px;
+	--text-xs: 12px;
+	--text-xs--line-height: 16px;
+	--text-sm: 13px;
+	--text-sm--line-height: 18px;
+	--text-base: 14px;
+	--text-base--line-height: 20px;
+
+	/*
+	 * Layout tokens. Padding and radius move together, the way Fluent's Card
+	 * couples its `size` — 8/12/16 px padding against 4/6 px radius — rather than
+	 * drifting apart into a dozen one-off values.
+	 */
+	--pf-card-pad: 1.25rem;
+	--pf-card-radius: 0.75rem;
+	--pf-gap: 1rem;
+	--pf-page-x: 2rem;
+	--pf-sidebar-w: 13rem;
+	--pf-row-y: 0.625rem;
+}
+
+/*
+ * Three layouts, chosen by the user, applied as `data-layout` on <html> beside
+ * `data-theme`. Precedent for offering this at all: Apple ships a user-selectable
+ * sidebar density (small / medium / large) in System Settings.
+ *
+ * `console` is the default and needs no block — it is the values above.
+ */
+
+/* Roomier: bigger type, more air, softer corners. */
+:root[data-layout='studio'] {
+	--text-2xs: 12px;
+	--text-2xs--line-height: 16px;
+	--text-xs: 13px;
+	--text-xs--line-height: 18px;
+	--text-sm: 14px;
+	--text-sm--line-height: 20px;
+	--text-base: 16px;
+	--text-base--line-height: 24px;
+
+	--pf-card-pad: 1.75rem;
+	--pf-card-radius: 1rem;
+	--pf-gap: 1.5rem;
+	--pf-page-x: 3rem;
+	--pf-sidebar-w: 15.5rem;
+	--pf-row-y: 0.875rem;
+}
+
+/*
+ * Workbench keeps Console's density but trades the wide sidebar for a narrow
+ * icon rail — 48px is WinUI's own `CompactPaneLength` — so the content gets the
+ * width back. Material's collapsed rail is 96dp, but that figure is calibrated
+ * for touch and would be wrong for a pointer-driven desktop app.
+ */
+:root[data-layout='workbench'] {
+	--pf-sidebar-w: 3rem;
+	--pf-card-radius: 0.5rem;
+	--pf-card-pad: 1rem;
+	--pf-gap: 0.75rem;
+	--pf-page-x: 1.5rem;
 }
 
 /*
@@ -120,6 +189,16 @@
 		background-color: var(--color-scrollbar-thumb-hover);
 	}
 
+	/*
+	 * Tailwind v4's Preflight dropped v3's `button { cursor: pointer }`, so every
+	 * one of the app's ~120 buttons rendered with an arrow cursor while anchors
+	 * showed a hand. That mismatch is most of "things don't feel clickable".
+	 */
+	button:not(:disabled),
+	[role='button']:not([aria-disabled='true']) {
+		cursor: pointer;
+	}
+
 	:focus-visible {
 		outline: 2px solid var(--color-indigo-500);
 		outline-offset: 2px;
@@ -159,7 +238,15 @@
 
 @layer components {
 	.card {
-		@apply rounded-2xl border border-white/10 bg-zinc-900 shadow-lg shadow-black/20;
+		/* Radius and padding come from the layout tokens; a fixed `rounded-2xl`
+		   would have made the dense layout look like the roomy one. */
+		@apply border border-white/10 bg-zinc-900 shadow-lg shadow-black/20;
+		border-radius: var(--pf-card-radius);
+	}
+
+	/** Standard page gutter, so every route breathes the same. */
+	.page-x {
+		padding-inline: var(--pf-page-x);
 	}
 
 	.input-base {

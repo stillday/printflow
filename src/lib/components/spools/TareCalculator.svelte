@@ -95,7 +95,7 @@
 		<Calculator size={15} class="text-indigo-400" />
 		<div class="min-w-0">
 			<p class="text-xs font-semibold text-zinc-200">{$t('spools.tare.title')}</p>
-			<p class="text-[11px] text-zinc-400">{$t('spools.tare.subtitle')}</p>
+			<p class="text-xs text-zinc-400">{$t('spools.tare.subtitle')}</p>
 		</div>
 	</div>
 
@@ -125,7 +125,7 @@
 
 	<div class="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-white/5 pt-4">
 		<div class="min-w-0">
-			<p class="text-[10px] tracking-widest text-zinc-400 uppercase">
+			<p class="text-2xs tracking-widest text-zinc-400 uppercase">
 				{$t('spools.tare.result')}
 			</p>
 			<p
@@ -135,7 +135,7 @@
 			>
 				{ready ? formatGrams(net) : '–'}
 			</p>
-			<p class="mt-0.5 text-[11px] text-zinc-400">{$t('spools.tare.formula')}</p>
+			<p class="mt-0.5 text-xs text-zinc-400">{$t('spools.tare.formula')}</p>
 			{#if negative}
 				<p class="mt-1 text-xs text-rose-400">{$t('spools.tare.negative')}</p>
 			{:else if malformed}

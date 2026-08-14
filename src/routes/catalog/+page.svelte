@@ -94,7 +94,7 @@
 	{/snippet}
 </PageHeader>
 
-<div class="px-8 pb-10">
+<div class="page-x pb-10">
 	{#if loading}
 		<p class="py-16 text-center text-sm text-zinc-400">{$t('common.loading')}</p>
 	{:else if entries.length === 0}
@@ -127,7 +127,7 @@
 			<ul class="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
 				{#each filtered as entry (entry.id)}
 					<li
-						class="card group relative overflow-hidden p-5 transition-colors duration-200 hover:border-indigo-500/40"
+						class="card group relative overflow-hidden p-5 transition-colors duration-200 hover:border-indigo-500/40 hover:bg-white/[0.04]"
 					>
 						<div
 							class="pointer-events-none absolute -top-16 -right-16 h-40 w-40 rounded-full blur-3xl transition-opacity duration-300 group-hover:opacity-100"
@@ -148,14 +148,14 @@
 								<p class="truncate text-sm font-semibold text-zinc-100">{entry.name}</p>
 								<p class="truncate text-xs text-zinc-400">{entry.brand}</p>
 								<span
-									class="mt-2 inline-flex rounded-md border border-white/10 bg-white/5 px-2 py-0.5 text-[11px] font-medium text-zinc-300"
+									class="mt-2 inline-flex rounded-md border border-white/10 bg-white/5 px-2 py-0.5 text-xs font-medium text-zinc-300"
 								>
 									{entry.material}
 								</span>
 							</div>
 
 							<div
-							class="flex shrink-0 gap-1 opacity-60 transition-opacity group-hover:opacity-100 focus-within:opacity-100"
+							class="flex shrink-0 gap-1 opacity-85 transition-opacity group-hover:opacity-100 focus-within:opacity-100"
 						>
 								<IconButton label={$t('common.edit')} onclick={() => openEdit(entry)}>
 									<Pencil size={15} />

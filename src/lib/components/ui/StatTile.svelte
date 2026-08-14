@@ -28,7 +28,7 @@
 
 	const classes = $derived(
 		cn(
-			'card group block px-5 py-4 transition-colors duration-200 hover:border-indigo-500/40',
+			'card group block px-5 py-4 transition-colors duration-200 hover:border-indigo-500/40 hover:bg-white/[0.04]',
 			// Only a linked tile reacts to the pointer beyond the border tint, so a
 			// dead tile never pretends to be clickable.
 			href && 'cursor-pointer hover:bg-white/[0.03]',

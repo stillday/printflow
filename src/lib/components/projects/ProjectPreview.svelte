@@ -218,7 +218,7 @@
 
 {#snippet settingsHint(text: string)}
 	<!-- The offline case is stated, not hidden: a missing button reads as a bug. -->
-	<p class="text-[11px] leading-relaxed text-zinc-400">
+	<p class="text-xs leading-relaxed text-zinc-400">
 		{text}
 		<a
 			href="/settings"
@@ -263,7 +263,7 @@
 			/>
 
 			<div class="mt-3 flex flex-wrap items-center justify-between gap-3">
-				<p class="min-w-0 text-[11px] leading-relaxed text-zinc-400">
+				<p class="min-w-0 text-xs leading-relaxed text-zinc-400">
 					{#if imageHost && stored.imageUrl && isExternalUrl(stored.imageUrl)}
 						{@const imageLink = stored.imageUrl}
 						<button
@@ -313,7 +313,7 @@
 			<p class="text-xs leading-relaxed text-zinc-400">
 				{$t('portal.preview.unsupported', { values: { host } })}
 			</p>
-			<p class="mt-1 text-[11px] text-zinc-400">
+			<p class="mt-1 text-xs text-zinc-400">
 				{$t('portal.supported', { values: { portals: $t('portal.portalList') } })}
 			</p>
 		{:else if !online.enabled}
@@ -324,7 +324,7 @@
 			</p>
 			<div class="mt-3">
 				{#if needsHuman}
-					<p class="mb-3 text-[11px] leading-relaxed text-amber-300">
+					<p class="mb-3 text-xs leading-relaxed text-amber-300">
 						{$t('portal.preview.needsHuman')}
 					</p>
 					<Button
@@ -359,7 +359,7 @@
 				business holding. So the honest offer is "open the page in your browser"
 				plus "paste a link you already have".
 			-->
-			<p class="mt-1 text-[11px] leading-relaxed text-zinc-400">{$t('portal.download.body')}</p>
+			<p class="mt-1 text-xs leading-relaxed text-zinc-400">{$t('portal.download.body')}</p>
 
 			<div class="mt-3 flex flex-wrap gap-2">
 				{#if isExternalUrl(sourceUrl)}
@@ -382,7 +382,7 @@
 			{#if downloadOpen}
 				<div class="mt-3 rounded-xl border border-white/10 bg-zinc-950/40 p-4">
 					{#if online.enabled}
-						<p class="mb-3 text-[11px] leading-relaxed text-zinc-400">
+						<p class="mb-3 text-xs leading-relaxed text-zinc-400">
 							{$t('portal.download.directHint')}
 						</p>
 						<Field label={$t('portal.download.urlLabel')} error={downloadUrlShown}>
@@ -402,7 +402,7 @@
 								{/if}
 								{downloading ? $t('portal.download.busy') : $t('portal.download.start')}
 							</Button>
-							<p class="text-[11px] leading-relaxed text-zinc-400">
+							<p class="text-xs leading-relaxed text-zinc-400">
 								{$t('portal.download.overwriteHint')}
 							</p>
 						</div>

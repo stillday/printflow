@@ -35,7 +35,7 @@
 			</span>
 			<button
 				type="button"
-				class="-m-1 shrink-0 p-1 text-current opacity-60 transition-opacity hover:opacity-100"
+				class="-m-1.5 inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-md p-1 text-current opacity-70 transition-opacity hover:opacity-100"
 				aria-label={$t('common.close')}
 				onclick={() => toasts.dismiss(toast.id)}
 			>

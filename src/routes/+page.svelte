@@ -116,7 +116,7 @@
 
 <PageHeader title={$t('dashboard.title')} subtitle={$t('dashboard.subtitle')} />
 
-<div class="px-8 pb-10">
+<div class="page-x pb-10">
 	{#if loading}
 		<p class="py-16 text-center text-sm text-zinc-400">{$t('common.loading')}</p>
 	{:else if isFresh}
@@ -190,7 +190,7 @@
 			{#if overdue > 0}
 				<a
 					href="/plan"
-					class="mb-2 flex items-center gap-2 rounded-xl border border-amber-500/30 bg-amber-500/5 px-4 py-2.5 text-[11px] text-amber-200 transition-colors hover:border-amber-400/60"
+					class="mb-2 flex items-center gap-2 rounded-xl border border-amber-500/30 bg-amber-500/5 px-4 py-2.5 text-xs text-amber-200 transition-colors hover:border-amber-400/60"
 				>
 					<TriangleAlert size={13} class="shrink-0" />
 					{$t('plan.overdue', { values: { count: overdue } })}
@@ -212,9 +212,9 @@
 								</span>
 								<span class="min-w-0 flex-1">
 									<span class="block truncate text-sm text-zinc-100">{entry.plateName}</span>
-									<span class="block truncate text-[11px] text-zinc-400">{entry.projectTitle}</span>
+									<span class="block truncate text-xs text-zinc-400">{entry.projectTitle}</span>
 								</span>
-								<span class="shrink-0 text-[11px] text-zinc-400 tabular-nums">
+								<span class="shrink-0 text-xs text-zinc-400 tabular-nums">
 									{formatDuration(entry.estimatedTimeSeconds, durationLabels)}
 								</span>
 							</a>
@@ -225,7 +225,7 @@
 				{#if upcomingRest > 0}
 					<a
 						href="/plan"
-						class="mt-2 block text-center text-[11px] text-indigo-400 transition-colors hover:text-indigo-300"
+						class="mt-2 block text-center text-xs text-indigo-400 transition-colors hover:text-indigo-300"
 					>
 						{$t('dashboard.upcomingMore', { values: { count: upcomingRest } })}
 					</a>
@@ -267,7 +267,7 @@
 							<li>
 								<a
 									href="/projects/{project.id}"
-									class="card block p-4 transition-colors duration-200 hover:border-indigo-500/40"
+									class="card block p-4 transition-colors duration-200 hover:border-indigo-500/40 hover:bg-white/[0.04]"
 								>
 									<div class="flex items-start justify-between gap-3">
 										<p class="min-w-0 flex-1 truncate text-sm font-medium text-zinc-100">
@@ -286,7 +286,7 @@
 												: 0}
 											tone={ratio >= 1 ? 'emerald' : 'indigo'}
 										/>
-										<p class="mt-2 text-[11px] text-zinc-400">
+										<p class="mt-2 text-xs text-zinc-400">
 											{$t('projects.partsProgress', {
 												values: {
 													printed: project.printedTotal,
@@ -332,7 +332,7 @@
 									/>
 									<div class="min-w-0 flex-1">
 										<p class="truncate text-xs font-medium text-zinc-200">{spoolTitle(spool)}</p>
-										<p class="mt-0.5 text-[11px] text-zinc-400 tabular-nums">
+										<p class="mt-0.5 text-xs text-zinc-400 tabular-nums">
 											{formatGrams(spool.currentWeightNet)}
 											<span class="text-zinc-400"> · {formatPercent(ratio)}</span>
 										</p>
