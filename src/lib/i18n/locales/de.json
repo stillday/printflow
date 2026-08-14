@@ -481,7 +481,25 @@
 		"noneFoundTitle": "Keine Dateien gefunden",
 		"chooseOtherFolder": "Anderen Ordner wählen",
 		"folderDialogFailed": "Der Ordner-Dialog konnte nicht geöffnet werden.",
-		"preparingImport": "Datei wird gelesen …"
+		"preparingImport": "Datei wird gelesen …",
+		"shape": {
+			"title": "Aufbau deiner Bibliothek",
+			"flat": "Alle Dateien liegen direkt im Ordner — es gibt keine Sortierung, die ich übernehmen könnte.",
+			"per-model": "Ein Ordner je Modell ({folders} Ordner, im Schnitt {perFolder} Dateien). Beim Importieren schlage ich den Ordnernamen als Projektnamen vor.",
+			"categorised": "Kategorien mit Modell-Ordnern darin ({categories}). Beim Importieren schlage ich den Modell-Ordner als Projektnamen vor.",
+			"mixed": "Verschachtelt bis Ebene {depth}, ohne durchgehendes Muster — ich schlage keine Projektnamen vor.",
+			"empty": "Keine Slicer-Dateien gefunden.",
+			"counts": "{files} Dateien in {folders} Ordnern"
+		},
+		"root": {
+			"title": "Modell-Ordner",
+			"hint": "Wo deine .3mf- und G-code-Dateien liegen. Wird beim Start eingelesen.",
+			"none": "Noch nicht festgelegt.",
+			"choose": "Ordner wählen",
+			"change": "Ändern",
+			"askTitle": "Wo liegen deine Modelle?",
+			"askBody": "Sag einmal, in welchem Ordner deine .3mf- und G-code-Dateien liegen. PrintFlow liest ihn dann selbst ein, erkennt wie er sortiert ist und schlägt beim Importieren passende Projektnamen vor."
+		}
 	},
 	"portal": {
 		"portalList": "MakerWorld, Printables, Thingiverse, Cults3D, MyMiniFactory und Thangs",

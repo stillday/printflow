@@ -481,7 +481,25 @@
 		"noneFoundTitle": "Geen bestanden gevonden",
 		"chooseOtherFolder": "Andere map kiezen",
 		"folderDialogFailed": "Het mapvenster kon niet geopend worden.",
-		"preparingImport": "Bestand wordt gelezen …"
+		"preparingImport": "Bestand wordt gelezen …",
+		"shape": {
+			"title": "Opbouw van je bibliotheek",
+			"flat": "Alle bestanden staan direct in de map — er is geen indeling die ik kan overnemen.",
+			"per-model": "Eén map per model ({folders} mappen, gemiddeld {perFolder} bestanden). Bij importeren stel ik de mapnaam voor als projectnaam.",
+			"categorised": "Categorieën met modelmappen erin ({categories}). Bij importeren stel ik de modelmap voor als projectnaam.",
+			"mixed": "Genest tot niveau {depth}, zonder vast patroon — ik stel geen projectnamen voor.",
+			"empty": "Geen slicer-bestanden gevonden.",
+			"counts": "{files} bestanden in {folders} mappen"
+		},
+		"root": {
+			"title": "Modelmap",
+			"hint": "Waar je .3mf- en G-code-bestanden staan. Wordt bij het starten ingelezen.",
+			"none": "Nog niet ingesteld.",
+			"choose": "Map kiezen",
+			"change": "Wijzigen",
+			"askTitle": "Waar staan je modellen?",
+			"askBody": "Geef één keer aan in welke map je .3mf- en G-code-bestanden staan. PrintFlow leest die map dan zelf, bepaalt hoe hij is ingedeeld en stelt bij importeren passende projectnamen voor."
+		}
 	},
 	"portal": {
 		"portalList": "MakerWorld, Printables, Thingiverse, Cults3D, MyMiniFactory en Thangs",

@@ -481,7 +481,25 @@
 		"noneFoundTitle": "No files found",
 		"chooseOtherFolder": "Choose another folder",
 		"folderDialogFailed": "The folder dialog could not be opened.",
-		"preparingImport": "Reading the file …"
+		"preparingImport": "Reading the file …",
+		"shape": {
+			"title": "How your library is arranged",
+			"flat": "Every file sits directly in the folder — there is no arrangement for me to reuse.",
+			"per-model": "One folder per model ({folders} folders, {perFolder} files each on average). On import I will suggest the folder name as the project name.",
+			"categorised": "Categories containing model folders ({categories}). On import I will suggest the model folder as the project name.",
+			"mixed": "Nested {depth} levels deep with no consistent pattern — I will not suggest project names.",
+			"empty": "No slicer files found.",
+			"counts": "{files} files in {folders} folders"
+		},
+		"root": {
+			"title": "Model folder",
+			"hint": "Where your .3mf and G-code files live. Read on startup.",
+			"none": "Not set yet.",
+			"choose": "Choose folder",
+			"change": "Change",
+			"askTitle": "Where do your models live?",
+			"askBody": "Tell PrintFlow once which folder holds your .3mf and G-code files. It then reads that folder itself, works out how it is arranged, and suggests matching project names on import."
+		}
 	},
 	"portal": {
 		"portalList": "MakerWorld, Printables, Thingiverse, Cults3D, MyMiniFactory and Thangs",

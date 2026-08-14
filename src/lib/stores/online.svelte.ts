@@ -1,25 +1,30 @@
 import { SETTING_ONLINE, getSetting, setSetting } from '$lib/db/settings';
 
 /**
- * Whether the user has allowed the app to contact model portals.
+ * Whether the app may contact model portals.
  *
- * PrintFlow is offline by default and says so on every screen, so this is a
- * deliberate, explicit opt-in rather than a convenience default. Turning it on
- * unlocks exactly two things — fetching a project's preview image once, and
- * downloading a file from a link the user supplies — both of which run in Rust,
- * so the WebView's Content-Security-Policy stays closed either way.
+ * **On unless switched off.** It unlocks exactly two things — fetching a
+ * project's preview image once, and downloading a file from a link the user
+ * supplies — and both run in Rust, so the WebView's Content-Security-Policy
+ * stays closed either way: the interface itself never opens a socket.
+ *
+ * Absent means on, which is why the check below is `!== 'off'` rather than
+ * `=== 'on'`: an existing installation that never touched the switch should get
+ * the new default too, and a failed read must not silently disable a feature the
+ * user is relying on.
  */
 class OnlineStore {
-	enabled = $state(false);
+	enabled = $state(true);
 	/** False until the stored value has been read, so the UI can avoid a flicker. */
 	loaded = $state(false);
 
 	async load() {
 		try {
-			this.enabled = (await getSetting(SETTING_ONLINE)) === 'on';
+			this.enabled = (await getSetting(SETTING_ONLINE)) !== 'off';
 		} catch {
-			// A read failure keeps the safe default.
-			this.enabled = false;
+			// A read failure keeps the default rather than turning a feature off
+			// behind the user's back.
+			this.enabled = true;
 		} finally {
 			this.loaded = true;
 		}

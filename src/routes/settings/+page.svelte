@@ -3,7 +3,17 @@
 	import { invoke } from '@tauri-apps/api/core';
 	import { open as openDialog, save as saveDialog } from '@tauri-apps/plugin-dialog';
 	import { locale, t } from 'svelte-i18n';
-	import { Database, Download, Globe, Info, Palette, Upload, WifiOff } from '@lucide/svelte';
+	import {
+		Database,
+		Download,
+		FolderOpen,
+		FolderSearch,
+		Globe,
+		Info,
+		Palette,
+		Upload,
+		WifiOff
+	} from '@lucide/svelte';
 	import PageHeader from '$lib/components/layout/PageHeader.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
 	import ConfirmDialog from '$lib/components/ui/ConfirmDialog.svelte';
@@ -12,6 +22,7 @@
 	import SectionCard from '$lib/components/ui/SectionCard.svelte';
 	import { closeDb } from '$lib/db';
 	import {
+		SETTING_LIBRARY_ROOT,
 		SETTING_LOCALE,
 		getDataSummary,
 		setSetting,
@@ -23,6 +34,7 @@
 	import { theme } from '$lib/stores/theme.svelte';
 	import { online } from '$lib/stores/online.svelte';
 	import { formatNumber } from '$lib/utils/format';
+	import { getSetting } from '$lib/db/settings';
 
 	const APP_VERSION = '0.1.0';
 
@@ -34,9 +46,10 @@
 
 	async function load() {
 		try {
-			[summary, dbPath] = await Promise.all([
+			[summary, dbPath, libraryRoot] = await Promise.all([
 				getDataSummary(),
-				invoke<string>('db_file_path')
+				invoke<string>('db_file_path'),
+				getSetting(SETTING_LIBRARY_ROOT)
 			]);
 		} catch {
 			toasts.error('errors.loadFailed');
@@ -48,6 +61,21 @@
 	onMount(load);
 
 	const current = $derived(($locale ?? 'de') as AppLocale);
+
+	/** The folder the file library reads on startup. */
+	let libraryRoot = $state<string | null>(null);
+
+	async function chooseLibraryRoot() {
+		try {
+			const picked = await openDialog({ directory: true, multiple: false });
+			if (typeof picked !== 'string') return;
+			await setSetting(SETTING_LIBRARY_ROOT, picked);
+			libraryRoot = picked;
+			toasts.success('toast.updated');
+		} catch {
+			toasts.error('errors.openFailed');
+		}
+	}
 
 	async function chooseOnline(enabled: boolean) {
 		if (enabled === online.enabled) return;
@@ -196,6 +224,22 @@
 			label={$t('settings.language')}
 			onchange={(value) => chooseLanguage(value as AppLocale)}
 		/>
+	</SectionCard>
+
+	<SectionCard icon={FolderSearch} title={$t('files.root.title')} hint={$t('files.root.hint')}>
+		<div class="flex flex-wrap items-center gap-4">
+			<p
+				class="min-w-0 flex-1 font-mono text-[11px] break-all {libraryRoot
+					? 'text-zinc-300'
+					: 'text-zinc-400'}"
+			>
+				{libraryRoot ?? $t('files.root.none')}
+			</p>
+			<Button variant={libraryRoot ? 'secondary' : 'primary'} onclick={chooseLibraryRoot}>
+				<FolderOpen size={15} />
+				{libraryRoot ? $t('files.root.change') : $t('files.root.choose')}
+			</Button>
+		</div>
 	</SectionCard>
 
 	<SectionCard

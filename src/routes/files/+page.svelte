@@ -31,6 +31,7 @@
 	import type { Part } from '$lib/types/schema';
 	import { formatBytes, formatDate } from '$lib/utils/format';
 	import { filterFiles, groupByFolder, suggestProjectName } from '$lib/utils/library';
+	import { analyseLibrary } from '$lib/utils/libraryShape';
 	import { parsePrintFile, type ParseResult } from '$lib/utils/threemf';
 	import { cn } from '$lib/utils/cn';
 
@@ -61,6 +62,13 @@
 	const visible = $derived(filterFiles(files, search));
 	const groups = $derived(groupByFolder(visible, imported));
 	const totalBytes = $derived(visible.reduce((sum, file) => sum + Math.max(0, file.sizeBytes), 0));
+
+	/**
+	 * How the library is already arranged. Read from the *whole* scan, not the
+	 * filtered view — the arrangement is a property of the folder, and typing in
+	 * the search box must not appear to change it.
+	 */
+	const shape = $derived(analyseLibrary(files));
 
 	onMount(async () => {
 		// Remember the library folder — nobody wants to re-pick it every time.
@@ -204,6 +212,25 @@
 					aria-label={$t('common.search')}
 				/>
 			</div>
+
+			<!--
+				What the folder's own structure is, said out loud: a user who spent
+				years arranging folders should not have to explain that arrangement,
+				and it decides whether we can suggest project names at all.
+			-->
+			{#if shape.shape !== 'empty' && !scanning}
+				<p class="mt-3 text-[11px] leading-relaxed text-zinc-400">
+					<span class="font-medium text-zinc-300">{$t('files.shape.title')}:</span>
+					{$t(`files.shape.${shape.shape}`, {
+						values: {
+							folders: shape.folderCount,
+							perFolder: shape.medianFilesPerFolder,
+							depth: shape.maxDepth,
+							categories: shape.categories.slice(0, 4).join(', ')
+						}
+					})}
+				</p>
+			{/if}
 
 			{#if timedOut}
 				<p class="mt-3 flex items-start gap-2 text-[11px] text-amber-300">
