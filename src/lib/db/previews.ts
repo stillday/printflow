@@ -108,6 +108,18 @@ export function fetchModelPreview(url: string): Promise<FetchedPreview> {
 	return invoke<FetchedPreview>('fetch_model_preview', { url });
 }
 
+/**
+ * Reads the page through the app's own browser engine.
+ *
+ * The portals answer plain HTTP clients with 403 — verified against MakerWorld
+ * and Printables — so this, not `fetchModelPreview`, is the path that actually
+ * works for them. `visible` opens the reader window so the user can clear a bot
+ * check once; the page never gets IPC access either way.
+ */
+export function fetchPreviewViaBrowser(url: string, visible = false): Promise<FetchedPreview> {
+	return invoke<FetchedPreview>('fetch_preview_via_browser', { url, visible });
+}
+
 /** Downloads a direct file URL into the user's model library. */
 export function downloadFile(url: string, targetPath: string): Promise<number> {
 	return invoke<number>('download_file', { url, targetPath });

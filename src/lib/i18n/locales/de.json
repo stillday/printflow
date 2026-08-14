@@ -517,7 +517,9 @@
 			"unsupported": "{host} ist keine der unterstützten Modellseiten.",
 			"from": "Bild von {host}",
 			"fromUnknown": "Herkunft unbekannt",
-			"fetchedAt": "geholt am {date}"
+			"fetchedAt": "geholt am {date}",
+			"openReader": "Seite im Fenster öffnen und prüfen",
+			"needsHuman": "Das Portal hat eine Sicherheitsabfrage gezeigt. Öffne die Seite einmal im Fenster, löse die Abfrage — das Bild wird dann automatisch übernommen."
 		},
 		"download": {
 			"title": "Modelldateien",

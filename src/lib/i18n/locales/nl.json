@@ -517,7 +517,9 @@
 			"unsupported": "{host} is geen van de ondersteunde modelsites.",
 			"from": "Afbeelding van {host}",
 			"fromUnknown": "Herkomst onbekend",
-			"fetchedAt": "opgehaald op {date}"
+			"fetchedAt": "opgehaald op {date}",
+			"openReader": "Pagina in een venster openen en controleren",
+			"needsHuman": "Het portaal toonde een veiligheidscontrole. Open de pagina één keer in een venster en los die op — de afbeelding wordt daarna automatisch overgenomen."
 		},
 		"download": {
 			"title": "Modelbestanden",

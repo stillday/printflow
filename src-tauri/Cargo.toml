@@ -22,6 +22,9 @@ tauri-plugin-dialog = "2"
 # in the tree via tauri, but without a TLS backend -- rustls rather than
 # native-tls so the four release targets need no system OpenSSL.
 reqwest = { version = "0.13", default-features = false, features = ["rustls"] }
+# Only for the poll interval while the offscreen reader window loads; the async
+# runtime itself already comes from tauri.
+tokio = { version = "1", default-features = false, features = ["time"] }
 tauri-plugin-os = "2"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"

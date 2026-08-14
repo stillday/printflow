@@ -579,7 +579,31 @@ async fn fetch_model_preview(url: String) -> Result<ModelPreview, String> {
         ));
     }
 
-    let content_type = image_response
+    let (image_base64, content_type) = image_from_response(image_response).await?;
+    Ok(ModelPreview {
+        image_base64,
+        content_type,
+        image_url: image_url.to_string(),
+        title: og_content(&html, "title"),
+    })
+}
+
+/// Downloads an image and returns it as base64 plus its content type.
+async fn fetch_image(image_url: &tauri::Url) -> Result<(String, String), String> {
+    let response = client()?
+        .get(image_url.clone())
+        .send()
+        .await
+        .map_err(|e| format!("could not fetch the preview image: {e}"))?;
+    if !response.status().is_success() {
+        return Err(format!("the preview image answered {}", response.status()));
+    }
+    image_from_response(response).await
+}
+
+/// Shared tail of both paths: verify it really is an image, cap it, encode it.
+async fn image_from_response(response: reqwest::Response) -> Result<(String, String), String> {
+    let content_type = response
         .headers()
         .get(reqwest::header::CONTENT_TYPE)
         .and_then(|value| value.to_str().ok())
@@ -589,22 +613,200 @@ async fn fetch_model_preview(url: String) -> Result<ModelPreview, String> {
         return Err(format!("that address returned `{content_type}`, not an image"));
     }
 
-    let image_bytes = image_response
+    let bytes = response
         .bytes()
         .await
         .map_err(|e| format!("could not read the preview image: {e}"))?;
-    if image_bytes.len() > MAX_IMAGE_BYTES {
+    if bytes.len() > MAX_IMAGE_BYTES {
         return Err(format!(
             "the preview image is larger than {} MB",
             MAX_IMAGE_BYTES / (1024 * 1024)
         ));
     }
+    Ok((to_base64(&bytes), content_type))
+}
 
+/* -------------------------------------------------------------------------- */
+/* Reading a model page through a real browser engine                         */
+/* -------------------------------------------------------------------------- */
+
+/*
+ * MakerWorld and Printables answer every plain HTTP client with 403, browser
+ * user-agent or not: their bot protection wants a real engine. Verified against
+ * both. So `fetch_model_preview` above cannot read those pages at all, and the
+ * only thing that can is the WebView the app already ships.
+ *
+ * The page is loaded in an offscreen window, and the result comes back through
+ * that window's **title** — deliberately, because the obvious alternative is
+ * worse: granting the page Tauri's IPC would hand a remote document every app
+ * command, including `read_slicer_file` and `download_file`. A title is a single
+ * string that Rust reads; the page can put nonsense in it, and the worst outcome
+ * is a wrong preview image.
+ */
+
+/// Marks a title this app wrote, so a page's own title is never mistaken for one.
+const TITLE_SENTINEL: &str = "__printflow__";
+
+/// Reads `og:image` / `og:title` and reports them by rewriting the title.
+///
+/// Runs as an initialization script, which does *not* grant IPC access. It waits
+/// for the tags to appear rather than reading once, because these portals render
+/// client-side and the head is often still empty at `DOMContentLoaded`.
+fn preview_reader_script() -> String {
+    format!(
+        r#"
+(function () {{
+  var SENTINEL = {sentinel:?};
+  var tries = 0;
+  function content(prop) {{
+    var el = document.querySelector('meta[property="' + prop + '"], meta[name="' + prop + '"]');
+    return el ? (el.getAttribute('content') || '') : '';
+  }}
+  function report() {{
+    var image = content('og:image');
+    var title = content('og:title') || document.title || '';
+    if (image) {{
+      // Separator cannot appear in a URL, so splitting on it in Rust is safe.
+      document.title = SENTINEL + '|' + image + '|' + title.replace(/\|/g, ' ');
+      return true;
+    }}
+    return false;
+  }}
+  function tick() {{
+    if (report()) return;
+    // ~20 s of patience; the caller times out on its own as well.
+    if (++tries > 200) {{
+      document.title = SENTINEL + '|' + '' + '|' + '';
+      return;
+    }}
+    setTimeout(tick, 100);
+  }}
+  if (document.readyState === 'loading') {{
+    document.addEventListener('DOMContentLoaded', tick);
+  }} else {{
+    tick();
+  }}
+}})();
+"#,
+        sentinel = TITLE_SENTINEL
+    )
+}
+
+/// What the offscreen page reported.
+struct PageFacts {
+    image_url: String,
+    title: Option<String>,
+}
+
+/// Loads `page_url` offscreen and waits for the injected script to report.
+async fn read_page_offscreen<R: tauri::Runtime>(
+    app: &tauri::AppHandle<R>,
+    page_url: &tauri::Url,
+    visible: bool,
+) -> Result<PageFacts, String> {
+    // A leftover window from an aborted attempt would make the builder fail.
+    if let Some(existing) = app.get_webview_window(PREVIEW_WEBVIEW_LABEL) {
+        let _ = existing.destroy();
+    }
+
+    let window = tauri::WebviewWindowBuilder::new(
+        app,
+        PREVIEW_WEBVIEW_LABEL,
+        tauri::WebviewUrl::External(page_url.clone()),
+    )
+    .title("PrintFlow")
+    // A realistic browser user-agent, verified to matter: the same engine gets
+    // the bot-check page with a default or app-specific string and the real page
+    // with this one. Being offscreen does not change the fingerprint — an
+    // unmapped window is not "headless" — so the hidden path works too.
+    .user_agent(
+        "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) \
+         Chrome/131.0.0.0 Safari/537.36",
+    )
+    .visible(visible)
+    .focused(visible)
+    .inner_size(1024.0, 768.0)
+    // No shared session: this window is for reading one public page, so it has
+    // no business carrying cookies from anywhere else.
+    .incognito(!visible)
+    .initialization_script(preview_reader_script())
+    .build()
+    .map_err(|e| format!("could not open the reader window: {e}"))?;
+
+    let deadline = std::time::Instant::now() + std::time::Duration::from_secs(if visible { 120 } else { 25 });
+    let mut facts: Option<PageFacts> = None;
+
+    while std::time::Instant::now() < deadline {
+        tokio::time::sleep(std::time::Duration::from_millis(150)).await;
+        let Ok(title) = window.title() else { continue };
+        let Some(rest) = title.strip_prefix(&format!("{TITLE_SENTINEL}|")) else {
+            continue;
+        };
+        let mut parts = rest.splitn(2, '|');
+        let image = parts.next().unwrap_or("").trim().to_string();
+        let page_title = parts.next().unwrap_or("").trim().to_string();
+        if image.is_empty() {
+            break;
+        }
+        facts = Some(PageFacts {
+            image_url: image,
+            title: if page_title.is_empty() {
+                None
+            } else {
+                Some(page_title)
+            },
+        });
+        break;
+    }
+
+    let _ = window.destroy();
+
+    facts.ok_or_else(|| {
+        if visible {
+            "the page did not report a preview image — it may still be showing a check".to_string()
+        } else {
+            "the page did not report a preview image in time; it is probably showing a bot check"
+                .to_string()
+        }
+    })
+}
+
+/// Fetches a model page's preview through the app's own browser engine.
+///
+/// `visible` opens the reader window instead of hiding it, which is the way out
+/// when the portal shows a bot check: the user solves it once and the same
+/// script reports as soon as the real page renders.
+#[tauri::command]
+async fn fetch_preview_via_browser(
+    app: tauri::AppHandle,
+    url: String,
+    visible: Option<bool>,
+) -> Result<ModelPreview, String> {
+    let page_url = web_url(&url)?;
+    if !is_model_portal(&page_url) {
+        return Err(format!(
+            "`{}` is not one of the supported model portals",
+            page_url.host_str().unwrap_or("?")
+        ));
+    }
+
+    let facts = read_page_offscreen(&app, &page_url, visible.unwrap_or(false)).await?;
+    let image_url = page_url
+        .join(&facts.image_url)
+        .map_err(|_| "the preview image address is not usable".to_string())?;
+    if image_url.scheme() != "https" {
+        return Err("the preview image is not served over https".into());
+    }
+
+    // The image itself comes over plain HTTP: bot protection sits on the pages,
+    // and an image CDN normally serves anyone. If that ever changes, this is the
+    // line that will start failing, and it fails with a readable message.
+    let (image_base64, content_type) = fetch_image(&image_url).await?;
     Ok(ModelPreview {
-        image_base64: to_base64(&image_bytes),
+        image_base64,
         content_type,
         image_url: image_url.to_string(),
-        title: og_content(&html, "title"),
+        title: facts.title,
     })
 }
 
@@ -724,9 +926,22 @@ fn open_external(url: String) -> Result<(), String> {
 ///
 /// Defense in depth for [`open_external`]: even if a stray anchor or a script
 /// tries to navigate, the window keeps showing PrintFlow.
+/// Label of the offscreen webview used to read a model page. Scoping the guard
+/// by label is what lets exactly this one window reach the open web.
+const PREVIEW_WEBVIEW_LABEL: &str = "portal-preview";
+
 fn navigation_guard<R: tauri::Runtime>() -> tauri::plugin::TauriPlugin<R> {
     tauri::plugin::Builder::new("navigation-guard")
-        .on_navigation(|_webview, url| is_app_origin(url))
+        .on_navigation(|webview, url| {
+            // The preview webview exists in order to load a model page, so the
+            // guard must not stop it. It is created without IPC access and is
+            // read only through its window title, so what it renders can reach
+            // nothing else in the app.
+            if webview.label() == PREVIEW_WEBVIEW_LABEL {
+                return true;
+            }
+            is_app_origin(url)
+        })
         .build()
 }
 
@@ -866,6 +1081,7 @@ pub fn run() {
             import_database,
             open_external,
             fetch_model_preview,
+            fetch_preview_via_browser,
             download_file,
             scan_slicer_files,
             read_slicer_file,

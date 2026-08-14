@@ -2886,6 +2886,7 @@ dependencies = [
  "tauri-plugin-dialog",
  "tauri-plugin-os",
  "tauri-plugin-sql",
+ "tokio",
 ]
 
 [[package]]

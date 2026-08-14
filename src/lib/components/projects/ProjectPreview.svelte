@@ -16,6 +16,7 @@
 		deletePreview,
 		downloadFile,
 		fetchModelPreview,
+		fetchPreviewViaBrowser,
 		fileNameFromPath,
 		fileNameFromUrl,
 		getPreview,
@@ -66,6 +67,8 @@
 	let preview = $state<ProjectPreview | null>(null);
 	let loading = $state(true);
 	let fetching = $state(false);
+	/** Set after a silent attempt failed, to offer the visible reader window. */
+	let needsHuman = $state(false);
 	let downloadOpen = $state(false);
 	let downloadUrl = $state('');
 	let downloadSubmitted = $state(false);
@@ -103,7 +106,17 @@
 		void load(id);
 	});
 
-	async function fetchPreview() {
+	/**
+	 * Reads the model page and stores its picture.
+	 *
+	 * Two paths, tried in that order for a reason: a plain HTTP request is cheap
+	 * and invisible, but MakerWorld and Printables answer it with 403 — their bot
+	 * protection wants a real browser engine. So on failure the app falls back to
+	 * loading the page in an offscreen WebView. If even that reports nothing, the
+	 * portal is showing a check that only a human can clear, and `visible` opens
+	 * the same window so the user can do it once.
+	 */
+	async function fetchPreview(visible = false) {
 		const url = sourceUrl?.trim();
 		// `online.enabled` is re-checked here and not only in the markup: the switch
 		// can be flipped in another tab of the app while this card is on screen.
@@ -111,7 +124,16 @@
 
 		fetching = true;
 		try {
-			const fetched = await fetchModelPreview(url);
+			let fetched;
+			if (visible) {
+				fetched = await fetchPreviewViaBrowser(url, true);
+			} else {
+				try {
+					fetched = await fetchModelPreview(url);
+				} catch {
+					fetched = await fetchPreviewViaBrowser(url, false);
+				}
+			}
 			await savePreview({
 				projectId,
 				imageBase64: fetched.imageBase64,
@@ -133,6 +155,9 @@
 			} else {
 				toasts.error('portal.errors.fetchFailedGeneric');
 			}
+			// A failed silent attempt is usually a bot check, which only a human can
+			// clear — so offer the visible window rather than leaving a dead end.
+			needsHuman = !visible;
 		} finally {
 			fetching = false;
 		}
@@ -261,7 +286,7 @@
 
 				<div class="flex shrink-0 items-center gap-2">
 					{#if canFetch}
-						<Button variant="ghost" size="sm" onclick={fetchPreview} disabled={fetching}>
+						<Button variant="ghost" size="sm" onclick={() => fetchPreview()} disabled={fetching}>
 							{#if fetching}
 								<Loader size={14} class="animate-spin" />
 							{:else}
@@ -298,7 +323,22 @@
 				{$t('portal.preview.emptyBody', { values: { host } })}
 			</p>
 			<div class="mt-3">
-				<Button variant="primary" size="sm" onclick={fetchPreview} disabled={fetching}>
+				{#if needsHuman}
+					<p class="mb-3 text-[11px] leading-relaxed text-amber-300">
+						{$t('portal.preview.needsHuman')}
+					</p>
+					<Button
+						variant="secondary"
+						size="sm"
+						class="mb-2"
+						onclick={() => fetchPreview(true)}
+						disabled={fetching}
+					>
+						<ExternalLink size={14} />
+						{$t('portal.preview.openReader')}
+					</Button>
+				{/if}
+				<Button variant="primary" size="sm" onclick={() => fetchPreview()} disabled={fetching}>
 					{#if fetching}
 						<Loader size={14} class="animate-spin" />
 					{:else}

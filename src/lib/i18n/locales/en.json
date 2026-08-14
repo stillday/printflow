@@ -517,7 +517,9 @@
 			"unsupported": "{host} is not one of the supported model sites.",
 			"from": "Image from {host}",
 			"fromUnknown": "Origin unknown",
-			"fetchedAt": "fetched on {date}"
+			"fetchedAt": "fetched on {date}",
+			"openReader": "Open the page in a window and check",
+			"needsHuman": "The portal showed a security check. Open the page in a window once and clear it — the image is then picked up automatically."
 		},
 		"download": {
 			"title": "Model files",
