@@ -221,10 +221,22 @@
 	onSaved={load}
 />
 
+<!--
+	The body states the blast radius instead of only warning that one exists: this
+	delete cascades, and the numbers are the difference between dropping an unused
+	entry and dropping four spools with 3.2 kg of filament on the shelf.
+-->
 <ConfirmDialog
 	open={pendingDelete !== null}
 	title={$t('catalog.deleteConfirm', { values: { name: pendingDelete?.name ?? '' } })}
-	body={$t('catalog.deleteBody')}
+	body={pendingDelete && pendingDelete.spoolCount > 0
+		? $t('catalog.deleteBodyCascade', {
+				values: {
+					count: pendingDelete.spoolCount,
+					remaining: formatGrams(pendingDelete.totalRemaining)
+				}
+			})
+		: $t('catalog.deleteBodyNoSpools')}
 	onConfirm={confirmDelete}
 	onCancel={() => (pendingDelete = null)}
 />

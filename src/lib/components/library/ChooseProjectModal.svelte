@@ -29,16 +29,20 @@
 	let newTitle = $state('');
 	let busy = $state(false);
 	let showError = $state(false);
+	/** The projects are in; before that the body is not worth rendering. */
+	let loaded = $state(false);
+	let body = $state<HTMLDivElement | null>(null);
 
-	// A file's folder usually *is* the project, so "new" is the common case —
-	// unless the library already has projects, where picking is more likely.
 	$effect(() => {
 		if (!file) return;
 		newTitle = suggestedName;
 		showError = false;
+		loaded = false;
 		void loadProjects();
 	});
 
+	// A file's folder usually *is* the project, so "new" is the common case —
+	// unless the library already has projects, where picking is more likely.
 	async function loadProjects() {
 		try {
 			projects = await listProjects();
@@ -50,8 +54,18 @@
 			}
 		} catch {
 			toasts.error('errors.loadFailed');
+		} finally {
+			loaded = true;
 		}
 	}
+
+	// The dialog opens before the projects arrive, so whatever `Modal` autofocused
+	// is gone by the time the real body renders. Claim focus back once, or it ends
+	// up on <body>, outside the panel and outside its Tab trap.
+	$effect(() => {
+		if (!loaded || !body) return;
+		body.querySelector<HTMLElement>('[data-autofocus]')?.focus();
+	});
 
 	const titleError = $derived(mode === 'new' ? requiredText(newTitle) : null);
 	const valid = $derived(mode === 'new' ? titleError === null : selectedId > 0);
@@ -73,7 +87,7 @@
 					sourceUrl: null,
 					status: 'planning'
 				});
-				toasts.success('toast.saved');
+				toasts.success('toast.created');
 				onChosen(id);
 			}
 		} catch {
@@ -91,8 +105,8 @@
 	size="sm"
 	{onClose}
 >
-	{#if file}
-		<div class="grid gap-5">
+	{#if file && loaded}
+		<div bind:this={body} class="grid gap-5">
 			{#if projects.length > 0}
 				<div class="grid grid-cols-2 gap-2">
 					{#each [{ value: 'existing', labelKey: 'files.existingProject', icon: FolderKanban }, { value: 'new', labelKey: 'files.newProject', icon: Plus }] as option (option.value)}
@@ -117,7 +131,7 @@
 
 			{#if mode === 'existing'}
 				<Field label={$t('files.existingProject')}>
-					<select class="input-base" bind:value={selectedId}>
+					<select class="input-base" bind:value={selectedId} data-autofocus>
 						{#each projects as project (project.id)}
 							<option value={project.id}>{project.title}</option>
 						{/each}
@@ -138,10 +152,14 @@
 				</Field>
 			{/if}
 		</div>
+	{:else if file}
+		<p class="py-2 text-sm text-zinc-400">{$t('common.loading')}</p>
 	{/if}
 
 	{#snippet footer()}
 		<Button variant="ghost" onclick={onClose} disabled={busy}>{$t('common.cancel')}</Button>
-		<Button variant="primary" onclick={confirm} disabled={busy}>{$t('common.continue')}</Button>
+		<Button variant="primary" onclick={confirm} disabled={busy || !loaded}>
+			{$t('common.continue')}
+		</Button>
 	{/snippet}
 </Modal>

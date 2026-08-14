@@ -9,6 +9,11 @@
 		title: string;
 		subtitle?: string;
 		size?: 'sm' | 'md' | 'lg' | 'xl';
+		/** `alertdialog` for destructive or irreversible confirmations — it makes
+		 *  assistive tech announce the dialog and its description at once. */
+		role?: 'dialog' | 'alertdialog';
+		/** Id of the element describing the consequence, announced after the title. */
+		describedBy?: string;
 		onClose: () => void;
 		children: Snippet;
 		footer?: Snippet;
@@ -16,7 +21,22 @@
 
 	// `open` is deliberately a plain prop, not `$bindable()`: closing always goes
 	// through `onClose` so the owner can reset its own state in one place.
-	let { open, title, subtitle, size = 'md', onClose, children, footer }: Props = $props();
+	let {
+		open,
+		title,
+		subtitle,
+		size = 'md',
+		role = 'dialog',
+		describedBy,
+		onClose,
+		children,
+		footer
+	}: Props = $props();
+
+	// The title renders as a visible <h2>, so point the dialog at that heading
+	// instead of duplicating the text into `aria-label` — an `aria-label` would
+	// override the heading and hide the subtitle from the accessible name.
+	const titleId = $props.id();
 
 	const widths = {
 		sm: 'max-w-md',
@@ -93,9 +113,10 @@
 
 		<div
 			bind:this={panel}
-			role="dialog"
+			{role}
 			aria-modal="true"
-			aria-label={title}
+			aria-labelledby={titleId}
+			aria-describedby={describedBy}
 			class={cn(
 				'animate-pop-in relative z-10 my-auto w-full rounded-2xl border border-white/10',
 				'bg-zinc-900 shadow-2xl shadow-black/60',
@@ -104,7 +125,7 @@
 		>
 			<header class="flex items-start gap-4 border-b border-white/10 px-6 py-5">
 				<div class="min-w-0 flex-1">
-					<h2 class="truncate text-base font-semibold text-zinc-100">{title}</h2>
+					<h2 id={titleId} class="truncate text-base font-semibold text-zinc-100">{title}</h2>
 					{#if subtitle}
 						<p class="mt-0.5 text-sm text-zinc-400">{subtitle}</p>
 					{/if}

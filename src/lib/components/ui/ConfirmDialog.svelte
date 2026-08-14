@@ -27,6 +27,11 @@
 
 	let busy = $state(false);
 
+	// Wired to the dialog's `aria-describedby`: the consequence sentence ("all
+	// current data is replaced …") is the whole point of this dialog, so it has
+	// to be announced with it rather than only on a later Tab.
+	const bodyId = $props.id();
+
 	async function confirm() {
 		if (busy) return;
 		busy = true;
@@ -38,7 +43,7 @@
 	}
 </script>
 
-<Modal {open} {title} size="sm" onClose={onCancel}>
+<Modal {open} {title} size="sm" role="alertdialog" describedBy={bodyId} onClose={onCancel}>
 	<div class="flex gap-4">
 		<div
 			class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border {tone ===
@@ -48,7 +53,7 @@
 		>
 			<TriangleAlert size={18} />
 		</div>
-		<p class="pt-1 text-sm leading-relaxed text-zinc-400">{body}</p>
+		<p id={bodyId} class="pt-1 text-sm leading-relaxed text-zinc-400">{body}</p>
 	</div>
 
 	{#snippet footer()}

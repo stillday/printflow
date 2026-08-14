@@ -141,7 +141,10 @@
 				startedAt,
 				actualDurationSeconds: durationSeconds,
 				failureReason: status === 'failed' ? failureReason : null,
-				planEntryId
+				planEntryId,
+				// Names travel with the job so the history stays readable after a
+				// part is renamed or the plate is re-linked.
+				partNames: new Map(parts.filter((part) => part.id).map((part) => [part.id!, part.name]))
 			});
 
 			toasts.success('toast.jobLogged');

@@ -37,6 +37,10 @@
 	let submitted = $state(false);
 	let busy = $state(false);
 	let showTare = $state(false);
+	let formEl = $state<HTMLFormElement | null>(null);
+	let weightEl = $state<HTMLInputElement | null>(null);
+	/** One toast per opening — see the note in `CatalogModal`. */
+	let announced = $state(false);
 
 	$effect(() => {
 		if (!open) return;
@@ -50,6 +54,23 @@
 		openedAt = toDateInputValue(spool?.openedAt ?? new Date().toISOString());
 		submitted = false;
 		showTare = false;
+		announced = false;
+	});
+
+	/**
+	 * Editing starts on the weight, not on the filament picker.
+	 *
+	 * `Modal` focuses the first control it finds, which is the `<select>` — and a
+	 * focused select reacts to a stray letter or arrow key by silently binding
+	 * the spool to a different filament. On an existing spool that rewrites
+	 * history; on a new one the picker is exactly where you want to be, so this
+	 * only applies to the edit case. The frame's delay puts it after `Modal`'s
+	 * own focus effect.
+	 */
+	$effect(() => {
+		if (!open || !spool) return;
+		const frame = requestAnimationFrame(() => weightEl?.focus());
+		return () => cancelAnimationFrame(frame);
 	});
 
 	const selectedCatalog = $derived(catalog.find((entry) => entry.id === catalogId) ?? null);
@@ -66,15 +87,40 @@
 	const errors = $derived({
 		catalogId: catalogId > 0 ? null : 'errors.required',
 		currentWeightNet: nonNegativeNumber(toNumber(weightInput)),
-		cost: nonNegativeNumber(toNumber(costInput))
+		// The price is marked optional, so an empty box has to mean "no price" —
+		// it used to fail the save with "please enter a valid number".
+		cost: costInput.trim() ? nonNegativeNumber(toNumber(costInput)) : null
 	});
 	const shown = $derived(
 		submitted ? errors : ({} as Partial<Record<keyof typeof errors, string | null>>)
 	);
 
+	/** Sends the user to the first field to fix, in DOM order. See `CatalogModal`. */
+	function focusFirstError() {
+		const selector = Object.entries(errors)
+			.filter(([, message]) => message !== null)
+			.map(([key]) => `[data-field="${key}"]`)
+			.join(', ');
+		if (!selector) return;
+
+		const control = formEl?.querySelector<HTMLElement>(selector);
+		control?.focus({ preventScroll: true });
+		control?.scrollIntoView({ block: 'center', behavior: 'smooth' });
+	}
+
 	async function save() {
 		submitted = true;
-		if (!isValid(errors) || busy) return;
+		if (!isValid(errors)) {
+			// The tare calculator can push the fields far apart, so the marked field
+			// is not necessarily anywhere near the Save button.
+			focusFirstError();
+			if (!announced) {
+				toasts.error('errors.formInvalid');
+				announced = true;
+			}
+			return;
+		}
+		if (busy) return;
 
 		busy = true;
 		try {
@@ -83,7 +129,7 @@
 				catalogId,
 				qrOrBarCode: code,
 				currentWeightNet: toNumber(weightInput),
-				cost: toNumber(costInput),
+				cost: costInput.trim() ? toNumber(costInput) : 0,
 				location,
 				status,
 				openedAt: fromDateInputValue(openedAt)
@@ -113,6 +159,7 @@
 	{onClose}
 >
 	<form
+		bind:this={formEl}
 		class="grid gap-5"
 		onsubmit={(event) => {
 			event.preventDefault();
@@ -122,7 +169,7 @@
 		<Field label={$t('spools.fields.catalog')} error={shown.catalogId}>
 			<div class="flex items-center gap-3">
 				<ColorSwatch color={selectedCatalog?.colorHex} size={18} />
-				<select class="input-base" bind:value={catalogId} data-autofocus>
+				<select class="input-base" bind:value={catalogId} data-field="catalogId" data-autofocus>
 					{#each catalog as entry (entry.id)}
 						<option value={entry.id}>
 							{entry.brand} · {entry.name} ({entry.material})
@@ -138,11 +185,17 @@
 				error={shown.currentWeightNet}
 				hint={$t('spools.fields.currentWeightNetHint')}
 			>
-				<input class="input-base" bind:value={weightInput} inputmode="decimal" />
+				<input
+					bind:this={weightEl}
+					class="input-base"
+					bind:value={weightInput}
+					inputmode="decimal"
+					data-field="currentWeightNet"
+				/>
 			</Field>
 
-			<Field label={$t('spools.cost')} error={shown.cost} optional>
-				<input class="input-base" bind:value={costInput} inputmode="decimal" />
+			<Field label="{$t('spools.cost')} ({$t('units.currency')})" error={shown.cost} optional>
+				<input class="input-base" bind:value={costInput} inputmode="decimal" data-field="cost" />
 			</Field>
 		</div>
 
@@ -172,7 +225,8 @@
 				/>
 			</Field>
 
-			<Field label={$t('spools.code')} optional>
+			<!-- "QR / barcode" over an empty box says nothing about what to type. -->
+			<Field label={$t('spools.code')} hint={$t('spools.codeHint')} optional>
 				<input class="input-base" bind:value={code} spellcheck="false" />
 			</Field>
 

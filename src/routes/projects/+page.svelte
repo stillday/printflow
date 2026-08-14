@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { goto } from '$app/navigation';
+	import { page } from '$app/state';
+	import { goto, replaceState } from '$app/navigation';
 	import { t } from 'svelte-i18n';
 	import { ExternalLink, FolderKanban, Pencil, Plus, Trash2 } from '@lucide/svelte';
 	import PageHeader from '$lib/components/layout/PageHeader.svelte';
@@ -23,10 +24,17 @@
 	import { projectTone } from '$lib/utils/status';
 	import { isExternalUrl, openExternal } from '$lib/utils/external';
 
+	/** Anything else in `?status=` (hand-typed, stale link) would filter the list empty. */
+	function readStatus(raw: string | null): 'all' | ProjectStatus {
+		return PROJECT_STATUSES.includes(raw as ProjectStatus) ? (raw as ProjectStatus) : 'all';
+	}
+
 	let projects = $state<ProjectWithProgress[]>([]);
 	let loading = $state(true);
-	let search = $state('');
-	let statusFilter = $state<'all' | ProjectStatus>('all');
+	// Search and status filter live in the URL, so opening a project and coming
+	// back — or reloading — restores the list the user was actually looking at.
+	let search = $state(page.url.searchParams.get('q') ?? '');
+	let statusFilter = $state<'all' | ProjectStatus>(readStatus(page.url.searchParams.get('status')));
 
 	let modalOpen = $state(false);
 	let editing = $state<Project | null>(null);
@@ -43,6 +51,32 @@
 	}
 
 	onMount(load);
+
+	// Mirrors the two filters back into the URL without adding history entries —
+	// `Back` should leave the list, not undo keystrokes. An unused filter writes
+	// no parameter at all, so an untouched list keeps a clean `/projects`.
+	const LIST_PATH = '/projects';
+	$effect(() => {
+		// Never rewrite someone else's URL: on the way to a project detail page the
+		// path can already have changed while this component is still alive.
+		if (page.url.pathname !== LIST_PATH) return;
+
+		const params = new URLSearchParams();
+		const term = search.trim();
+		if (term) params.set('q', term);
+		if (statusFilter !== 'all') params.set('status', statusFilter);
+
+		const query = params.toString();
+		const next = query ? `?${query}` : '';
+		if (next !== page.url.search) replaceState(`${LIST_PATH}${next}`, page.state);
+	});
+
+	function resetFilters() {
+		search = '';
+		statusFilter = 'all';
+	}
+
+	const filtersActive = $derived(search.trim() !== '' || statusFilter !== 'all');
 
 	const filtered = $derived.by(() => {
 		const term = search.trim().toLowerCase();
@@ -128,22 +162,40 @@
 	{:else}
 		<div class="mb-5 flex flex-wrap items-end gap-3">
 			<div class="w-full max-w-xs">
+				<!--
+					Both controls carry a real `<label for>`: the status select used to be
+					captioned by a bare `<span>`, which is not associated with anything and
+					left the select without an accessible name.
+				-->
+				<label class="label-base" for="project-search">{$t('common.search')}</label>
 				<input
+					id="project-search"
 					class="input-base"
 					type="search"
 					bind:value={search}
 					placeholder={$t('common.searchPlaceholder')}
-					aria-label={$t('common.search')}
 				/>
 			</div>
 			<div>
-				<span class="label-base">{$t('projects.filterStatus')}</span>
-				<select class="input-base w-44" bind:value={statusFilter}>
+				<label class="label-base" for="project-status">{$t('projects.filterStatus')}</label>
+				<select id="project-status" class="input-base w-44" bind:value={statusFilter}>
 					<option value="all">{$t('common.all')}</option>
 					{#each PROJECT_STATUSES as value (value)}
 						<option {value}>{$t(`status.${value}`)}</option>
 					{/each}
 				</select>
+			</div>
+
+			<div class="ml-auto flex items-center gap-3">
+				<!-- Filtering changed the list silently; the count says by how much. -->
+				<p class="text-xs text-zinc-400 tabular-nums" aria-live="polite">
+					{$t('projects.countOf', {
+						values: { shown: filtered.length, total: projects.length }
+					})}
+				</p>
+				{#if filtersActive}
+					<Button variant="ghost" size="sm" onclick={resetFilters}>{$t('common.reset')}</Button>
+				{/if}
 			</div>
 		</div>
 
@@ -153,7 +205,12 @@
 					icon={FolderKanban}
 					title={$t('common.noResults')}
 					body={$t('common.noResultsHint')}
-				/>
+				>
+					{#snippet action()}
+						<!-- The filters survive in the URL now, so a stale one needs a way out. -->
+						<Button onclick={resetFilters}>{$t('common.reset')}</Button>
+					{/snippet}
+				</EmptyState>
 			</div>
 		{:else}
 			<ul class="grid gap-4 lg:grid-cols-2 2xl:grid-cols-3">
@@ -175,8 +232,9 @@
 								<p class="truncate text-sm font-semibold text-zinc-100 group-hover:text-indigo-200">
 									{project.title}
 								</p>
+								<!-- A bare date told nobody what it dates. -->
 								<p class="mt-0.5 truncate text-xs text-zinc-400">
-									{formatDate(project.updatedAt)}
+									{$t('projects.updatedAt', { values: { date: formatDate(project.updatedAt) } })}
 								</p>
 							</a>
 							<StatusPill labelKey="status.{project.status}" tone={projectTone(project.status)} />

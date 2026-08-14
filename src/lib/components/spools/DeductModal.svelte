@@ -9,7 +9,7 @@
 	import type { SpoolWithCatalog } from '$lib/types/schema';
 	import { formatGrams } from '$lib/utils/format';
 	import { spoolTitle } from '$lib/utils/status';
-	import { toNumber } from '$lib/utils/validate';
+	import { positiveNumber, toNumber } from '$lib/utils/validate';
 
 	interface Props {
 		spool: SpoolWithCatalog | null;
@@ -21,19 +21,35 @@
 
 	let amountInput = $state('');
 	let busy = $state(false);
+	let submitted = $state(false);
+	let amountEl = $state<HTMLInputElement | null>(null);
 
 	$effect(() => {
-		if (spool) amountInput = '';
+		if (!spool) return;
+		amountInput = '';
+		submitted = false;
 	});
 
 	const amount = $derived(toNumber(amountInput));
-	const valid = $derived(Number.isFinite(amount) && amount > 0);
+	const error = $derived(positiveNumber(amount));
+	const valid = $derived(error === null);
+	/** Only surface the message once the user has tried, like in the other forms. */
+	const shownError = $derived(submitted ? error : null);
 	const remaining = $derived(
 		spool && valid ? Math.max(0, spool.currentWeightNet - amount) : (spool?.currentWeightNet ?? 0)
 	);
 
 	async function deduct() {
-		if (!spool?.id || !valid || busy) return;
+		submitted = true;
+		// The button stays enabled and the click is what explains the problem: a
+		// greyed-out button next to `abc` or `0` left the user with nothing to read.
+		// No toast here — unlike the two big forms, the one field of this dialog is
+		// always on screen, right where the focus lands.
+		if (!valid) {
+			amountEl?.focus();
+			return;
+		}
+		if (!spool?.id || busy) return;
 		busy = true;
 		try {
 			await deductFromSpool(spool.id, amount);
@@ -91,9 +107,11 @@
 
 			<Field
 				label="{$t('spools.deductAmount')} ({$t('units.gram')})"
+				error={shownError}
 				hint={$t('spools.deductHint')}
 			>
 				<input
+					bind:this={amountEl}
 					class="input-base"
 					bind:value={amountInput}
 					inputmode="decimal"
@@ -114,7 +132,7 @@
 
 	{#snippet footer()}
 		<Button variant="ghost" onclick={onClose} disabled={busy}>{$t('common.cancel')}</Button>
-		<Button variant="primary" onclick={deduct} disabled={!valid || busy}>
+		<Button variant="primary" onclick={deduct} disabled={busy}>
 			{$t('spools.deduct')}
 		</Button>
 	{/snippet}

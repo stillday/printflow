@@ -1,4 +1,4 @@
-import { execute, nullable, select, selectOne, transaction } from './index';
+import { execute, nullable, select, transaction } from './index';
 import type { FilamentRequirement, PlanEntryDecoded, PlanStatus } from '$lib/types/schema';
 
 interface PlanRow {
@@ -76,18 +76,6 @@ export async function listOverdue(today: string): Promise<PlanEntryDecoded[]> {
 		[today]
 	);
 	return rows.map(mapEntry);
-}
-
-/** The next open entry from `today` on — for the dashboard tile. */
-export async function nextPlanned(today: string): Promise<PlanEntryDecoded | null> {
-	const row = await selectOne<PlanRow>(
-		`${JOIN_SELECT}
-		 WHERE e.status = 'planned' AND e.planned_date >= ?
-		 ORDER BY e.planned_date, e.position, e.id
-		 LIMIT 1`,
-		[today]
-	);
-	return row ? mapEntry(row) : null;
 }
 
 /** Appends a plate to the end of a day's queue. */

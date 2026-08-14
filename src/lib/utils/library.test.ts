@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { ScannedFile } from '$lib/db/library';
+import type { ImportedPlate } from '$lib/db/plates';
 import { filterFiles, groupByFolder, splitFolder, suggestProjectName } from './library';
 
 function file(overrides: Partial<ScannedFile> = {}): ScannedFile {
@@ -11,6 +12,13 @@ function file(overrides: Partial<ScannedFile> = {}): ScannedFile {
 		modifiedAt: null,
 		...overrides
 	};
+}
+
+/** Shorthand for what `listImportedPaths` returns: path → project. */
+function imported(...entries: [string, number][]): Map<string, ImportedPlate> {
+	return new Map(
+		entries.map(([path, projectId]) => [path, { projectId, projectTitle: `Projekt ${projectId}` }])
+	);
 }
 
 describe('splitFolder', () => {
@@ -30,7 +38,7 @@ describe('groupByFolder', () => {
 			file({ path: '/m/T/a.3mf', fileName: 'a.3mf', folder: 'T', sizeBytes: 1500 }),
 			file({ path: '/m/T/b.3mf', fileName: 'b.3mf', folder: 'T', sizeBytes: 2500 })
 		];
-		const groups = groupByFolder(files, new Set(['/m/T/b.3mf']));
+		const groups = groupByFolder(files, imported(['/m/T/b.3mf', 7]));
 
 		expect(groups.map((g) => g.folder)).toEqual(['', 'T']);
 		expect(groups[0]).toMatchObject({ segments: [], totalBytes: 500, importedCount: 0 });
@@ -38,8 +46,19 @@ describe('groupByFolder', () => {
 		expect(groups[1].files.map((f) => f.fileName)).toEqual(['a.3mf', 'b.3mf']);
 	});
 
+	it('counts by path only, so a plate from another folder does not leak in', () => {
+		const files = [
+			file({ path: '/m/T/a.3mf', fileName: 'a.3mf', folder: 'T' }),
+			file({ path: '/m/T/b.3mf', fileName: 'b.3mf', folder: 'T' })
+		];
+		// Same project on both entries, and one path that is not in the scan at all.
+		const groups = groupByFolder(files, imported(['/m/T/a.3mf', 3], ['/m/K/c.3mf', 3]));
+
+		expect(groups[0].importedCount).toBe(1);
+	});
+
 	it('ignores a negative size rather than subtracting it', () => {
-		const groups = groupByFolder([file({ sizeBytes: -100 })], new Set());
+		const groups = groupByFolder([file({ sizeBytes: -100 })], new Map());
 		expect(groups[0].totalBytes).toBe(0);
 	});
 });

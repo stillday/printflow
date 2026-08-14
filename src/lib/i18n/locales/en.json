@@ -63,7 +63,8 @@
 		"hoursShort": "h",
 		"minutesShort": "min",
 		"meters": "m",
-		"pieces": "pcs"
+		"pieces": "pcs",
+		"currency": "€"
 	},
 	"status": {
 		"active": "Active",
@@ -96,7 +97,10 @@
 		"lowStockEmpty": "All active spools are well stocked.",
 		"quickActions": "Quick actions",
 		"emptyTitle": "Nothing set up yet",
-		"emptyBody": "Add a filament to the catalog first, then register your spools and start your first project."
+		"emptyBody": "Add a filament to the catalog first, then register your spools and start your first project.",
+		"upcoming": "The next few days",
+		"upcomingEmpty": "Nothing planned for the next few days.",
+		"upcomingMore": "{count, plural, one {# more entry} other {# more entries}}"
 	},
 	"catalog": {
 		"title": "Filament catalog",
@@ -123,8 +127,11 @@
 			"spoolTareWeightHint": "Weight of the bare spool without filament",
 			"nominalWeight": "Nominal weight (new)",
 			"printingTempMin": "Printing temp. min.",
-			"printingTempMax": "Printing temp. max."
-		}
+			"printingTempMax": "Printing temp. max.",
+			"nominalWeightHint": "Filament on a full spool, without the spool itself — usually 1000 g."
+		},
+		"deleteBodyCascade": "{count, plural, one {Its spool, holding {remaining} of filament, will be deleted too.} other {Its # spools, holding {remaining} of filament in total, will be deleted too.}} This cannot be undone.",
+		"deleteBodyNoSpools": "The catalog entry will be deleted. No spools are attached to it. This cannot be undone."
 	},
 	"spools": {
 		"title": "Spools",
@@ -173,7 +180,9 @@
 			"open": "Tare calculator",
 			"applyAsRemaining": "Save as remaining weight",
 			"implausible": "More than the spool nominally holds ({nominal}) — check the tare."
-		}
+		},
+		"deleteConfirmNamed": "Delete spool “{name}”?",
+		"codeHint": "Your own code on the spool — makes it findable via search."
 	},
 	"projects": {
 		"title": "Projects",
@@ -204,7 +213,9 @@
 			"parts": "Parts",
 			"plates": "Print plates",
 			"history": "History"
-		}
+		},
+		"countOf": "{shown} of {total}",
+		"updatedAt": "Last edited {date}"
 	},
 	"parts": {
 		"title": "Bill of materials",
@@ -368,7 +379,9 @@
 			"tooLarge": "The file is too large (maximum {max} MB)."
 		},
 		"exportFailed": "Export failed.",
-		"importFailed": "Import failed."
+		"importFailed": "Import failed.",
+		"formInvalid": "Please check the highlighted fields.",
+		"minAboveMax": "Must not be below the minimum"
 	},
 	"toast": {
 		"saved": "Saved",
@@ -383,7 +396,8 @@
 		"languageChanged": "Language changed",
 		"scheduled": "Scheduled",
 		"moved": "Moved",
-		"scheduledCount": "{count, plural, one {# plate scheduled} other {# plates scheduled}}"
+		"scheduledCount": "{count, plural, one {# plate scheduled} other {# plates scheduled}}",
+		"movedTo": "Moved to {date}"
 	},
 	"plan": {
 		"title": "Print plan",
@@ -432,7 +446,12 @@
 		"spreadHint": "Fills each day up to 24 hours of printing, then moves on.",
 		"spreadPreview": "{count} plates, {time} in total — spread from the chosen day.",
 		"dayAfter": "This day: {before} planned → {after} afterwards",
-		"pastDate": "That day is in the past — the entry will show up as overdue straight away."
+		"pastDate": "That day is in the past — the entry will show up as overdue straight away.",
+		"moveToDate": "Move to another date",
+		"moveToTomorrow": "To tomorrow",
+		"moveHint": "Drag an entry onto another day — or use the date field to move it to any day at all.",
+		"dropHere": "Drop here",
+		"dragHandle": "Drag to move"
 	},
 	"files": {
 		"title": "Files",
@@ -457,6 +476,87 @@
 		"chooseProject": "Into which project?",
 		"existingProject": "Existing",
 		"newProject": "New",
-		"newProjectHint": "Suggested from the folder name."
+		"newProjectHint": "Suggested from the folder name.",
+		"alreadyImportedIn": "Already a plate in “{project}” — open the project",
+		"noneFoundTitle": "No files found",
+		"chooseOtherFolder": "Choose another folder",
+		"folderDialogFailed": "The folder dialog could not be opened.",
+		"preparingImport": "Reading the file …"
+	},
+	"portal": {
+		"portalList": "MakerWorld, Printables, Thingiverse, Cults3D, MyMiniFactory and Thangs",
+		"supported": "Supported are {portals}.",
+		"preview": {
+			"title": "Preview image",
+			"hint": "Fetched from the model page once, then stored locally.",
+			"alt": "Preview image of the model",
+			"fetch": "Fetch preview image",
+			"fetching": "Fetching …",
+			"refetch": "Fetch again",
+			"remove": "Remove",
+			"emptyBody": "No image stored yet. PrintFlow can fetch it from {host} once and keep it in the database — what you see is always the local copy.",
+			"noSource": "This project has no source link. Add a link to the model page and the preview image can be fetched.",
+			"unsupported": "{host} is not one of the supported model sites.",
+			"from": "Image from {host}",
+			"fromUnknown": "Origin unknown",
+			"fetchedAt": "fetched on {date}"
+		},
+		"download": {
+			"title": "Model files",
+			"body": "The portals hand out their download links only to signed-in users, so PrintFlow cannot fetch the files itself — open the model page in your browser and download them there.",
+			"openPage": "Open model page in browser",
+			"direct": "Download from a direct link",
+			"directHint": "If you already have a direct link to a file, PrintFlow downloads it to a location of your choice.",
+			"urlLabel": "File link",
+			"urlPlaceholder": "https://…/model.3mf",
+			"start": "Download",
+			"busy": "Downloading …",
+			"dialogTitle": "Save file as",
+			"overwriteHint": "An existing file is never overwritten — pick a new name."
+		},
+		"title": {
+			"fetch": "Fetch title from page",
+			"busy": "Fetching title …",
+			"hint": "Fetches the model page's title and suggests it as the project name.",
+			"suggestion": "Suggestion from the page: “{title}”",
+			"apply": "Use as title",
+			"dismiss": "Discard",
+			"offline": "Online features are off — the page title can only be fetched once they are enabled.",
+			"none": "The page returned no title.",
+			"failed": "Could not fetch the title: {reason}",
+			"failedGeneric": "Could not fetch the title."
+		},
+		"offline": {
+			"settings": "Open settings",
+			"fetch": "Online features are off, so the preview image cannot be fetched right now.",
+			"refetch": "Online features are off — the stored image stays visible, but a new one can only be fetched once they are enabled.",
+			"download": "Online features are off. Enable them first to download a file."
+		},
+		"toast": {
+			"previewFetched": "Preview image saved",
+			"previewRemoved": "Preview image removed",
+			"downloaded": "“{name}” downloaded ({size})"
+		},
+		"errors": {
+			"fetchFailed": "Could not fetch the preview image: {reason}",
+			"fetchFailedGeneric": "Could not fetch the preview image.",
+			"downloadFailed": "Download failed: {reason}",
+			"downloadFailedGeneric": "Download failed."
+		}
+	},
+	"parts.correctCounters": "Correct counters by hand",
+	"parts.correctCountersHint": "Only changes this part's counters — no filament deducted, no history entry. Use “Log print” for an actual print.",
+	"parts.whichPlatePrinted": "Which file did you print?",
+	"parts.incrementFailed": "Increase failed quantity",
+	"parts.decrementFailed": "Decrease failed quantity",
+	"plates.scheduledOn": "Scheduled {date}",
+	"plates.scheduledOverdue": "Scheduled, overdue",
+	"plates.scheduledCount": "{count, plural, one {# open entry on the print plan} other {# open entries on the print plan}}",
+	"plates.filterParts": "Filter parts …",
+	"plan.scheduleAgain": "Schedule again",
+	"search": {
+		"placeholder": "Projects, parts, files, spools …",
+		"resultsLabel": "Search results",
+		"shortcutModifier": "Ctrl"
 	}
 }

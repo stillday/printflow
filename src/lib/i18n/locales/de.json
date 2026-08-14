@@ -63,7 +63,8 @@
 		"hoursShort": "Std",
 		"minutesShort": "Min",
 		"meters": "m",
-		"pieces": "Stk"
+		"pieces": "Stk",
+		"currency": "€"
 	},
 	"status": {
 		"active": "Aktiv",
@@ -96,7 +97,10 @@
 		"lowStockEmpty": "Alle aktiven Spulen sind gut gefüllt.",
 		"quickActions": "Schnellaktionen",
 		"emptyTitle": "Noch nichts eingerichtet",
-		"emptyBody": "Lege zuerst ein Filament im Katalog an, registriere dann deine Spulen und starte dein erstes Projekt."
+		"emptyBody": "Lege zuerst ein Filament im Katalog an, registriere dann deine Spulen und starte dein erstes Projekt.",
+		"upcoming": "Die nächsten Tage",
+		"upcomingEmpty": "In den nächsten Tagen ist nichts geplant.",
+		"upcomingMore": "{count, plural, one {# weiterer Eintrag} other {# weitere Einträge}}"
 	},
 	"catalog": {
 		"title": "Filament-Katalog",
@@ -123,8 +127,11 @@
 			"spoolTareWeightHint": "Gewicht der leeren Spule ohne Filament",
 			"nominalWeight": "Nenngewicht (neu)",
 			"printingTempMin": "Drucktemperatur min.",
-			"printingTempMax": "Drucktemperatur max."
-		}
+			"printingTempMax": "Drucktemperatur max.",
+			"nominalWeightHint": "Filamentmenge einer vollen Spule, ohne die Spule selbst — meist 1000 g."
+		},
+		"deleteBodyCascade": "{count, plural, one {Die zugehörige Spule mit {remaining} Restbestand wird ebenfalls gelöscht.} other {Die # zugehörigen Spulen mit zusammen {remaining} Restbestand werden ebenfalls gelöscht.}} Das lässt sich nicht rückgängig machen.",
+		"deleteBodyNoSpools": "Der Katalogeintrag wird gelöscht. Es hängen keine Spulen daran. Das lässt sich nicht rückgängig machen."
 	},
 	"spools": {
 		"title": "Spulen",
@@ -173,7 +180,9 @@
 			"open": "Tara-Rechner",
 			"applyAsRemaining": "Als Restmenge speichern",
 			"implausible": "Mehr als die Spule nominal hält ({nominal}) — Tara prüfen."
-		}
+		},
+		"deleteConfirmNamed": "Spule „{name}“ löschen?",
+		"codeHint": "Eigener Code auf der Spule — hilft beim Wiederfinden über die Suche."
 	},
 	"projects": {
 		"title": "Projekte",
@@ -204,7 +213,9 @@
 			"parts": "Teile",
 			"plates": "Druckplatten",
 			"history": "Historie"
-		}
+		},
+		"countOf": "{shown} von {total}",
+		"updatedAt": "Zuletzt bearbeitet {date}"
 	},
 	"parts": {
 		"title": "Stückliste",
@@ -368,7 +379,9 @@
 			"tooLarge": "Die Datei ist zu groß (maximal {max} MB)."
 		},
 		"exportFailed": "Export fehlgeschlagen.",
-		"importFailed": "Import fehlgeschlagen."
+		"importFailed": "Import fehlgeschlagen.",
+		"formInvalid": "Bitte prüfe die markierten Felder.",
+		"minAboveMax": "Muss mindestens so groß wie das Minimum sein"
 	},
 	"toast": {
 		"saved": "Gespeichert",
@@ -383,7 +396,8 @@
 		"languageChanged": "Sprache geändert",
 		"scheduled": "Eingeplant",
 		"moved": "Verschoben",
-		"scheduledCount": "{count, plural, one {# Platte eingeplant} other {# Platten eingeplant}}"
+		"scheduledCount": "{count, plural, one {# Platte eingeplant} other {# Platten eingeplant}}",
+		"movedTo": "Auf {date} verschoben"
 	},
 	"plan": {
 		"title": "Druckplan",
@@ -432,7 +446,12 @@
 		"spreadHint": "Füllt jeden Tag bis 24 Stunden Druckzeit, dann den nächsten.",
 		"spreadPreview": "{count} Platten, zusammen {time} — verteilt ab dem gewählten Tag.",
 		"dayAfter": "Dieser Tag: {before} geplant → {after} danach",
-		"pastDate": "Der Tag liegt in der Vergangenheit — der Eintrag erscheint sofort als überfällig."
+		"pastDate": "Der Tag liegt in der Vergangenheit — der Eintrag erscheint sofort als überfällig.",
+		"moveToDate": "Auf ein anderes Datum verschieben",
+		"moveToTomorrow": "Auf morgen",
+		"moveHint": "Einträge lassen sich auf einen anderen Tag ziehen – oder über das Datumsfeld auf einen beliebigen Tag verschieben.",
+		"dropHere": "Hier ablegen",
+		"dragHandle": "Zum Verschieben ziehen"
 	},
 	"files": {
 		"title": "Dateien",
@@ -457,6 +476,87 @@
 		"chooseProject": "In welches Projekt?",
 		"existingProject": "Vorhandenes",
 		"newProject": "Neues",
-		"newProjectHint": "Vorgeschlagen aus dem Ordnernamen."
+		"newProjectHint": "Vorgeschlagen aus dem Ordnernamen.",
+		"alreadyImportedIn": "Steckt schon als Platte in „{project}“ — Projekt öffnen",
+		"noneFoundTitle": "Keine Dateien gefunden",
+		"chooseOtherFolder": "Anderen Ordner wählen",
+		"folderDialogFailed": "Der Ordner-Dialog konnte nicht geöffnet werden.",
+		"preparingImport": "Datei wird gelesen …"
+	},
+	"portal": {
+		"portalList": "MakerWorld, Printables, Thingiverse, Cults3D, MyMiniFactory und Thangs",
+		"supported": "Unterstützt werden {portals}.",
+		"preview": {
+			"title": "Vorschaubild",
+			"hint": "Einmalig von der Modellseite geholt, danach lokal gespeichert.",
+			"alt": "Vorschaubild des Modells",
+			"fetch": "Vorschaubild holen",
+			"fetching": "Wird geholt …",
+			"refetch": "Neu holen",
+			"remove": "Entfernen",
+			"emptyBody": "Noch kein Bild gespeichert. PrintFlow kann es einmalig von {host} holen und legt es danach in der Datenbank ab — angezeigt wird immer die lokale Kopie.",
+			"noSource": "Für dieses Projekt ist kein Quell-Link hinterlegt. Trag im Projekt einen Link zur Modellseite ein, dann kann das Vorschaubild geholt werden.",
+			"unsupported": "{host} ist keine der unterstützten Modellseiten.",
+			"from": "Bild von {host}",
+			"fromUnknown": "Herkunft unbekannt",
+			"fetchedAt": "geholt am {date}"
+		},
+		"download": {
+			"title": "Modelldateien",
+			"body": "Die Portale geben ihre Download-Links nur an angemeldete Nutzer heraus. PrintFlow kann die Dateien deshalb nicht selbst laden — öffne die Modellseite im Browser und lade sie dort herunter.",
+			"openPage": "Modellseite im Browser öffnen",
+			"direct": "Von Direktlink laden",
+			"directHint": "Hast du bereits einen direkten Link zu einer Datei, lädt PrintFlow sie an einen Ort deiner Wahl.",
+			"urlLabel": "Datei-Link",
+			"urlPlaceholder": "https://…/modell.3mf",
+			"start": "Herunterladen",
+			"busy": "Wird geladen …",
+			"dialogTitle": "Datei speichern unter",
+			"overwriteHint": "Eine vorhandene Datei wird nicht überschrieben — wähle einen neuen Namen."
+		},
+		"title": {
+			"fetch": "Titel von der Seite holen",
+			"busy": "Titel wird geholt …",
+			"hint": "Holt den Titel der Modellseite und schlägt ihn als Projektnamen vor.",
+			"suggestion": "Vorschlag von der Seite: „{title}“",
+			"apply": "Als Titel übernehmen",
+			"dismiss": "Verwerfen",
+			"offline": "Online-Funktionen sind aus — der Seitentitel kann erst nach dem Einschalten geholt werden.",
+			"none": "Die Seite hat keinen Titel geliefert.",
+			"failed": "Titel konnte nicht geholt werden: {reason}",
+			"failedGeneric": "Titel konnte nicht geholt werden."
+		},
+		"offline": {
+			"settings": "Einstellungen öffnen",
+			"fetch": "Online-Funktionen sind aus, deshalb kann das Vorschaubild gerade nicht geholt werden.",
+			"refetch": "Online-Funktionen sind aus — das gespeicherte Bild bleibt sichtbar, ein neues kann erst nach dem Einschalten geholt werden.",
+			"download": "Online-Funktionen sind aus. Zum Laden einer Datei musst du sie zuerst einschalten."
+		},
+		"toast": {
+			"previewFetched": "Vorschaubild gespeichert",
+			"previewRemoved": "Vorschaubild entfernt",
+			"downloaded": "„{name}“ geladen ({size})"
+		},
+		"errors": {
+			"fetchFailed": "Vorschaubild konnte nicht geholt werden: {reason}",
+			"fetchFailedGeneric": "Vorschaubild konnte nicht geholt werden.",
+			"downloadFailed": "Download fehlgeschlagen: {reason}",
+			"downloadFailedGeneric": "Download fehlgeschlagen."
+		}
+	},
+	"parts.correctCounters": "Zähler von Hand korrigieren",
+	"parts.correctCountersHint": "Ändert nur die Zähler dieses Teils — ohne Filamentabzug, ohne Eintrag in der Historie. Für einen echten Druck „Druck starten“ verwenden.",
+	"parts.whichPlatePrinted": "Welche Datei hast du gedruckt?",
+	"parts.incrementFailed": "Fehlgeschlagene Stückzahl erhöhen",
+	"parts.decrementFailed": "Fehlgeschlagene Stückzahl verringern",
+	"plates.scheduledOn": "Eingeplant {date}",
+	"plates.scheduledOverdue": "Eingeplant, überfällig",
+	"plates.scheduledCount": "{count, plural, one {# offener Eintrag im Druckplan} other {# offene Einträge im Druckplan}}",
+	"plates.filterParts": "Teile filtern …",
+	"plan.scheduleAgain": "Nochmal einplanen",
+	"search": {
+		"placeholder": "Projekte, Teile, Dateien, Spulen …",
+		"resultsLabel": "Suchergebnisse",
+		"shortcutModifier": "Strg"
 	}
 }

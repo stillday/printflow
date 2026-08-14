@@ -15,6 +15,7 @@
 	import { toasts } from '$lib/stores/toast.svelte';
 	import { SPOOL_STATUSES, type FilamentCatalog, type SpoolWithCatalog } from '$lib/types/schema';
 	import { formatGrams } from '$lib/utils/format';
+	import { spoolTitle } from '$lib/utils/status';
 
 	let spools = $state<SpoolWithCatalog[]>([]);
 	let catalog = $state<FilamentCatalog[]>([]);
@@ -225,9 +226,16 @@
 
 <DeductModal spool={deducting} onClose={() => (deducting = null)} onSaved={load} />
 
+<!--
+	The dialog names the spool: several spools of the same filament differ only by
+	location, and the cards are close together — "Delete spool?" alone gave no way
+	to tell whether the right row was hit.
+-->
 <ConfirmDialog
 	open={pendingDelete !== null}
-	title={$t('spools.deleteConfirm')}
+	title={pendingDelete
+		? $t('spools.deleteConfirmNamed', { values: { name: spoolTitle(pendingDelete) } })
+		: $t('spools.deleteConfirm')}
 	body={$t('spools.deleteBody')}
 	onConfirm={confirmDelete}
 	onCancel={() => (pendingDelete = null)}

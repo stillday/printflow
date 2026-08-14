@@ -17,9 +17,10 @@ theme.
 | **Spool inventory** (`/spools`) | Per-spool net weight with fill rings, storage locations, barcodes, cost, and a tare calculator (`net = scale − tare`). Filter by status, material and location. |
 | **Project BOM** (`/projects`) | Multi-part assemblies with required / printed / failed counters, inline `+`/`−` adjustment and overall progress. |
 | **Plate import** (`/projects/[id]`) | Drag & drop a `.3mf` or `.gcode` file: print time, layer count and per-slot filament usage are read out, and the objects on the plate are mapped to (or turned into) BOM parts. |
-| **Print plan** (`/plan`) | A weekly agenda of what gets printed when: per-day print time with a warning above 24 h, the week's filament need per material, and a separate section for overdue entries. Logging a print from here closes its plan entry. |
+| **Print plan** (`/plan`) | A weekly agenda of what gets printed when: per-day print time with a warning above 24 h, the week's filament need per material, and a separate section for overdue entries. Schedule one plate or a batch, optionally spread over following days. Logging a print from here closes its plan entry. |
+| **File library** (`/files`) | Point PrintFlow at the folder your models live in; it walks it for `.3mf` and G-code, groups the hits by folder, marks what is already imported and imports the rest into a project. |
 | **Print logging** | Assign a spool per AMS/MMU slot, see needed vs. available vs. remaining, then log the print as successful, failed or cancelled. Stock and part counters update in one atomic transaction. |
-| **Settings** (`/settings`) | Appearance (dark / light / system), language switch, database location, and backup export / import. |
+| **Settings** (`/settings`) | Appearance (dark / light / system), language switch, online features (off by default), database location, and backup export / import. |
 
 ---
 
@@ -33,9 +34,17 @@ theme.
 - **[JSZip](https://stuk.github.io/jszip/)** — client-side `.3mf` unpacking
 - TypeScript in strict mode
 
-**No network access at runtime.** The Content-Security-Policy in
-`src-tauri/tauri.conf.json` restricts the WebView to `'self'` plus the Tauri IPC
-channel, so the app cannot phone home even by accident.
+**The WebView never reaches the network.** The Content-Security-Policy in
+`src-tauri/tauri.conf.json` restricts it to `'self'` plus the Tauri IPC channel,
+so the interface cannot phone home even by accident.
+
+Two optional features do use the network, and they are **off by default** and run
+in Rust rather than in the WebView, which is why the policy above stays closed:
+fetching a project's preview image once from its model page (it is then stored
+locally and rendered from a `data:` URI), and downloading a file from a link you
+supply. Both are restricted to a fixed list of model portals, https-only, size-
+capped and time-limited — see `fetch_model_preview` and `download_file` in
+`src-tauri/src/lib.rs`. With the switch off, nothing in the app opens a socket.
 
 ---
 
@@ -80,15 +89,18 @@ src/
     utils/
       threemf.ts            .3mf / G-code metadata parser
       plan.ts               calendar maths for the print plan
+      library.ts            grouping and filtering for the file library
       format.ts color.ts status.ts validate.ts cn.ts
     components/
       ui/ layout/ catalog/ spools/ projects/
   routes/                   /, /spools, /catalog, /projects, /projects/[id],
-                            /plan, /settings
+                            /plan, /files, /settings
 
 src-tauri/
-  src/lib.rs                plugins, backup commands, transaction command
-  migrations/001_initial.sql 002_print_plan.sql
+  src/lib.rs                plugins, backup + transaction commands, the slicer
+                            file scanner, and the two model-portal commands
+  migrations/                001_initial · 002_print_plan · 003_plate_source_path
+                             004_project_previews · 005_job_parts
   tauri.conf.json           window, CSP and bundle configuration
   capabilities/default.json permissions granted to the main window
 ```

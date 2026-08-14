@@ -1,6 +1,6 @@
 <script lang="ts">
 		import { page } from '$app/state';
-	import { goto } from '$app/navigation';
+	import { goto, replaceState } from '$app/navigation';
 	import { t } from 'svelte-i18n';
 	import { ArrowLeft, ExternalLink, History, Layers3, Pencil, Trash2 } from '@lucide/svelte';
 	import PageHeader from '$lib/components/layout/PageHeader.svelte';
@@ -12,6 +12,7 @@
 	import ProjectModal from '$lib/components/projects/ProjectModal.svelte';
 	import PartsPanel from '$lib/components/projects/PartsPanel.svelte';
 	import PlateDropzone from '$lib/components/projects/PlateDropzone.svelte';
+	import ProjectPreview from '$lib/components/projects/ProjectPreview.svelte';
 	import PlateImportModal from '$lib/components/projects/PlateImportModal.svelte';
 	import PlateCard from '$lib/components/projects/PlateCard.svelte';
 	import AssignPartsModal from '$lib/components/projects/AssignPartsModal.svelte';
@@ -37,9 +38,44 @@
 	import { cn } from '$lib/utils/cn';
 	import { isExternalUrl, openExternal } from '$lib/utils/external';
 
-	type Tab = 'parts' | 'plates' | 'history';
+	const TABS = ['parts', 'plates', 'history'] as const;
+	type Tab = (typeof TABS)[number];
 
 	const projectId = $derived(Number(page.params.id));
+
+	function tabFromUrl(url: URL): Tab {
+		const value = url.searchParams.get('tab');
+		return TABS.includes(value as Tab) ? (value as Tab) : 'parts';
+	}
+
+	/**
+	 * The open tab comes from the URL, so a reload, the back button or a link
+	 * shared from elsewhere no longer dumps the user back on "parts".
+	 *
+	 * Not a plain `$derived` of `page.url`: `replaceState` is shallow routing and
+	 * deliberately leaves `page.url` pointing at the last real navigation, so a
+	 * derived value would never move. The URL seeds and re-seeds this instead —
+	 * which is exactly when it has to, because `page.url` does change on every
+	 * real navigation, including a popstate back into this page.
+	 */
+	let tab = $state<Tab>(tabFromUrl(page.url));
+
+	$effect(() => {
+		tab = tabFromUrl(page.url);
+	});
+
+	function selectTab(next: Tab) {
+		if (next === tab) return;
+		tab = next;
+		const url = new URL(page.url);
+		// The default tab stays implicit, so the plain project URL keeps working
+		// and does not grow a redundant `?tab=parts`.
+		if (next === 'parts') url.searchParams.delete('tab');
+		else url.searchParams.set('tab', next);
+		// `replaceState`, not `pushState`: switching tabs is not a step the back
+		// button should have to walk through, but it must survive a reload.
+		replaceState(url, page.state);
+	}
 
 	let project = $state<Project | null>(null);
 	let parts = $state<Part[]>([]);
@@ -48,7 +84,6 @@
 	let spools = $state<SpoolWithCatalog[]>([]);
 	let loading = $state(true);
 	let notFound = $state(false);
-	let tab = $state<Tab>('parts');
 
 	let editOpen = $state(false);
 	let parseResult = $state<ParseResult | null>(null);
@@ -159,10 +194,11 @@
 		}
 
 		event.preventDefault();
-		tab = order[next];
+		const target = order[next];
+		selectTab(target);
 		// The newly selected tab is the only one with tabindex 0, so focus has to
 		// follow it explicitly.
-		document.getElementById(`tab-${tab}`)?.focus();
+		document.getElementById(`tab-${target}`)?.focus();
 	}
 
 	async function confirmPlateDelete() {
@@ -214,7 +250,7 @@
 	 * chip, so following the link lands on the thing that was clicked.
 	 */
 	function showPlate(plate: PrintPlateDecoded) {
-		tab = 'plates';
+		selectTab('plates');
 		highlightPlateId = plate.id ?? null;
 		// Wait for the panel to render before scrolling to it.
 		requestAnimationFrame(() => {
@@ -286,6 +322,15 @@
 
 	<div class="px-8 pb-10">
 		<!--
+			The model page's own picture, fetched once and then stored locally — for
+			a project that came from MakerWorld or Printables it is the fastest way
+			to recognise which build this is.
+		-->
+		<div class="mb-5">
+			<ProjectPreview {projectId} sourceUrl={activeProject.sourceUrl} />
+		</div>
+
+		<!--
 			Import sits above the tabs, not inside the files tab: a user standing in
 			the parts list who wants to attach a file had no visible way there.
 			Import is the entry point to everything on this page, not one of its
@@ -313,11 +358,24 @@
 						'relative -mb-px px-4 py-2.5 text-sm font-medium transition-colors',
 						selected ? 'text-indigo-200' : 'text-zinc-400 hover:text-zinc-200'
 					)}
-					onclick={() => (tab = item.value)}
+					onclick={() => selectTab(item.value)}
 					onkeydown={onTabKeydown}
 				>
 					{$t(item.labelKey)}
-					<span class="ml-1.5 text-xs text-zinc-400 tabular-nums">{item.count}</span>
+					<!--
+						A badge, not a loose digit: "Teile 12 Druckplatten 3" read as one
+						sentence with numbers in it rather than as three counts.
+					-->
+					<span
+						class={cn(
+							'ml-1.5 inline-flex h-4.5 min-w-4.5 items-center justify-center rounded-full border px-1.5 text-[10px] font-semibold tabular-nums',
+							selected
+								? 'border-indigo-400/40 bg-indigo-500/15 text-indigo-200'
+								: 'border-white/10 bg-white/5 text-zinc-400'
+						)}
+					>
+						{item.count}
+					</span>
 					{#if selected}
 						<span
 							class="absolute right-0 bottom-0 left-0 h-0.5 rounded-full bg-indigo-400 shadow-[0_0_12px_rgba(129,140,248,0.8)]"
@@ -336,6 +394,7 @@
 					{plates}
 					onLinkFiles={(part) => (linkingPart = part)}
 					onShowPlate={showPlate}
+					onPrint={(plate) => (printing = plate)}
 					onChanged={reload}
 				/>
 			</div>
@@ -362,6 +421,7 @@
 								onSchedule={(item) => (scheduling = item)}
 								onPrint={(item) => (printing = item)}
 								onDelete={(item) => (pendingPlateDelete = item)}
+								onChanged={reload}
 							/>
 						{/each}
 					</ul>

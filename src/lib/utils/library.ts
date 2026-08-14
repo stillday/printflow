@@ -1,4 +1,5 @@
 import type { ScannedFile } from '$lib/db/library';
+import type { ImportedPlate } from '$lib/db/plates';
 
 /**
  * Turning a flat scan result into the folder view the UI shows.
@@ -30,8 +31,14 @@ export function splitFolder(folder: string): string[] {
  * In a model library the folder *is* the project — one folder per model, often
  * with the plates for its parts inside — so grouping by it is what makes a flat
  * list of a thousand files legible.
+ *
+ * `imported` is keyed by absolute path; only its keys matter here, the project
+ * behind each one is what the row itself links to.
  */
-export function groupByFolder(files: ScannedFile[], imported: Set<string>): FolderGroup[] {
+export function groupByFolder(
+	files: ScannedFile[],
+	imported: ReadonlyMap<string, ImportedPlate>
+): FolderGroup[] {
 	const groups = new Map<string, FolderGroup>();
 
 	for (const file of files) {

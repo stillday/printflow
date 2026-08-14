@@ -1,6 +1,16 @@
 <script lang="ts">
 	import { t } from 'svelte-i18n';
-	import { Check, FileBox, Link2, Minus, Package, Plus, Trash2 } from '@lucide/svelte';
+	import {
+		Check,
+		FileBox,
+		Link2,
+		Minus,
+		Package,
+		Play,
+		Plus,
+		SlidersHorizontal,
+		Trash2
+	} from '@lucide/svelte';
 	import Button from '$lib/components/ui/Button.svelte';
 	import IconButton from '$lib/components/ui/IconButton.svelte';
 	import EmptyState from '$lib/components/ui/EmptyState.svelte';
@@ -26,10 +36,15 @@
 		onLinkFiles: (part: Part) => void;
 		/** Jumps to a file and highlights it. */
 		onShowPlate: (plate: PrintPlateDecoded) => void;
+		/**
+		 * Opens the real print flow (`PrintJobModal`) for one of the part's files:
+		 * deducts filament, writes history and counts the parts in one transaction.
+		 */
+		onPrint: (plate: PrintPlateDecoded) => void;
 		onChanged: () => void;
 	}
 
-	let { projectId, parts, plates, onLinkFiles, onShowPlate, onChanged }: Props = $props();
+	let { projectId, parts, plates, onLinkFiles, onShowPlate, onPrint, onChanged }: Props = $props();
 
 	/**
 	 * Per part: which plates carry it and how many copies they produce in total.
@@ -65,6 +80,33 @@
 	let pendingDelete = $state<Part | null>(null);
 	/** Ids currently being written, to keep +/- clicks from racing each other. */
 	let busyIds = $state<number[]>([]);
+	/**
+	 * Part whose manual counter row is unfolded. The +/- buttons write
+	 * `printed_quantity` straight through — no filament, no history, no plan — so
+	 * they are a repair tool, not the way a print gets recorded. Folded away by
+	 * default, one part at a time.
+	 */
+	let correctingId = $state<number | null>(null);
+	/** Part whose "which file did you print?" list is open. */
+	let choosingId = $state<number | null>(null);
+
+	/**
+	 * The prominent action. A part is printed by printing a file, so with a
+	 * single linked file this goes straight into the print flow; with several it
+	 * has to ask which one, because that choice decides what gets deducted.
+	 */
+	function startPrint(part: Part, linked: { plate: PrintPlateDecoded }[]) {
+		if (linked.length === 0) {
+			onLinkFiles(part);
+			return;
+		}
+		if (linked.length === 1) {
+			choosingId = null;
+			onPrint(linked[0].plate);
+			return;
+		}
+		choosingId = choosingId === part.id ? null : (part.id ?? null);
+	}
 
 	const totals = $derived(
 		parts.reduce(
@@ -273,78 +315,170 @@
 									</span>
 								{/if}
 							</div>
+
+							<!-- Several files produce this part, so the print flow has to know
+							     which one actually ran before it deducts anything. -->
+							{#if choosingId === part.id && linkedPlates.length > 1}
+								<div class="mt-2 rounded-xl border border-indigo-500/30 bg-indigo-500/5 p-2">
+									<p class="px-1 pb-1.5 text-[11px] text-zinc-400">
+										{$t('parts.whichPlatePrinted')}
+									</p>
+									<ul class="flex flex-wrap gap-1.5">
+										{#each linkedPlates as entry (entry.plate.id)}
+											<li>
+												<button
+													type="button"
+													class="inline-flex max-w-full items-center gap-1.5 rounded-md border border-white/10 bg-white/5 px-2 py-1 text-[11px] text-zinc-200 transition-colors hover:border-indigo-500/50 hover:bg-indigo-500/10"
+													onclick={() => {
+														choosingId = null;
+														onPrint(entry.plate);
+													}}
+												>
+													<Play size={11} class="shrink-0 text-indigo-300" />
+													<span class="truncate">{entry.plate.name}</span>
+													<span class="text-zinc-400 tabular-nums">{entry.quantity}×</span>
+												</button>
+											</li>
+										{/each}
+									</ul>
+								</div>
+							{/if}
+						</div>
+
+						<!-- Read-only: the counters are an outcome of logged prints now, not
+						     an input field. -->
+						<div class="flex shrink-0 items-center gap-4 text-right">
+							<div>
+								<p class="text-sm font-semibold text-zinc-100 tabular-nums" aria-live="polite">
+									{part.printedQuantity}<span class="text-zinc-400">/{part.requiredQuantity}</span>
+								</p>
+								<p class="text-[10px] tracking-widest text-zinc-400 uppercase">
+									{$t('parts.printed')}
+								</p>
+							</div>
+							{#if part.failedQuantity > 0}
+								<div>
+									<p class="text-sm text-rose-400 tabular-nums">{part.failedQuantity}</p>
+									<p class="text-[10px] tracking-widest text-zinc-400 uppercase">
+										{$t('parts.failed')}
+									</p>
+								</div>
+							{/if}
 						</div>
 
 						<div class="flex shrink-0 items-center gap-1.5">
-							<span class="text-[10px] tracking-widest text-zinc-400 uppercase">
-								{$t('parts.printed')}
-							</span>
+							{#if linkedPlates.length > 0}
+								<Button
+									variant="primary"
+									size="sm"
+									aria-expanded={linkedPlates.length > 1 ? choosingId === part.id : undefined}
+									onclick={() => startPrint(part, linkedPlates)}
+								>
+									<Play size={13} />
+									{$t('plates.startPrint')}
+								</Button>
+							{/if}
+
 							<IconButton
-								label={$t('parts.decrement')}
-								class="h-7 w-7"
-								disabled={part.printedQuantity === 0 || busyIds.includes(part.id!)}
-								onclick={() => adjust(part, 'printed', -1)}
+								label={$t('parts.correctCounters')}
+								aria-expanded={correctingId === part.id}
+								class={cn(correctingId === part.id && 'bg-white/10 text-zinc-100')}
+								onclick={() => (correctingId = correctingId === part.id ? null : (part.id ?? null))}
 							>
-								<Minus size={13} />
+								<SlidersHorizontal size={15} />
 							</IconButton>
-							<span
-								class="w-14 text-center text-sm font-semibold text-zinc-100 tabular-nums"
-								aria-live="polite"
-							>
-								{part.printedQuantity}<span class="text-zinc-400">/{part.requiredQuantity}</span>
-							</span>
-							<IconButton
-								label={$t('parts.increment')}
-								class="h-7 w-7"
-								tone="success"
-								disabled={busyIds.includes(part.id!)}
-								onclick={() => adjust(part, 'printed', 1)}
-							>
-								<Plus size={13} />
-							</IconButton>
-						</div>
 
-						<div class="flex shrink-0 items-center gap-1.5">
-							<span class="text-[10px] tracking-widest text-zinc-400 uppercase">
-								{$t('parts.required')}
-							</span>
-							<input
-								class="input-base h-7 w-16 py-0 text-center text-xs tabular-nums"
-								type="number"
-								min="0"
-								step="1"
-								aria-label={$t('parts.required')}
-								value={part.requiredQuantity}
-								onblur={(event) => setRequired(part, event.currentTarget.value)}
-							/>
-						</div>
-
-						<div class="flex shrink-0 items-center gap-1.5">
-							<span class="text-[10px] tracking-widest text-zinc-400 uppercase">
-								{$t('parts.failed')}
-							</span>
 							<IconButton
-								label={$t('parts.failed')}
-								class="h-7 w-7"
+								label={$t('common.delete')}
 								tone="danger"
-								disabled={busyIds.includes(part.id!)}
-								onclick={() => adjust(part, 'failed', 1)}
+								class="opacity-50 transition-opacity group-hover:opacity-100 focus-visible:opacity-100"
+								onclick={() => (pendingDelete = part)}
 							>
-								<Plus size={13} />
+								<Trash2 size={15} />
 							</IconButton>
-							<span class="w-6 text-center text-sm tabular-nums {part.failedQuantity > 0 ? 'text-rose-400' : 'text-zinc-400'}">
-								{part.failedQuantity}
-							</span>
 						</div>
 
-						<IconButton
-							label={$t('common.delete')}
-							tone="danger"
-							class="opacity-50 transition-opacity group-hover:opacity-100 focus-visible:opacity-100"
-							onclick={() => (pendingDelete = part)}
-						>
-							<Trash2 size={15} />
-						</IconButton>
+						{#if correctingId === part.id}
+							<div
+								class="w-full rounded-xl border border-white/10 bg-zinc-950/40 px-4 py-3"
+							>
+								<p class="text-[11px] leading-relaxed text-zinc-400">
+									{$t('parts.correctCountersHint')}
+								</p>
+								<div class="mt-3 flex flex-wrap items-center gap-x-5 gap-y-3">
+									<div class="flex items-center gap-1.5">
+										<span class="text-[10px] tracking-widest text-zinc-400 uppercase">
+											{$t('parts.printed')}
+										</span>
+										<IconButton
+											label={$t('parts.decrement')}
+											class="h-7 w-7"
+											disabled={part.printedQuantity === 0 || busyIds.includes(part.id!)}
+											onclick={() => adjust(part, 'printed', -1)}
+										>
+											<Minus size={13} />
+										</IconButton>
+										<span class="w-8 text-center text-sm text-zinc-100 tabular-nums">
+											{part.printedQuantity}
+										</span>
+										<IconButton
+											label={$t('parts.increment')}
+											class="h-7 w-7"
+											tone="success"
+											disabled={busyIds.includes(part.id!)}
+											onclick={() => adjust(part, 'printed', 1)}
+										>
+											<Plus size={13} />
+										</IconButton>
+									</div>
+
+									<div class="flex items-center gap-1.5">
+										<span class="text-[10px] tracking-widest text-zinc-400 uppercase">
+											{$t('parts.failed')}
+										</span>
+										<IconButton
+											label={$t('parts.decrementFailed')}
+											class="h-7 w-7"
+											disabled={part.failedQuantity === 0 || busyIds.includes(part.id!)}
+											onclick={() => adjust(part, 'failed', -1)}
+										>
+											<Minus size={13} />
+										</IconButton>
+										<span
+											class="w-8 text-center text-sm tabular-nums {part.failedQuantity > 0
+												? 'text-rose-400'
+												: 'text-zinc-400'}"
+										>
+											{part.failedQuantity}
+										</span>
+										<IconButton
+											label={$t('parts.incrementFailed')}
+											class="h-7 w-7"
+											tone="danger"
+											disabled={busyIds.includes(part.id!)}
+											onclick={() => adjust(part, 'failed', 1)}
+										>
+											<Plus size={13} />
+										</IconButton>
+									</div>
+
+									<div class="flex items-center gap-1.5">
+										<span class="text-[10px] tracking-widest text-zinc-400 uppercase">
+											{$t('parts.required')}
+										</span>
+										<input
+											class="input-base h-7 w-16 py-0 text-center text-xs tabular-nums"
+											type="number"
+											min="0"
+											step="1"
+											aria-label={$t('parts.required')}
+											value={part.requiredQuantity}
+											onblur={(event) => setRequired(part, event.currentTarget.value)}
+										/>
+									</div>
+								</div>
+							</div>
+						{/if}
 					</li>
 				{/each}
 			</ul>

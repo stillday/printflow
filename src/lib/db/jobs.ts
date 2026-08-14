@@ -5,6 +5,7 @@ import { touchStatement } from './projects';
 import { completeStatement } from './plan';
 import type {
 	JobStatus,
+	PartCounted,
 	PartOnPlate,
 	PrintJobDecoded,
 	PrintPlateDecoded,
@@ -15,6 +16,7 @@ interface JobRow {
 	id: number;
 	plate_id: number;
 	spool_ids_used_json: string;
+	parts_counted_json: string | null;
 	started_at: string;
 	completed_at: string | null;
 	status: JobStatus;
@@ -23,24 +25,30 @@ interface JobRow {
 	plate_name: string;
 }
 
-function mapJob(row: JobRow): PrintJobDecoded {
-	let spoolsUsed: SpoolAssignment[] = [];
+/** Tolerates legacy or hand-edited JSON rather than throwing on render. */
+function parseArray<T>(raw: string | null | undefined): T[] {
+	if (!raw) return [];
 	try {
-		const parsed = JSON.parse(row.spool_ids_used_json);
-		if (Array.isArray(parsed)) spoolsUsed = parsed;
+		const parsed = JSON.parse(raw);
+		return Array.isArray(parsed) ? (parsed as T[]) : [];
 	} catch {
-		spoolsUsed = [];
+		return [];
 	}
+}
+
+function mapJob(row: JobRow): PrintJobDecoded {
 	return {
 		id: row.id,
 		plateId: row.plate_id,
 		spoolIdsUsedJson: row.spool_ids_used_json,
+		partsCountedJson: row.parts_counted_json ?? '[]',
 		startedAt: row.started_at,
 		completedAt: row.completed_at,
 		status: row.status,
 		actualDurationSeconds: row.actual_duration_seconds,
 		failureReason: row.failure_reason,
-		spoolsUsed,
+		spoolsUsed: parseArray<SpoolAssignment>(row.spool_ids_used_json),
+		partsCounted: parseArray<PartCounted>(row.parts_counted_json),
 		plateName: row.plate_name
 	};
 }
@@ -75,6 +83,8 @@ export interface LogJobInput {
 	 * needs printing, so it stays on the plan.
 	 */
 	planEntryId?: number | null;
+	/** Part id → name, so the job can record readable history. */
+	partNames?: Map<number, string>;
 }
 
 /**
@@ -91,15 +101,34 @@ export async function logPrintJob(input: LogJobInput): Promise<void> {
 	const { plate, status, assignments, startedAt } = input;
 	const completedAt = now();
 
+	/**
+	 * What this job did to the part counters, recorded on the job itself.
+	 * Names are copied in rather than joined later: the history should still
+	 * read correctly after a part is renamed or the plate is re-linked.
+	 */
+	const counter: 'printed' | 'failed' = status === 'success' ? 'printed' : 'failed';
+	const partsCounted: PartCounted[] =
+		status === 'cancelled'
+			? []
+			: (plate.partsOnPlate as PartOnPlate[])
+					.filter((part) => part.quantityOnPlate > 0)
+					.map((part) => ({
+						partId: part.partId,
+						name: input.partNames?.get(part.partId) ?? `#${part.partId}`,
+						quantity: part.quantityOnPlate,
+						counter
+					}));
+
 	const statements = [
 		{
 			sql: `INSERT INTO print_jobs
-			        (plate_id, spool_ids_used_json, started_at, completed_at, status,
-			         actual_duration_seconds, failure_reason)
-			      VALUES (?, ?, ?, ?, ?, ?, ?)`,
+			        (plate_id, spool_ids_used_json, parts_counted_json, started_at, completed_at,
+			         status, actual_duration_seconds, failure_reason)
+			      VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
 			params: [
 				plate.id!,
 				JSON.stringify(assignments),
+				JSON.stringify(partsCounted),
 				startedAt,
 				completedAt,
 				status,
@@ -122,7 +151,6 @@ export async function logPrintJob(input: LogJobInput): Promise<void> {
 			}
 		}
 
-		const counter = status === 'success' ? 'printed' : 'failed';
 		for (const part of plate.partsOnPlate as PartOnPlate[]) {
 			if (part.quantityOnPlate > 0) {
 				statements.push(incrementStatement(part.partId, counter, part.quantityOnPlate));

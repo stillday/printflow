@@ -41,6 +41,15 @@
 	let tempMaxInput = $state('');
 	let submitted = $state(false);
 	let busy = $state(false);
+	let formEl = $state<HTMLFormElement | null>(null);
+	/**
+	 * Whether the "please check the fields" toast has already been shown.
+	 *
+	 * Error toasts stay until they are dismissed, so a second copy of the same
+	 * sentence would only stack up next to the first. Every further failed
+	 * attempt still reports itself by moving the focus and by the field message.
+	 */
+	let announced = $state(false);
 
 	// Re-seed whenever the dialog opens, so a cancelled edit leaves no residue.
 	$effect(() => {
@@ -53,15 +62,33 @@
 		tempMinInput = source.printingTempMin != null ? String(source.printingTempMin) : '';
 		tempMaxInput = source.printingTempMax != null ? String(source.printingTempMax) : '';
 		submitted = false;
+		announced = false;
 	});
+
+	/** Optional field: empty is a valid answer, anything else has to be a number. */
+	function optionalNumber(value: string): string | null {
+		if (!value.trim()) return null;
+		return Number.isFinite(toNumber(value)) ? null : 'errors.invalidNumber';
+	}
+
+	const tempMin = $derived(tempMinInput.trim() ? toNumber(tempMinInput) : null);
+	const tempMax = $derived(tempMaxInput.trim() ? toNumber(tempMaxInput) : null);
 
 	const errors = $derived({
 		brand: requiredText(form.brand),
 		name: requiredText(form.name),
 		material: requiredText(form.material),
+		// The hex box takes free text. Without this, "blau" was accepted and then
+		// silently saved as the fallback indigo — the swatch changed, nothing said why.
+		colorHex: normalizeHex(form.colorHex) ? null : 'errors.invalidColor',
 		density: positiveNumber(toNumber(densityInput)),
 		spoolTareWeight: positiveNumber(toNumber(tareInput)),
-		nominalWeight: positiveNumber(toNumber(nominalInput))
+		nominalWeight: positiveNumber(toNumber(nominalInput)),
+		printingTempMin: optionalNumber(tempMinInput),
+		// A swapped range would be stored as typed and read back as "260–240 °C".
+		printingTempMax:
+			optionalNumber(tempMaxInput) ??
+			(tempMin !== null && tempMax !== null && tempMax < tempMin ? 'errors.minAboveMax' : null)
 	});
 
 	/** Only surface validation errors once the user has tried to save. */
@@ -76,9 +103,40 @@
 		if (density && !entry) densityInput = String(density);
 	}
 
+	/**
+	 * Sends the user to the first field they still have to fix.
+	 *
+	 * Queried in DOM order instead of in the order of the error map, so the field
+	 * the eye reaches first is also the one that gets the caret.
+	 */
+	function focusFirstError() {
+		const selector = Object.entries(errors)
+			.filter(([, message]) => message !== null)
+			.map(([key]) => `[data-field="${key}"]`)
+			.join(', ');
+		if (!selector) return;
+
+		const control = formEl?.querySelector<HTMLElement>(selector);
+		// Focus without scrolling, then centre by hand: the browser's own focus
+		// scroll stops as soon as the field is barely inside the dialog, which in
+		// this nine-field grid often means half-hidden behind the header.
+		control?.focus({ preventScroll: true });
+		control?.scrollIntoView({ block: 'center', behavior: 'smooth' });
+	}
+
 	async function save() {
 		submitted = true;
-		if (!isValid(errors) || busy) return;
+		if (!isValid(errors)) {
+			// Nine fields in a two-column grid inside a scrolling dialog: the invalid
+			// one is regularly off-screen, and marking it alone makes Save look dead.
+			focusFirstError();
+			if (!announced) {
+				toasts.error('errors.formInvalid');
+				announced = true;
+			}
+			return;
+		}
+		if (busy) return;
 
 		busy = true;
 		try {
@@ -88,8 +146,8 @@
 				density: toNumber(densityInput),
 				spoolTareWeight: toNumber(tareInput),
 				nominalWeight: toNumber(nominalInput),
-				printingTempMin: tempMinInput.trim() ? Math.round(toNumber(tempMinInput)) : null,
-				printingTempMax: tempMaxInput.trim() ? Math.round(toNumber(tempMaxInput)) : null
+				printingTempMin: tempMin !== null ? Math.round(tempMin) : null,
+				printingTempMax: tempMax !== null ? Math.round(tempMax) : null
 			};
 
 			if (payload.id) {
@@ -116,6 +174,7 @@
 	{onClose}
 >
 	<form
+		bind:this={formEl}
 		class="grid gap-5 sm:grid-cols-2"
 		onsubmit={(event) => {
 			event.preventDefault();
@@ -127,6 +186,7 @@
 				class="input-base"
 				bind:value={form.brand}
 				placeholder={$t('catalog.fields.brandPlaceholder')}
+				data-field="brand"
 				data-autofocus
 			/>
 		</Field>
@@ -136,6 +196,7 @@
 				class="input-base"
 				bind:value={form.name}
 				placeholder={$t('catalog.fields.namePlaceholder')}
+				data-field="name"
 			/>
 		</Field>
 
@@ -145,6 +206,7 @@
 				list="pf-materials"
 				value={form.material}
 				oninput={(event) => onMaterialChange(event.currentTarget.value)}
+				data-field="material"
 			/>
 			<datalist id="pf-materials">
 				{#each COMMON_MATERIALS as material (material)}
@@ -153,21 +215,35 @@
 			</datalist>
 		</Field>
 
-		<Field label={$t('catalog.fields.colorHex')}>
+		<Field label={$t('catalog.fields.colorHex')} error={shown.colorHex}>
 			<div class="flex items-center gap-3">
-				<label
+				<!--
+					A <span>, not a <label>: `Field` wraps its children in a label of its
+					own, and a label inside a label is invalid — which control the caption
+					then belongs to is up to the browser. The swatch is purely the
+					clickable surface of the colour input lying transparently on top of
+					it, so it needs no caption; the picker is named by `Field`, being the
+					first control inside it, and the hex box carries its own name.
+				-->
+				<span
 					class="relative h-10 w-14 shrink-0 cursor-pointer overflow-hidden rounded-xl border border-white/10"
 					style="background-color: {normalizeHex(form.colorHex) ?? DEFAULT_FILAMENT_COLOR};
 					       box-shadow: 0 0 16px {rgbaFromHex(form.colorHex, 0.5)}"
 				>
-					<span class="sr-only">{$t('catalog.fields.colorHex')}</span>
 					<input
 						type="color"
 						class="absolute inset-0 h-full w-full cursor-pointer opacity-0"
 						bind:value={form.colorHex}
 					/>
-				</label>
-				<input class="input-base font-mono" bind:value={form.colorHex} spellcheck="false" />
+				</span>
+				<input
+					class="input-base font-mono"
+					bind:value={form.colorHex}
+					spellcheck="false"
+					placeholder="#rrggbb"
+					aria-label={$t('catalog.fields.colorHex')}
+					data-field="colorHex"
+				/>
 			</div>
 		</Field>
 
@@ -176,7 +252,12 @@
 			error={shown.density}
 			hint={$t('catalog.fields.densityHint')}
 		>
-			<input class="input-base" bind:value={densityInput} inputmode="decimal" />
+			<input
+				class="input-base"
+				bind:value={densityInput}
+				inputmode="decimal"
+				data-field="density"
+			/>
 		</Field>
 
 		<Field
@@ -184,22 +265,51 @@
 			error={shown.spoolTareWeight}
 			hint={$t('catalog.fields.spoolTareWeightHint')}
 		>
-			<input class="input-base" bind:value={tareInput} inputmode="decimal" />
+			<input
+				class="input-base"
+				bind:value={tareInput}
+				inputmode="decimal"
+				data-field="spoolTareWeight"
+			/>
 		</Field>
 
 		<Field
 			label="{$t('catalog.fields.nominalWeight')} ({$t('units.gram')})"
 			error={shown.nominalWeight}
+			hint={$t('catalog.fields.nominalWeightHint')}
 		>
-			<input class="input-base" bind:value={nominalInput} inputmode="decimal" />
+			<input
+				class="input-base"
+				bind:value={nominalInput}
+				inputmode="decimal"
+				data-field="nominalWeight"
+			/>
 		</Field>
 
 		<div class="grid grid-cols-2 gap-3">
-			<Field label="{$t('catalog.fields.printingTempMin')} ({$t('units.celsius')})" optional>
-				<input class="input-base" bind:value={tempMinInput} inputmode="numeric" />
+			<Field
+				label="{$t('catalog.fields.printingTempMin')} ({$t('units.celsius')})"
+				error={shown.printingTempMin}
+				optional
+			>
+				<input
+					class="input-base"
+					bind:value={tempMinInput}
+					inputmode="numeric"
+					data-field="printingTempMin"
+				/>
 			</Field>
-			<Field label="{$t('catalog.fields.printingTempMax')} ({$t('units.celsius')})" optional>
-				<input class="input-base" bind:value={tempMaxInput} inputmode="numeric" />
+			<Field
+				label="{$t('catalog.fields.printingTempMax')} ({$t('units.celsius')})"
+				error={shown.printingTempMax}
+				optional
+			>
+				<input
+					class="input-base"
+					bind:value={tempMaxInput}
+					inputmode="numeric"
+					data-field="printingTempMax"
+				/>
 			</Field>
 		</div>
 

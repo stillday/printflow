@@ -1,0 +1,11 @@
+-- Which parts a print job counted, and by how much.
+--
+-- The job flow already knows this: it increments each part on the plate inside
+-- the same transaction. But it kept no record, so the history could say "plate
+-- printed" and never "when did I print the legs?" — and if the plate's linkage
+-- changed afterwards, the past was retold with the present's data.
+--
+-- Stored as JSON on the job rather than as rows, matching how `spool_ids_used_json`
+-- records the filament side of the same event: both are an immutable snapshot of
+-- what this job did, not a live relation.
+ALTER TABLE print_jobs ADD COLUMN parts_counted_json TEXT NOT NULL DEFAULT '[]';

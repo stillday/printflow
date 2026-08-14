@@ -148,6 +148,10 @@ export interface PrintPlate {
 export interface PrintPlateDecoded extends PrintPlate {
 	filamentRequirements: FilamentRequirement[];
 	partsOnPlate: PartOnPlate[];
+	/** Open plan entries for this plate; 0 when it is not scheduled. */
+	plannedCount: number;
+	/** Earliest upcoming planned day, or null. */
+	nextPlannedDate: string | null;
 }
 
 /** One entry of `PrintJob.spoolIdsUsedJson`. */
@@ -158,10 +162,24 @@ export interface SpoolAssignment {
 	weightGrams: number;
 }
 
+/** One entry of `PrintJob.partsCountedJson`. */
+export interface PartCounted {
+	partId: number;
+	name: string;
+	quantity: number;
+	/** Which counter this job moved. */
+	counter: 'printed' | 'failed';
+}
+
 export interface PrintJob {
 	id?: number;
 	plateId: number;
 	spoolIdsUsedJson: string;
+	/**
+	 * Snapshot of the parts this job counted. Kept on the job rather than derived
+	 * from the plate, so re-linking a plate later does not rewrite history.
+	 */
+	partsCountedJson?: string;
 	startedAt: string;
 	completedAt?: string | null;
 	status: JobStatus;
@@ -171,6 +189,7 @@ export interface PrintJob {
 
 export interface PrintJobDecoded extends PrintJob {
 	spoolsUsed: SpoolAssignment[];
+	partsCounted: PartCounted[];
 	plateName: string;
 }
 

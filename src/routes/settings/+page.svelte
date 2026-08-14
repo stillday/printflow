@@ -3,19 +3,13 @@
 	import { invoke } from '@tauri-apps/api/core';
 	import { open as openDialog, save as saveDialog } from '@tauri-apps/plugin-dialog';
 	import { locale, t } from 'svelte-i18n';
-	import {
-		Check,
-		Database,
-		Download,
-		Globe,
-		Info,
-		Palette,
-		Upload,
-		WifiOff
-	} from '@lucide/svelte';
+	import { Database, Download, Globe, Info, Palette, Upload, WifiOff } from '@lucide/svelte';
 	import PageHeader from '$lib/components/layout/PageHeader.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
 	import ConfirmDialog from '$lib/components/ui/ConfirmDialog.svelte';
+	import OptionCardGroup from '$lib/components/ui/OptionCardGroup.svelte';
+	import PageState from '$lib/components/ui/PageState.svelte';
+	import SectionCard from '$lib/components/ui/SectionCard.svelte';
 	import { closeDb } from '$lib/db';
 	import {
 		SETTING_LOCALE,
@@ -28,13 +22,13 @@
 	import { THEMES, type ThemePreference } from '$lib/theme';
 	import { theme } from '$lib/stores/theme.svelte';
 	import { online } from '$lib/stores/online.svelte';
-	import { cn } from '$lib/utils/cn';
 	import { formatNumber } from '$lib/utils/format';
 
 	const APP_VERSION = '0.1.0';
 
 	let summary = $state<DataSummary | null>(null);
 	let dbPath = $state('');
+	let loading = $state(true);
 	let busy = $state(false);
 	let pendingImport = $state<string | null>(null);
 
@@ -46,6 +40,8 @@
 			]);
 		} catch {
 			toasts.error('errors.loadFailed');
+		} finally {
+			loading = false;
 		}
 	}
 
@@ -143,6 +139,30 @@
 		}
 	}
 
+	const themeOptions = $derived(
+		THEMES.map((option) => ({
+			value: option,
+			label: $t(`settings.themes.${option}`),
+			// "System" on its own doesn't say which way it currently resolves.
+			hint: option === 'system' ? $t(`settings.themes.${theme.resolved}`) : undefined
+		}))
+	);
+
+	const languageOptions = $derived(
+		SUPPORTED_LOCALES.map((code) => ({
+			value: code,
+			label: $t(`languages.${code}`),
+			hint: code.toUpperCase()
+		}))
+	);
+
+	// The store holds a boolean; the radio group speaks in values, so the two
+	// states get names here rather than a `String(boolean)` round-trip.
+	const onlineOptions = $derived([
+		{ value: 'off', label: $t('settings.onlineOff'), hint: $t('settings.onlineOffHint') },
+		{ value: 'on', label: $t('settings.onlineOn'), hint: $t('settings.onlineOnHint') }
+	]);
+
 	const summaryRows = $derived(
 		summary
 			? [
@@ -160,228 +180,117 @@
 <PageHeader title={$t('settings.title')} subtitle={$t('settings.subtitle')} />
 
 <div class="grid max-w-3xl gap-6 px-8 pb-10">
-	<section class="card p-6">
-		<div class="flex items-center gap-3">
-			<div
-				class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-indigo-500/20 bg-indigo-500/10 text-indigo-300"
-			>
-				<Palette size={17} />
-			</div>
-			<div class="min-w-0">
-				<h2 class="text-sm font-semibold text-zinc-100">{$t('settings.theme')}</h2>
-				<p class="mt-0.5 text-xs text-zinc-400">{$t('settings.themeHint')}</p>
-			</div>
-		</div>
+	<SectionCard icon={Palette} title={$t('settings.theme')} hint={$t('settings.themeHint')}>
+		<OptionCardGroup
+			options={themeOptions}
+			value={theme.preference}
+			label={$t('settings.theme')}
+			onchange={(value) => chooseTheme(value as ThemePreference)}
+		/>
+	</SectionCard>
 
-		<div class="mt-5 grid gap-2 sm:grid-cols-3">
-			{#each THEMES as option (option)}
-				{@const selected = option === theme.preference}
-				<button
-					type="button"
-					aria-pressed={selected}
-					class={cn(
-						'flex items-center justify-between gap-2 rounded-xl border px-4 py-3 text-left text-sm transition-colors',
-						selected
-							? 'border-indigo-500/40 bg-indigo-500/10 text-indigo-200'
-							: 'border-white/10 bg-zinc-950/40 text-zinc-300 hover:border-white/20 hover:bg-white/5'
-					)}
-					onclick={() => chooseTheme(option)}
-				>
-					<span>
-						<span class="block font-medium">{$t(`settings.themes.${option}`)}</span>
-						{#if option === 'system'}
-							<span class="mt-0.5 block text-[11px] text-zinc-400">
-								{$t(`settings.themes.${theme.resolved}`)}
-							</span>
-						{/if}
-					</span>
-					{#if selected}
-						<Check size={16} />
-					{/if}
-				</button>
-			{/each}
-		</div>
-	</section>
+	<SectionCard icon={Globe} title={$t('settings.language')} hint={$t('settings.languageHint')}>
+		<OptionCardGroup
+			options={languageOptions}
+			value={current}
+			label={$t('settings.language')}
+			onchange={(value) => chooseLanguage(value as AppLocale)}
+		/>
+	</SectionCard>
 
-	<section class="card p-6">
-		<div class="flex items-center gap-3">
-			<div
-				class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-indigo-500/20 bg-indigo-500/10 text-indigo-300"
-			>
-				<Globe size={17} />
-			</div>
-			<div class="min-w-0">
-				<h2 class="text-sm font-semibold text-zinc-100">{$t('settings.language')}</h2>
-				<p class="mt-0.5 text-xs text-zinc-400">{$t('settings.languageHint')}</p>
-			</div>
-		</div>
-
-		<div class="mt-5 grid gap-2 sm:grid-cols-3">
-			{#each SUPPORTED_LOCALES as code (code)}
-				{@const selected = code === current}
-				<button
-					type="button"
-					aria-pressed={selected}
-					class={cn(
-						'flex items-center justify-between gap-2 rounded-xl border px-4 py-3 text-left text-sm transition-colors',
-						selected
-							? 'border-indigo-500/40 bg-indigo-500/10 text-indigo-200'
-							: 'border-white/10 bg-zinc-950/40 text-zinc-300 hover:border-white/20 hover:bg-white/5'
-					)}
-					onclick={() => chooseLanguage(code)}
-				>
-					<span>
-						<span class="block font-medium">{$t(`languages.${code}`)}</span>
-						<span class="mt-0.5 block text-[11px] text-zinc-400 uppercase">{code}</span>
-					</span>
-					{#if selected}
-						<Check size={16} />
-					{/if}
-				</button>
-			{/each}
-		</div>
-	</section>
-
-	<section class="card p-6">
-		<div class="flex items-center gap-3">
-			<div
-				class={cn(
-					'flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border',
-					online.enabled
-						? 'border-amber-500/20 bg-amber-500/10 text-amber-400'
-						: 'border-emerald-500/20 bg-emerald-500/10 text-emerald-400'
-				)}
-			>
-				{#if online.enabled}
-					<Globe size={17} />
-				{:else}
-					<WifiOff size={17} />
-				{/if}
-			</div>
-			<div class="min-w-0">
-				<h2 class="text-sm font-semibold text-zinc-100">{$t('settings.online')}</h2>
-				<p class="mt-0.5 text-xs text-zinc-400">{$t('settings.onlineHint')}</p>
-			</div>
-		</div>
-
-		<div class="mt-5 grid gap-2 sm:grid-cols-2">
-			{#each [false, true] as value (value)}
-				{@const selected = online.enabled === value}
-				<button
-					type="button"
-					aria-pressed={selected}
-					class={cn(
-						'flex items-start justify-between gap-2 rounded-xl border px-4 py-3 text-left text-sm transition-colors',
-						selected
-							? 'border-indigo-500/40 bg-indigo-500/10 text-indigo-200'
-							: 'border-white/10 bg-zinc-950/40 text-zinc-300 hover:border-white/20 hover:bg-white/5'
-					)}
-					onclick={() => chooseOnline(value)}
-				>
-					<span>
-						<span class="block font-medium">
-							{$t(value ? 'settings.onlineOn' : 'settings.onlineOff')}
-						</span>
-						<span class="mt-0.5 block text-[11px] leading-snug text-zinc-400">
-							{$t(value ? 'settings.onlineOnHint' : 'settings.onlineOffHint')}
-						</span>
-					</span>
-					{#if selected}
-						<Check size={16} class="mt-0.5 shrink-0" />
-					{/if}
-				</button>
-			{/each}
-		</div>
+	<SectionCard
+		icon={online.enabled ? Globe : WifiOff}
+		title={$t('settings.online')}
+		hint={$t('settings.onlineHint')}
+		tone={online.enabled ? 'amber' : 'emerald'}
+	>
+		<OptionCardGroup
+			options={onlineOptions}
+			value={online.enabled ? 'on' : 'off'}
+			label={$t('settings.online')}
+			columns={2}
+			onchange={(value) => chooseOnline(value === 'on')}
+		/>
 
 		{#if online.enabled}
 			<p class="mt-4 text-[11px] leading-relaxed text-zinc-400">
 				{$t('settings.onlineDetail')}
 			</p>
 		{/if}
-	</section>
+	</SectionCard>
 
-	<section class="card p-6">
-		<div class="flex items-center gap-3">
-			<div
-				class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-emerald-500/20 bg-emerald-500/10 text-emerald-400"
-			>
-				<Database size={17} />
-			</div>
-			<div class="min-w-0">
-				<h2 class="text-sm font-semibold text-zinc-100">{$t('settings.database')}</h2>
-				<p class="mt-0.5 text-xs text-zinc-400">{$t('settings.databaseHint')}</p>
+	<SectionCard
+		icon={Database}
+		title={$t('settings.database')}
+		hint={$t('settings.databaseHint')}
+		tone="emerald"
+	>
+		<div class="grid gap-5">
+			{#if loading}
+				<PageState variant="loading" />
+			{:else}
+				{#if dbPath}
+					<div>
+						<span class="label-base">{$t('settings.databasePath')}</span>
+						<p
+							class="rounded-xl border border-white/10 bg-zinc-950/60 px-3 py-2 font-mono text-xs break-all text-zinc-400"
+						>
+							{dbPath}
+						</p>
+					</div>
+				{/if}
+
+				{#if summaryRows.length > 0}
+					<div>
+						<span class="label-base">{$t('settings.dataSummary')}</span>
+						<dl class="grid grid-cols-2 gap-2 sm:grid-cols-3">
+							{#each summaryRows as row (row.key)}
+								<div class="rounded-xl border border-white/10 bg-zinc-950/40 px-3 py-2">
+									<dt class="text-[11px] text-zinc-400">{$t(row.key)}</dt>
+									<dd class="mt-0.5 text-sm font-semibold text-zinc-100 tabular-nums">
+										{formatNumber(row.value)}
+									</dd>
+								</div>
+							{/each}
+						</dl>
+					</div>
+				{/if}
+			{/if}
+
+			<div class="grid gap-3 sm:grid-cols-2">
+				<div class="rounded-xl border border-white/10 bg-zinc-950/40 p-4">
+					<p class="text-xs font-medium text-zinc-200">{$t('settings.export')}</p>
+					<p class="mt-1 mb-3 text-[11px] leading-relaxed text-zinc-400">
+						{$t('settings.exportHint')}
+					</p>
+					<Button variant="secondary" size="sm" onclick={exportBackup} disabled={busy}>
+						<Download size={14} />
+						{$t('settings.export')}
+					</Button>
+				</div>
+
+				<div class="rounded-xl border border-white/10 bg-zinc-950/40 p-4">
+					<p class="text-xs font-medium text-zinc-200">{$t('settings.import')}</p>
+					<p class="mt-1 mb-3 text-[11px] leading-relaxed text-zinc-400">
+						{$t('settings.importHint')}
+					</p>
+					<Button variant="secondary" size="sm" onclick={chooseBackup} disabled={busy}>
+						<Upload size={14} />
+						{$t('settings.import')}
+					</Button>
+				</div>
 			</div>
 		</div>
+	</SectionCard>
 
-		{#if dbPath}
-			<div class="mt-5">
-				<span class="label-base">{$t('settings.databasePath')}</span>
-				<p
-					class="rounded-xl border border-white/10 bg-zinc-950/60 px-3 py-2 font-mono text-xs break-all text-zinc-400"
-				>
-					{dbPath}
-				</p>
-			</div>
-		{/if}
-
-		{#if summaryRows.length > 0}
-			<div class="mt-5">
-				<span class="label-base">{$t('settings.dataSummary')}</span>
-				<dl class="grid grid-cols-2 gap-2 sm:grid-cols-3">
-					{#each summaryRows as row (row.key)}
-						<div class="rounded-xl border border-white/10 bg-zinc-950/40 px-3 py-2">
-							<dt class="text-[11px] text-zinc-400">{$t(row.key)}</dt>
-							<dd class="mt-0.5 text-sm font-semibold text-zinc-100 tabular-nums">
-								{formatNumber(row.value)}
-							</dd>
-						</div>
-					{/each}
-				</dl>
-			</div>
-		{/if}
-
-		<div class="mt-5 grid gap-3 sm:grid-cols-2">
-			<div class="rounded-xl border border-white/10 bg-zinc-950/40 p-4">
-				<p class="text-xs font-medium text-zinc-200">{$t('settings.export')}</p>
-				<p class="mt-1 mb-3 text-[11px] leading-relaxed text-zinc-400">
-					{$t('settings.exportHint')}
-				</p>
-				<Button variant="secondary" size="sm" onclick={exportBackup} disabled={busy}>
-					<Download size={14} />
-					{$t('settings.export')}
-				</Button>
-			</div>
-
-			<div class="rounded-xl border border-white/10 bg-zinc-950/40 p-4">
-				<p class="text-xs font-medium text-zinc-200">{$t('settings.import')}</p>
-				<p class="mt-1 mb-3 text-[11px] leading-relaxed text-zinc-400">
-					{$t('settings.importHint')}
-				</p>
-				<Button variant="secondary" size="sm" onclick={chooseBackup} disabled={busy}>
-					<Upload size={14} />
-					{$t('settings.import')}
-				</Button>
-			</div>
-		</div>
-	</section>
-
-	<section class="card p-6">
-		<div class="flex items-center gap-3">
-			<div
-				class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-white/10 bg-white/5 text-zinc-400"
-			>
-				<Info size={17} />
-			</div>
-			<div class="min-w-0">
-				<h2 class="text-sm font-semibold text-zinc-100">{$t('settings.about')}</h2>
-				<p class="mt-0.5 text-xs text-zinc-400">
-					{$t('app.name')} · {$t('settings.version')}
-					{APP_VERSION}
-				</p>
-			</div>
-		</div>
-		<p class="mt-4 text-xs leading-relaxed text-zinc-400">{$t('settings.aboutBody')}</p>
-	</section>
+	<SectionCard
+		icon={Info}
+		title={$t('settings.about')}
+		hint="{$t('app.name')} · {$t('settings.version')} {APP_VERSION}"
+		tone="zinc"
+	>
+		<p class="text-xs leading-relaxed text-zinc-400">{$t('settings.aboutBody')}</p>
+	</SectionCard>
 </div>
 
 <ConfirmDialog

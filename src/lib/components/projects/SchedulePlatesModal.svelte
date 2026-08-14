@@ -60,6 +60,8 @@
 	let dateInput = $state(todayPlanDate());
 	/** Spread over consecutive days instead of piling onto one. */
 	let spread = $state(false);
+	/** Only offered for a single plate — a note shared by a batch says nothing. */
+	let note = $state('');
 	let dayLoad = $state<number | null>(null);
 	let busy = $state(false);
 
@@ -82,6 +84,7 @@
 		if (!open) return;
 		dateInput = date ?? lastDate;
 		spread = false;
+		note = '';
 		selected = [...preselected];
 		if (plates === null) void loadProjects();
 	});
@@ -165,7 +168,7 @@
 		try {
 			const dates = spread ? spreadDates() : chosen.map(() => dateInput);
 			for (const [index, plate] of chosen.entries()) {
-				await createEntry(plate.id!, dates[index]);
+				await createEntry(plate.id!, dates[index], chosen.length === 1 ? note : null);
 			}
 			lastDate = dateInput;
 			toasts.success('toast.scheduledCount', { count: chosen.length });
@@ -257,6 +260,12 @@
 					</Button>
 				{/each}
 			</div>
+
+			{#if chosen.length === 1}
+				<Field label={$t('plan.note')} optional>
+					<input class="input-base" bind:value={note} placeholder={$t('plan.notePlaceholder')} />
+				</Field>
+			{/if}
 
 			{#if chosen.length > 1}
 				<label class="flex items-start gap-3 text-sm text-zinc-300">

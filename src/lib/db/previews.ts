@@ -112,3 +112,78 @@ export function fetchModelPreview(url: string): Promise<FetchedPreview> {
 export function downloadFile(url: string, targetPath: string): Promise<number> {
 	return invoke<number>('download_file', { url, targetPath });
 }
+
+/* -------------------------------------------------------------------------- */
+/* Which links the online features apply to                                   */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Mirrors `MODEL_PORTALS` in `src-tauri/src/lib.rs`.
+ *
+ * This copy decides only what the UI *offers* — whether a "fetch preview" button
+ * appears next to a link at all. The rule that actually holds is the one in
+ * Rust, which rejects every other host no matter what the WebView asks for; the
+ * list here just avoids showing a button that is guaranteed to fail.
+ */
+export const MODEL_PORTALS = [
+	'makerworld.com',
+	'printables.com',
+	'thingiverse.com',
+	'cults3d.com',
+	'myminifactory.com',
+	'thangs.com'
+] as const;
+
+/**
+ * The host of an `http(s)` URL, lowercased — for provenance lines and for the
+ * "… is not a supported portal" message. Anything unparseable yields null, so a
+ * URL restored from an old backup cannot crash a render.
+ */
+export function urlHost(value: string | null | undefined): string | null {
+	const trimmed = value?.trim();
+	if (!trimmed) return null;
+	try {
+		const url = new URL(trimmed);
+		if (url.protocol !== 'http:' && url.protocol !== 'https:') return null;
+		return url.host.toLowerCase();
+	} catch {
+		return null;
+	}
+}
+
+/** True for a link on one of the supported portals — subdomains included. */
+export function isModelPortalUrl(value: string | null | undefined): boolean {
+	const host = urlHost(value);
+	if (!host) return false;
+	return MODEL_PORTALS.some((portal) => host === portal || host.endsWith(`.${portal}`));
+}
+
+/** Last path segment of a URL, offered as the file name in the save dialog. */
+export function fileNameFromUrl(value: string): string {
+	try {
+		const name = decodeURIComponent(new URL(value).pathname.split('/').filter(Boolean).pop() ?? '');
+		return name || 'download';
+	} catch {
+		return 'download';
+	}
+}
+
+/** Last segment of a path the user picked, for the "saved X" confirmation. */
+export function fileNameFromPath(path: string): string {
+	return path.split(/[\\/]/).filter(Boolean).pop() ?? path;
+}
+
+/**
+ * The reason a Rust command failed, as text.
+ *
+ * `invoke` rejects with whatever the command's `Err` carried, and these two
+ * commands answer in finished sentences meant to be read ("the page answered
+ * 404", "a file of that name already exists"). Anything else is a fault in the
+ * bridge rather than a message worth showing, so it yields null and the caller
+ * falls back to a translated, generic wording.
+ */
+export function commandError(error: unknown): string | null {
+	if (typeof error === 'string' && error.trim()) return error.trim();
+	if (error instanceof Error && error.message.trim()) return error.message.trim();
+	return null;
+}

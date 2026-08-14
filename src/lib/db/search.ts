@@ -1,6 +1,6 @@
 import { select } from './index';
 
-export type SearchKind = 'project' | 'spool' | 'catalog';
+export type SearchKind = 'project' | 'part' | 'plate' | 'spool' | 'catalog';
 
 export interface SearchHit {
 	kind: SearchKind;
@@ -20,20 +20,44 @@ function likePattern(term: string): string {
 }
 
 /**
- * Quick search across projects, spools and the catalog. Deliberately a single
- * round trip per entity rather than a FTS index — the data set of a personal
- * workshop is small and this keeps the schema simple.
+ * Quick search across projects, their parts and plates, spools and the catalog.
+ * Deliberately a single round trip per entity rather than a FTS index — the
+ * data set of a personal workshop is small and this keeps the schema simple.
+ *
+ * Parts and plates are what a user actually remembers by name ("Scharnier",
+ * "Halter_v2.3mf"); both carry their project title so two identically named
+ * parts in different assemblies stay tellable apart.
  */
 export async function quickSearch(term: string, limitPerKind = 5): Promise<SearchHit[]> {
 	const trimmed = term.trim();
 	if (trimmed.length < 2) return [];
 	const pattern = likePattern(trimmed);
 
-	const [projects, spools, catalog] = await Promise.all([
+	const [projects, parts, plates, spools, catalog] = await Promise.all([
 		select<{ id: number; title: string; status: string }>(
 			`SELECT id, title, status FROM projects
 			 WHERE title LIKE ? ESCAPE '\\' OR IFNULL(description, '') LIKE ? ESCAPE '\\'
 			 ORDER BY updated_at DESC LIMIT ?`,
+			[pattern, pattern, limitPerKind]
+		),
+		select<{ id: number; name: string; project_id: number; project_title: string }>(
+			`SELECT p.id, p.name, p.project_id, j.title AS project_title
+			 FROM parts p JOIN projects j ON j.id = p.project_id
+			 WHERE p.name LIKE ? ESCAPE '\\'
+			 ORDER BY j.updated_at DESC, p.sort_order LIMIT ?`,
+			[pattern, limitPerKind]
+		),
+		select<{
+			id: number;
+			name: string;
+			file_name: string;
+			project_id: number;
+			project_title: string;
+		}>(
+			`SELECT t.id, t.name, t.file_name, t.project_id, j.title AS project_title
+			 FROM print_plates t JOIN projects j ON j.id = t.project_id
+			 WHERE t.name LIKE ? ESCAPE '\\' OR t.file_name LIKE ? ESCAPE '\\'
+			 ORDER BY t.created_at DESC LIMIT ?`,
 			[pattern, pattern, limitPerKind]
 		),
 		select<{
@@ -67,6 +91,26 @@ export async function quickSearch(term: string, limitPerKind = 5): Promise<Searc
 			title: row.title,
 			subtitleKey: `status.${row.status}`,
 			href: `/projects/${row.id}`
+		})),
+		...parts.map((row): SearchHit => ({
+			kind: 'part',
+			id: row.id,
+			title: row.name,
+			subtitle: row.project_title,
+			// Parts have no page of their own — they live in their project's list.
+			href: `/projects/${row.project_id}`
+		})),
+		...plates.map((row): SearchHit => ({
+			kind: 'plate',
+			id: row.id,
+			title: row.name,
+			// A plate is often renamed after import, so a hit on the file name
+			// would otherwise show nothing the user recognises.
+			subtitle:
+				row.file_name && row.file_name !== row.name
+					? `${row.project_title} — ${row.file_name}`
+					: row.project_title,
+			href: `/projects/${row.project_id}`
 		})),
 		...spools.map((row): SearchHit => ({
 			kind: 'spool',

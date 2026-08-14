@@ -46,6 +46,16 @@
 	const ready = $derived(Number.isFinite(net));
 	const negative = $derived(ready && net < 0);
 	/**
+	 * Something is typed but unusable. Without this the result just reads "–" and
+	 * the apply button stays greyed out, with nothing pointing at the field that
+	 * caused it — the same dead end the deduct dialog used to have.
+	 */
+	const malformed = $derived(
+		[scaleInput, tareInput].some(
+			(value) => value.trim() !== '' && !Number.isFinite(toNumber(value))
+		)
+	);
+	/**
 	 * A tare typed as 25 instead of 250 yields more filament than the spool ever
 	 * held, and nothing downstream would question it — `fillRatio` just clamps.
 	 */
@@ -118,6 +128,8 @@
 			<p class="mt-0.5 text-[11px] text-zinc-400">{$t('spools.tare.formula')}</p>
 			{#if negative}
 				<p class="mt-1 text-xs text-rose-400">{$t('spools.tare.negative')}</p>
+			{:else if malformed}
+				<p class="mt-1 text-xs text-rose-400">{$t('errors.invalidNumber')}</p>
 			{:else if implausible}
 				<p class="mt-1 text-xs text-amber-300">
 					{$t('spools.tare.implausible', { values: { nominal: formatGrams(nominalWeight ?? 0) } })}

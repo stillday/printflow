@@ -63,7 +63,8 @@
 		"hoursShort": "u",
 		"minutesShort": "min",
 		"meters": "m",
-		"pieces": "st"
+		"pieces": "st",
+		"currency": "€"
 	},
 	"status": {
 		"active": "Actief",
@@ -96,7 +97,10 @@
 		"lowStockEmpty": "Alle actieve spoelen zijn goed gevuld.",
 		"quickActions": "Snelle acties",
 		"emptyTitle": "Nog niets ingesteld",
-		"emptyBody": "Voeg eerst een filament toe aan de catalogus, registreer daarna je spoelen en start je eerste project."
+		"emptyBody": "Voeg eerst een filament toe aan de catalogus, registreer daarna je spoelen en start je eerste project.",
+		"upcoming": "De komende dagen",
+		"upcomingEmpty": "De komende dagen is niets gepland.",
+		"upcomingMore": "{count, plural, one {nog # planning} other {nog # planningen}}"
 	},
 	"catalog": {
 		"title": "Filamentcatalogus",
@@ -123,8 +127,11 @@
 			"spoolTareWeightHint": "Gewicht van de lege spoel zonder filament",
 			"nominalWeight": "Nominaal gewicht (nieuw)",
 			"printingTempMin": "Printtemperatuur min.",
-			"printingTempMax": "Printtemperatuur max."
-		}
+			"printingTempMax": "Printtemperatuur max.",
+			"nominalWeightHint": "Filament op een volle spoel, zonder de spoel zelf — meestal 1000 g."
+		},
+		"deleteBodyCascade": "{count, plural, one {De bijbehorende spoel met {remaining} restvoorraad wordt ook verwijderd.} other {De # bijbehorende spoelen met in totaal {remaining} restvoorraad worden ook verwijderd.}} Dit kan niet ongedaan gemaakt worden.",
+		"deleteBodyNoSpools": "Het catalogusitem wordt verwijderd. Er hangen geen spoelen aan. Dit kan niet ongedaan gemaakt worden."
 	},
 	"spools": {
 		"title": "Spoelen",
@@ -173,7 +180,9 @@
 			"open": "Tarra-calculator",
 			"applyAsRemaining": "Als restgewicht opslaan",
 			"implausible": "Meer dan de spoel nominaal bevat ({nominal}) — controleer de tarra."
-		}
+		},
+		"deleteConfirmNamed": "Spoel „{name}” verwijderen?",
+		"codeHint": "Eigen code op de spoel — maakt hem vindbaar via de zoekfunctie."
 	},
 	"projects": {
 		"title": "Projecten",
@@ -204,7 +213,9 @@
 			"parts": "Onderdelen",
 			"plates": "Printplaten",
 			"history": "Geschiedenis"
-		}
+		},
+		"countOf": "{shown} van {total}",
+		"updatedAt": "Laatst bewerkt {date}"
 	},
 	"parts": {
 		"title": "Stuklijst",
@@ -368,7 +379,9 @@
 			"tooLarge": "Het bestand is te groot (maximaal {max} MB)."
 		},
 		"exportFailed": "Exporteren mislukt.",
-		"importFailed": "Importeren mislukt."
+		"importFailed": "Importeren mislukt.",
+		"formInvalid": "Controleer de gemarkeerde velden.",
+		"minAboveMax": "Mag niet lager zijn dan het minimum"
 	},
 	"toast": {
 		"saved": "Opgeslagen",
@@ -383,7 +396,8 @@
 		"languageChanged": "Taal gewijzigd",
 		"scheduled": "Ingepland",
 		"moved": "Verplaatst",
-		"scheduledCount": "{count, plural, one {# plaat ingepland} other {# platen ingepland}}"
+		"scheduledCount": "{count, plural, one {# plaat ingepland} other {# platen ingepland}}",
+		"movedTo": "Naar {date} verplaatst"
 	},
 	"plan": {
 		"title": "Printplanning",
@@ -432,7 +446,12 @@
 		"spreadHint": "Vult elke dag tot 24 uur printtijd en gaat dan verder.",
 		"spreadPreview": "{count} platen, samen {time} — verdeeld vanaf de gekozen dag.",
 		"dayAfter": "Deze dag: {before} gepland → {after} daarna",
-		"pastDate": "Die dag ligt in het verleden — de planning verschijnt direct als te laat."
+		"pastDate": "Die dag ligt in het verleden — de planning verschijnt direct als te laat.",
+		"moveToDate": "Naar een andere datum verplaatsen",
+		"moveToTomorrow": "Naar morgen",
+		"moveHint": "Sleep een planning naar een andere dag – of verplaats hem met het datumveld naar een willekeurige dag.",
+		"dropHere": "Hier neerzetten",
+		"dragHandle": "Sleep om te verplaatsen"
 	},
 	"files": {
 		"title": "Bestanden",
@@ -457,6 +476,87 @@
 		"chooseProject": "In welk project?",
 		"existingProject": "Bestaand",
 		"newProject": "Nieuw",
-		"newProjectHint": "Voorgesteld op basis van de mapnaam."
+		"newProjectHint": "Voorgesteld op basis van de mapnaam.",
+		"alreadyImportedIn": "Zit al als plaat in ‘{project}’ — project openen",
+		"noneFoundTitle": "Geen bestanden gevonden",
+		"chooseOtherFolder": "Andere map kiezen",
+		"folderDialogFailed": "Het mapvenster kon niet geopend worden.",
+		"preparingImport": "Bestand wordt gelezen …"
+	},
+	"portal": {
+		"portalList": "MakerWorld, Printables, Thingiverse, Cults3D, MyMiniFactory en Thangs",
+		"supported": "Ondersteund worden {portals}.",
+		"preview": {
+			"title": "Voorbeeldafbeelding",
+			"hint": "Eenmalig van de modelpagina gehaald en daarna lokaal bewaard.",
+			"alt": "Voorbeeldafbeelding van het model",
+			"fetch": "Voorbeeldafbeelding ophalen",
+			"fetching": "Bezig met ophalen …",
+			"refetch": "Opnieuw ophalen",
+			"remove": "Verwijderen",
+			"emptyBody": "Nog geen afbeelding opgeslagen. PrintFlow kan hem eenmalig bij {host} ophalen en bewaart hem daarna in de database — je ziet altijd de lokale kopie.",
+			"noSource": "Dit project heeft geen bronlink. Voeg een link naar de modelpagina toe, dan kan de voorbeeldafbeelding worden opgehaald.",
+			"unsupported": "{host} is geen van de ondersteunde modelsites.",
+			"from": "Afbeelding van {host}",
+			"fromUnknown": "Herkomst onbekend",
+			"fetchedAt": "opgehaald op {date}"
+		},
+		"download": {
+			"title": "Modelbestanden",
+			"body": "De portalen geven hun downloadlinks alleen aan ingelogde gebruikers. PrintFlow kan de bestanden daarom niet zelf ophalen — open de modelpagina in je browser en download ze daar.",
+			"openPage": "Modelpagina in browser openen",
+			"direct": "Via directe link downloaden",
+			"directHint": "Heb je al een directe link naar een bestand, dan downloadt PrintFlow het naar een plek van jouw keuze.",
+			"urlLabel": "Bestandslink",
+			"urlPlaceholder": "https://…/model.3mf",
+			"start": "Downloaden",
+			"busy": "Bezig met downloaden …",
+			"dialogTitle": "Bestand opslaan als",
+			"overwriteHint": "Een bestaand bestand wordt nooit overschreven — kies een nieuwe naam."
+		},
+		"title": {
+			"fetch": "Titel van de pagina ophalen",
+			"busy": "Titel wordt opgehaald …",
+			"hint": "Haalt de titel van de modelpagina op en stelt die voor als projectnaam.",
+			"suggestion": "Voorstel van de pagina: „{title}”",
+			"apply": "Als titel overnemen",
+			"dismiss": "Verwerpen",
+			"offline": "Onlinefuncties staan uit — de paginatitel kan pas na het inschakelen worden opgehaald.",
+			"none": "De pagina gaf geen titel terug.",
+			"failed": "Titel kon niet worden opgehaald: {reason}",
+			"failedGeneric": "Titel kon niet worden opgehaald."
+		},
+		"offline": {
+			"settings": "Instellingen openen",
+			"fetch": "Onlinefuncties staan uit, daarom kan de voorbeeldafbeelding nu niet worden opgehaald.",
+			"refetch": "Onlinefuncties staan uit — de opgeslagen afbeelding blijft zichtbaar, een nieuwe kan pas na het inschakelen worden opgehaald.",
+			"download": "Onlinefuncties staan uit. Schakel ze eerst in om een bestand te downloaden."
+		},
+		"toast": {
+			"previewFetched": "Voorbeeldafbeelding opgeslagen",
+			"previewRemoved": "Voorbeeldafbeelding verwijderd",
+			"downloaded": "„{name}” gedownload ({size})"
+		},
+		"errors": {
+			"fetchFailed": "Voorbeeldafbeelding kon niet worden opgehaald: {reason}",
+			"fetchFailedGeneric": "Voorbeeldafbeelding kon niet worden opgehaald.",
+			"downloadFailed": "Download mislukt: {reason}",
+			"downloadFailedGeneric": "Download mislukt."
+		}
+	},
+	"parts.correctCounters": "Tellers handmatig corrigeren",
+	"parts.correctCountersHint": "Wijzigt alleen de tellers van dit onderdeel — zonder filament af te boeken en zonder item in de geschiedenis. Gebruik „Print boeken” voor een echte print.",
+	"parts.whichPlatePrinted": "Welk bestand heb je geprint?",
+	"parts.incrementFailed": "Aantal mislukt verhogen",
+	"parts.decrementFailed": "Aantal mislukt verlagen",
+	"plates.scheduledOn": "Ingepland {date}",
+	"plates.scheduledOverdue": "Ingepland, te laat",
+	"plates.scheduledCount": "{count, plural, one {# open item in de printplanning} other {# open items in de printplanning}}",
+	"plates.filterParts": "Onderdelen filteren …",
+	"plan.scheduleAgain": "Nogmaals inplannen",
+	"search": {
+		"placeholder": "Projecten, onderdelen, bestanden, spoelen …",
+		"resultsLabel": "Zoekresultaten",
+		"shortcutModifier": "Ctrl"
 	}
 }

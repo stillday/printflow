@@ -17,6 +17,9 @@ interface PlateRow {
 	parts_on_plate_json: string;
 	source_path: string | null;
 	created_at: string;
+	// Only present on the list query — see `listPlates`.
+	planned_count?: number;
+	next_planned_date?: string | null;
 }
 
 /** Tolerates hand-edited or legacy JSON rather than throwing on render. */
@@ -42,13 +45,29 @@ function mapPlate(row: PlateRow): PrintPlateDecoded {
 		sourcePath: row.source_path,
 		createdAt: row.created_at,
 		filamentRequirements: parseJson<FilamentRequirement>(row.filament_requirements_json, []),
-		partsOnPlate: parseJson<PartOnPlate>(row.parts_on_plate_json, [])
+		partsOnPlate: parseJson<PartOnPlate>(row.parts_on_plate_json, []),
+		plannedCount: row.planned_count ?? 0,
+		nextPlannedDate: row.next_planned_date ?? null
 	};
 }
 
+/**
+ * A project's plates, each carrying whether it is already on the print plan.
+ *
+ * Without this the plates view and the plan told different stories about the
+ * same plate, and nothing stopped a user from scheduling one twice.
+ */
 export async function listPlates(projectId: number): Promise<PrintPlateDecoded[]> {
 	const rows = await select<PlateRow>(
-		'SELECT * FROM print_plates WHERE project_id = ? ORDER BY created_at, id',
+		`SELECT pl.*,
+		        (SELECT COUNT(*) FROM print_plan_entries e
+		          WHERE e.plate_id = pl.id AND e.status = 'planned')          AS planned_count,
+		        (SELECT MIN(e.planned_date) FROM print_plan_entries e
+		          WHERE e.plate_id = pl.id AND e.status = 'planned'
+		            AND e.planned_date >= date('now', 'localtime'))            AS next_planned_date
+		 FROM print_plates pl
+		 WHERE pl.project_id = ?
+		 ORDER BY pl.created_at, pl.id`,
 		[projectId]
 	);
 	return rows.map(mapPlate);
@@ -140,13 +159,33 @@ export function plateTotalWeight(plate: PrintPlateDecoded): number {
 }
 
 /**
- * Absolute paths of every plate already imported, for the library scanner.
+ * Where every already-imported file ended up, keyed by its absolute path.
  *
- * A `Set` rather than a list: the scanner checks thousands of rows against it.
+ * A `Map` rather than a `Set`: the library screen has to be able to say *which*
+ * project a file is in and link there, and the lookup runs against thousands of
+ * scanned rows.
  */
-export async function listImportedPaths(): Promise<Set<string>> {
-	const rows = await select<{ source_path: string }>(
-		"SELECT DISTINCT source_path FROM print_plates WHERE source_path IS NOT NULL AND source_path <> ''"
+export async function listImportedPaths(): Promise<Map<string, ImportedPlate>> {
+	const rows = await select<{
+		source_path: string;
+		project_id: number;
+		project_title: string;
+	}>(
+		`SELECT pl.source_path, pl.project_id, p.title AS project_title
+		 FROM print_plates pl
+		 JOIN projects p ON p.id = pl.project_id
+		 WHERE pl.source_path IS NOT NULL AND pl.source_path <> ''
+		 GROUP BY pl.source_path`
 	);
-	return new Set(rows.map((row) => row.source_path));
+	return new Map(
+		rows.map((row) => [
+			row.source_path,
+			{ projectId: row.project_id, projectTitle: row.project_title }
+		])
+	);
+}
+
+export interface ImportedPlate {
+	projectId: number;
+	projectTitle: string;
 }
