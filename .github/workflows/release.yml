@@ -53,7 +53,7 @@ jobs:
         with:
           # 20 is too old for the undici that jsdom pulls in: vitest dies with
           # `webidl.util.markAsUncloneable is not a function`.
-          node-version: 22
+          node-version: '24.22.3'
           cache: npm
 
       - name: Set up Rust
